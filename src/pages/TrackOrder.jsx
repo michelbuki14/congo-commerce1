@@ -1,0 +1,210 @@
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Search, Package, Truck, CheckCircle2, Circle } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
+import StatusBadge from '@/components/StatusBadge';
+import { getOrderIds, getProfile } from '@/lib/session';
+import { formatUSD, formatDate } from '@/lib/format';
+import { SHIPMENT_STATUS_FLOW, SHIPMENT_STATUS_LABELS } from '@/lib/logistics';
+
+export default function TrackOrder() {
+  const [number, setNumber] = useState('');
+  const [phone, setPhone] = useState(getProfile().phone || '');
+  const [order, setOrder] = useState(null);
+  const [fulfillments, setFulfillments] = useState([]);
+  const [shipments, setShipments] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const [error, setError] = useState('');
+  const history = getOrderIds();
+
+  const lookup = async (e) => {
+    e.preventDefault();
+    setError('');
+    setOrder(null);
+    if (!number.trim()) {
+      setError('Entrez votre numéro de commande.');
+      return;
+    }
+    setSearching(true);
+    try {
+      const rows = await base44.entities.Order.filter({ order_number: number.trim().toUpperCase() });
+      const found = rows[0];
+      if (!found) {
+        setError('Aucune commande trouvée avec ce numéro.');
+        return;
+      }
+      if (phone.trim() && found.customer_phone && !found.customer_phone.includes(phone.trim().slice(-6))) {
+        setError('Le téléphone ne correspond pas à cette commande.');
+        return;
+      }
+      const [f, s] = await Promise.all([
+        base44.entities.FulfillmentOrder.filter({ order_id: found.id }, 'fulfillment_number', 50),
+        base44.entities.Shipment.filter({ order_number: found.order_number }, '-created_date', 50),
+      ]);
+      setOrder(found);
+      setFulfillments(f);
+      setShipments(s);
+    } catch {
+      setError('Impossible de récupérer la commande pour le moment.');
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const openHistory = async (orderNumber) => {
+    setNumber(orderNumber);
+    setSearching(true);
+    setError('');
+    try {
+      const rows = await base44.entities.Order.filter({ order_number: orderNumber });
+      const found = rows[0];
+      if (!found) return;
+      const [f, s] = await Promise.all([
+        base44.entities.FulfillmentOrder.filter({ order_id: found.id }, 'fulfillment_number', 50),
+        base44.entities.Shipment.filter({ order_number: found.order_number }, '-created_date', 50),
+      ]);
+      setOrder(found);
+      setFulfillments(f);
+      setShipments(s);
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  return (
+    <div className="mx-auto max-w-3xl space-y-5 pb-8">
+      <h1 className="text-lg font-bold md:text-xl">Suivre ma commande</h1>
+
+      <form onSubmit={lookup} className="space-y-3 rounded-2xl border border-border bg-card p-4">
+        <div className="grid gap-3 md:grid-cols-2">
+          <input
+            value={number}
+            onChange={(e) => setNumber(e.target.value.toUpperCase())}
+            placeholder="Numéro de commande (CC-…)"
+            className="h-11 rounded-lg border border-border bg-background px-3 text-sm"
+          />
+          <input
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="Téléphone (optionnel)"
+            className="h-11 rounded-lg border border-border bg-background px-3 text-sm"
+          />
+        </div>
+        {error && <p className="text-xs text-destructive">{error}</p>}
+        <button
+          type="submit"
+          disabled={searching}
+          className="flex w-full items-center justify-center gap-2 rounded-full bg-primary py-3 text-sm font-bold text-primary-foreground disabled:opacity-50"
+        >
+          <Search className="h-4 w-4" /> {searching ? 'Recherche…' : 'Rechercher'}
+        </button>
+      </form>
+
+      {!!history.length && !order && (
+        <section className="rounded-2xl border border-border bg-card p-4">
+          <h2 className="mb-2 text-sm font-bold">Commandes de cet appareil</h2>
+          <div className="space-y-2">
+            {history.map((h) => (
+              <button
+                key={h.id}
+                type="button"
+                onClick={() => openHistory(h.order_number)}
+                className="flex w-full items-center justify-between rounded-xl border border-border px-3 py-2.5 text-left"
+              >
+                <div>
+                  <p className="text-sm font-semibold">{h.order_number}</p>
+                  <p className="text-[11px] text-muted-foreground">{formatDate(h.created_date)}</p>
+                </div>
+                <span className="text-sm font-semibold">{formatUSD(h.total_usd)}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {order && (
+        <>
+          <section className="rounded-2xl border border-border bg-card p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <p className="text-base font-bold">{order.order_number}</p>
+                <p className="text-xs text-muted-foreground">
+                  {formatDate(order.created_date)} · {order.customer_name}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <StatusBadge status={order.status} />
+                <StatusBadge status={order.payment_status} />
+              </div>
+            </div>
+            <p className="mt-3 text-sm">
+              Total : <span className="font-bold text-primary">{formatUSD(order.total_usd)}</span> · {order.payment_method}
+            </p>
+          </section>
+
+          {fulfillments.map((f) => {
+            const shipment = shipments.find((s) => s.fulfillment_order_id === f.id);
+            const currentIndex = SHIPMENT_STATUS_FLOW.indexOf(f.status);
+            const steps = SHIPMENT_STATUS_FLOW.slice(0, 8);
+            return (
+              <section key={f.id} className="rounded-2xl border border-border bg-card p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-bold">{f.seller_name || f.supplier_name || 'Congo Commerce'}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {f.fulfillment_number} · {f.source_type === 'international_supplier' ? 'Import international' : 'Local RDC'}
+                    </p>
+                  </div>
+                  <StatusBadge status={f.status} />
+                </div>
+
+                {f.tracking_number && (
+                  <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Truck className="h-3.5 w-3.5" /> {f.courier_name} · {f.tracking_number}
+                  </p>
+                )}
+
+                <div className="mt-3 space-y-2">
+                  {steps.map((step, i) => {
+                    const done = currentIndex >= i;
+                    return (
+                      <div key={step} className="flex items-center gap-2.5">
+                        {done ? (
+                          i === currentIndex ? (
+                            <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" />
+                          ) : (
+                            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
+                          )
+                        ) : (
+                          <Circle className="h-4 w-4 shrink-0 text-muted-foreground/40" />
+                        )}
+                        <span className={`text-xs ${done ? 'font-semibold' : 'text-muted-foreground'}`}>
+                          {SHIPMENT_STATUS_LABELS[step]}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {!!shipment?.events?.length && (
+                  <div className="mt-3 space-y-1 rounded-lg bg-secondary/50 p-2.5">
+                    {shipment.events.slice(-4).reverse().map((ev, i) => (
+                      <p key={i} className="text-[11px] text-muted-foreground">
+                        <Package className="mr-1 inline h-3 w-3" />
+                        {ev.label} — {formatDate(ev.at)}
+                      </p>
+                    ))}
+                  </div>
+                )}
+              </section>
+            );
+          })}
+
+          <Link to={`/order/${order.id}`} className="block rounded-full border border-border bg-card py-3 text-center text-sm font-semibold">
+            Voir le détail complet
+          </Link>
+        </>
+      )}
+    </div>
+  );
+}

@@ -1,0 +1,62 @@
+{
+  "name": "Creator",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "handle": {
+      "type": "string"
+    },
+    "avatar_url": {
+      "type": "string"
+    },
+    "bio": {
+      "type": "string"
+    },
+    "city": {
+      "type": "string",
+      "default": "Kinshasa"
+    },
+    "referral_code": {
+      "type": "string"
+    },
+    "commission_rate": {
+      "type": "number",
+      "default": 8
+    },
+    "total_clicks": {
+      "type": "number",
+      "default": 0
+    },
+    "total_conversions": {
+      "type": "number",
+      "default": 0
+    },
+    "total_earnings_usd": {
+      "type": "number",
+      "default": 0
+    },
+    "followers_count": {
+      "type": "number",
+      "default": 0
+    },
+    "verified": {
+      "type": "boolean",
+      "default": false
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "active",
+        "suspended"
+      ],
+      "default": "active"
+    }
+  },
+  "required": [
+    "name",
+    "handle"
+  ]
+}

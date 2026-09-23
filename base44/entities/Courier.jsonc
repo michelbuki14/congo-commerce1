@@ -1,0 +1,57 @@
+{
+  "name": "Courier",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "code": {
+      "type": "string"
+    },
+    "adapter": {
+      "type": "string",
+      "default": "mock_courier"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "service_areas": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "base_rate_usd": {
+      "type": "number",
+      "default": 3
+    },
+    "per_kg_usd": {
+      "type": "number",
+      "default": 1
+    },
+    "avg_days": {
+      "type": "number",
+      "default": 3
+    },
+    "supports_tracking": {
+      "type": "boolean",
+      "default": true
+    },
+    "supports_cod": {
+      "type": "boolean",
+      "default": true
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    },
+    "is_mock": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "name",
+    "code"
+  ]
+}

@@ -1,0 +1,192 @@
+import React, { useEffect, useState } from 'react';
+import { Plus, Trash2, Truck, MapPin, Store } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
+import DashboardNav from '@/components/DashboardNav';
+import { ADMIN_LINKS } from '@/lib/navLinks';
+import { getCities } from '@/lib/config';
+import { formatUSD } from '@/lib/format';
+
+const TABS = [
+  { id: 'couriers', label: 'Transporteurs' },
+  { id: 'zones', label: 'Zones de livraison' },
+  { id: 'pickups', label: 'Points de retrait' },
+];
+
+export default function AdminLogistics() {
+  const [tab, setTab] = useState('couriers');
+  const [couriers, setCouriers] = useState([]);
+  const [zones, setZones] = useState([]);
+  const [pickups, setPickups] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [drafts, setDrafts] = useState({
+    zones: { name: '', city: getCities()[0], fee_usd: 2.5, eta_days: '2-4' },
+    pickups: { name: '', city: getCities()[0], commune: '', address: '', phone: '', fee_usd: 0.5 },
+  });
+
+  const load = async () => {
+    const [c, z, p] = await Promise.all([
+      base44.entities.Courier.list('name', 50).catch(() => []),
+      base44.entities.DeliveryZone.list('city', 100).catch(() => []),
+      base44.entities.PickupPoint.list('city', 100).catch(() => []),
+    ]);
+    setCouriers(c);
+    setZones(z);
+    setPickups(p);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const patchCourier = async (c, field, value) => {
+    const updated = await base44.entities.Courier.update(c.id, { [field]: Number(value) || 0 });
+    setCouriers((prev) => prev.map((x) => (x.id === c.id ? updated : x)));
+  };
+
+  const addZone = async (e) => {
+    e.preventDefault();
+    if (!drafts.zones.name) return;
+    await base44.entities.DeliveryZone.create({ ...drafts.zones, country: 'CD', supports_pickup: true, active: true });
+    setDrafts({ ...drafts, zones: { name: '', city: getCities()[0], fee_usd: 2.5, eta_days: '2-4' } });
+    await load();
+  };
+
+  const addPickup = async (e) => {
+    e.preventDefault();
+    if (!drafts.pickups.name) return;
+    await base44.entities.PickupPoint.create({ ...drafts.pickups, hours: '08:00 - 18:00', active: true });
+    setDrafts({ ...drafts, pickups: { name: '', city: getCities()[0], commune: '', address: '', phone: '', fee_usd: 0.5 } });
+    await load();
+  };
+
+  const removeZone = async (z) => {
+    await base44.entities.DeliveryZone.delete(z.id);
+    setZones((prev) => prev.filter((x) => x.id !== z.id));
+  };
+
+  const removePickup = async (p) => {
+    await base44.entities.PickupPoint.delete(p.id);
+    setPickups((prev) => prev.filter((x) => x.id !== p.id));
+  };
+
+  if (loading) return <div className="h-64 animate-pulse rounded-2xl bg-secondary" />;
+
+  return (
+    <div className="space-y-5 pb-8">
+      <DashboardNav title="Logistique" links={ADMIN_LINKS} />
+
+      <div className="flex flex-wrap gap-2">
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => setTab(t.id)}
+            className={`rounded-full px-3.5 py-1.5 text-xs font-semibold ${tab === t.id ? 'bg-primary text-primary-foreground' : 'bg-secondary'}`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'couriers' && (
+        <div className="space-y-2.5">
+          {couriers.map((c) => (
+            <div key={c.id} className="rounded-2xl border border-border bg-card p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="flex items-center gap-2 text-sm font-bold">
+                  <Truck className="h-4 w-4 text-primary" /> {c.name}
+                  {c.is_mock && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-900">démo</span>}
+                </p>
+                <span className="text-[11px] text-muted-foreground">
+                  {c.supports_tracking ? 'Suivi activé' : 'Sans suivi'} · {c.supports_cod ? 'Paiement à la livraison' : 'Paiement anticipé'}
+                </span>
+              </div>
+              <div className="mt-3 grid gap-3 md:grid-cols-3">
+                {[
+                  { field: 'base_rate_usd', label: 'Tarif de base USD' },
+                  { field: 'per_kg_usd', label: 'Par kg USD' },
+                  { field: 'avg_days', label: 'Délai moyen (jours)' },
+                ].map((f) => (
+                  <label key={f.field} className="text-[11px] text-muted-foreground">
+                    {f.label}
+                    <input
+                      type="number"
+                      defaultValue={c[f.field] ?? 0}
+                      onBlur={(e) => patchCourier(c, f.field, e.target.value)}
+                      className="mt-1 h-9 w-full rounded-lg border border-border bg-background px-2 text-sm text-foreground"
+                    />
+                  </label>
+                ))}
+              </div>
+              <p className="mt-2 text-[11px] text-muted-foreground">Zones desservies : {(c.service_areas || []).join(', ') || '—'}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab === 'zones' && (
+        <>
+          <form onSubmit={addZone} className="grid gap-3 rounded-2xl border border-border bg-card p-4 md:grid-cols-4">
+            <input value={drafts.zones.name} onChange={(e) => setDrafts({ ...drafts, zones: { ...drafts.zones, name: e.target.value } })} placeholder="Nom de la zone" required className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
+            <select value={drafts.zones.city} onChange={(e) => setDrafts({ ...drafts, zones: { ...drafts.zones, city: e.target.value } })} className="h-11 rounded-lg border border-border bg-background px-3 text-sm">
+              {getCities().map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+            <input type="number" step="0.1" value={drafts.zones.fee_usd} onChange={(e) => setDrafts({ ...drafts, zones: { ...drafts.zones, fee_usd: Number(e.target.value) } })} placeholder="Frais USD" className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
+            <input value={drafts.zones.eta_days} onChange={(e) => setDrafts({ ...drafts, zones: { ...drafts.zones, eta_days: e.target.value } })} placeholder="Délai (ex : 2-4)" className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
+            <button type="submit" className="flex items-center justify-center gap-1.5 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground md:col-span-4">
+              <Plus className="h-4 w-4" /> Ajouter la zone
+            </button>
+          </form>
+          <div className="space-y-2">
+            {zones.map((z) => (
+              <div key={z.id} className="flex items-center justify-between rounded-xl border border-border bg-card p-3.5">
+                <div>
+                  <p className="flex items-center gap-2 text-sm font-semibold"><MapPin className="h-4 w-4 text-primary" /> {z.name}</p>
+                  <p className="text-[11px] text-muted-foreground">{z.city}, {z.country} · {formatUSD(z.fee_usd)} · {z.eta_days} jours</p>
+                </div>
+                <button type="button" onClick={() => removeZone(z)} className="rounded-lg p-2 text-destructive hover:bg-secondary" aria-label="Supprimer">
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {tab === 'pickups' && (
+        <>
+          <form onSubmit={addPickup} className="grid gap-3 rounded-2xl border border-border bg-card p-4 md:grid-cols-3">
+            <input value={drafts.pickups.name} onChange={(e) => setDrafts({ ...drafts, pickups: { ...drafts.pickups, name: e.target.value } })} placeholder="Nom du point relais" required className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
+            <select value={drafts.pickups.city} onChange={(e) => setDrafts({ ...drafts, pickups: { ...drafts.pickups, city: e.target.value } })} className="h-11 rounded-lg border border-border bg-background px-3 text-sm">
+              {getCities().map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+            <input value={drafts.pickups.commune} onChange={(e) => setDrafts({ ...drafts, pickups: { ...drafts.pickups, commune: e.target.value } })} placeholder="Commune" className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
+            <input value={drafts.pickups.address} onChange={(e) => setDrafts({ ...drafts, pickups: { ...drafts.pickups, address: e.target.value } })} placeholder="Adresse" className="h-11 rounded-lg border border-border bg-background px-3 text-sm md:col-span-2" />
+            <input value={drafts.pickups.phone} onChange={(e) => setDrafts({ ...drafts, pickups: { ...drafts.pickups, phone: e.target.value } })} placeholder="Téléphone" className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
+            <button type="submit" className="flex items-center justify-center gap-1.5 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground md:col-span-3">
+              <Plus className="h-4 w-4" /> Ajouter le point de retrait
+            </button>
+          </form>
+          <div className="space-y-2">
+            {pickups.map((p) => (
+              <div key={p.id} className="flex items-center justify-between rounded-xl border border-border bg-card p-3.5">
+                <div>
+                  <p className="flex items-center gap-2 text-sm font-semibold"><Store className="h-4 w-4 text-primary" /> {p.name}</p>
+                  <p className="text-[11px] text-muted-foreground">{p.address}, {p.commune} · {p.city} · {p.phone} · {formatUSD(p.fee_usd)}</p>
+                </div>
+                <button type="button" onClick={() => removePickup(p)} className="rounded-lg p-2 text-destructive hover:bg-secondary" aria-label="Supprimer">
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}

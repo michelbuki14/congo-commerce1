@@ -1,0 +1,37 @@
+{
+  "name": "AuditLog",
+  "type": "object",
+  "properties": {
+    "action": {
+      "type": "string"
+    },
+    "actor": {
+      "type": "string",
+      "default": "system"
+    },
+    "entity": {
+      "type": "string"
+    },
+    "entity_id": {
+      "type": "string"
+    },
+    "reference": {
+      "type": "string"
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "info",
+        "warning",
+        "critical"
+      ],
+      "default": "info"
+    },
+    "details": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "action"
+  ]
+}

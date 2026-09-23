@@ -1,0 +1,80 @@
+{
+  "name": "WalletTransaction",
+  "type": "object",
+  "properties": {
+    "wallet_id": {
+      "type": "string"
+    },
+    "owner_type": {
+      "type": "string"
+    },
+    "owner_name": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "CREDIT",
+        "DEBIT",
+        "REFUND",
+        "COMMISSION",
+        "PAYOUT",
+        "ADJUSTMENT"
+      ],
+      "default": "CREDIT"
+    },
+    "direction": {
+      "type": "string",
+      "enum": [
+        "credit",
+        "debit"
+      ],
+      "default": "credit"
+    },
+    "amount_usd": {
+      "type": "number",
+      "default": 0
+    },
+    "amount_cdf": {
+      "type": "number",
+      "default": 0
+    },
+    "balance_after_usd": {
+      "type": "number",
+      "default": 0
+    },
+    "currency": {
+      "type": "string",
+      "default": "USD"
+    },
+    "description": {
+      "type": "string"
+    },
+    "reference": {
+      "type": "string"
+    },
+    "order_id": {
+      "type": "string"
+    },
+    "order_number": {
+      "type": "string"
+    },
+    "idempotency_key": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "posted",
+        "pending",
+        "reversed"
+      ],
+      "default": "posted"
+    }
+  },
+  "required": [
+    "wallet_id",
+    "type",
+    "amount_usd"
+  ]
+}

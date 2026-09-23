@@ -1,0 +1,62 @@
+{
+  "name": "Wallet",
+  "type": "object",
+  "properties": {
+    "owner_type": {
+      "type": "string",
+      "enum": [
+        "customer",
+        "seller",
+        "creator",
+        "courier",
+        "platform"
+      ],
+      "default": "customer"
+    },
+    "owner_id": {
+      "type": "string"
+    },
+    "owner_name": {
+      "type": "string"
+    },
+    "owner_email": {
+      "type": "string"
+    },
+    "balance_usd": {
+      "type": "number",
+      "default": 0
+    },
+    "balance_cdf": {
+      "type": "number",
+      "default": 0
+    },
+    "pending_usd": {
+      "type": "number",
+      "default": 0
+    },
+    "lifetime_credit_usd": {
+      "type": "number",
+      "default": 0
+    },
+    "lifetime_debit_usd": {
+      "type": "number",
+      "default": 0
+    },
+    "currency": {
+      "type": "string",
+      "default": "USD"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "frozen"
+      ],
+      "default": "active"
+    }
+  },
+  "required": [
+    "owner_type",
+    "owner_name"
+  ]
+}

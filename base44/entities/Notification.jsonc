@@ -1,0 +1,46 @@
+{
+  "name": "Notification",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "message": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "order",
+        "promo",
+        "system",
+        "payment",
+        "social"
+      ],
+      "default": "system"
+    },
+    "audience": {
+      "type": "string",
+      "enum": [
+        "customer",
+        "seller",
+        "admin"
+      ],
+      "default": "customer"
+    },
+    "order_number": {
+      "type": "string"
+    },
+    "read": {
+      "type": "boolean",
+      "default": false
+    },
+    "is_demo": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "title"
+  ]
+}

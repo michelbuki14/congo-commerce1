@@ -1,0 +1,43 @@
+{
+  "name": "Shipment",
+  "type": "object",
+  "properties": {
+    "fulfillment_order_id": {
+      "type": "string"
+    },
+    "order_number": {
+      "type": "string"
+    },
+    "courier_id": {
+      "type": "string"
+    },
+    "courier_name": {
+      "type": "string"
+    },
+    "tracking_number": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "default": "PENDING"
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "proof_of_delivery": {
+      "type": "string"
+    },
+    "delivered_to": {
+      "type": "string"
+    },
+    "delivered_at": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "order_number"
+  ]
+}

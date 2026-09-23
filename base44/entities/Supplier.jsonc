@@ -1,0 +1,75 @@
+{
+  "name": "Supplier",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "code": {
+      "type": "string"
+    },
+    "adapter": {
+      "type": "string",
+      "enum": [
+        "mock_supplier_a",
+        "mock_supplier_b",
+        "mock_supplier_c",
+        "manual"
+      ],
+      "default": "manual"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "local_warehouse",
+        "international"
+      ],
+      "default": "international"
+    },
+    "country": {
+      "type": "string",
+      "default": "CN"
+    },
+    "logo_url": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "is_mock": {
+      "type": "boolean",
+      "default": true
+    },
+    "avg_shipping_days": {
+      "type": "number",
+      "default": 18
+    },
+    "shipping_base_usd": {
+      "type": "number",
+      "default": 9
+    },
+    "import_cost_percent": {
+      "type": "number",
+      "default": 7
+    },
+    "default_markup_percent": {
+      "type": "number",
+      "default": 45
+    },
+    "products_count": {
+      "type": "number",
+      "default": 0
+    },
+    "last_sync_at": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "code"
+  ]
+}

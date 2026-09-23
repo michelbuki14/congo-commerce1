@@ -1,0 +1,36 @@
+{
+  "name": "DeliveryZone",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "city": {
+      "type": "string"
+    },
+    "country": {
+      "type": "string",
+      "default": "CD"
+    },
+    "fee_usd": {
+      "type": "number",
+      "default": 2.5
+    },
+    "eta_days": {
+      "type": "string",
+      "default": "2-4"
+    },
+    "supports_pickup": {
+      "type": "boolean",
+      "default": true
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "name",
+    "city"
+  ]
+}

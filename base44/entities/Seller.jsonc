@@ -1,0 +1,77 @@
+{
+  "name": "Seller",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "slug": {
+      "type": "string"
+    },
+    "owner_name": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "city": {
+      "type": "string"
+    },
+    "country": {
+      "type": "string",
+      "default": "CD"
+    },
+    "logo_url": {
+      "type": "string"
+    },
+    "banner_url": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "verified": {
+      "type": "boolean",
+      "default": false
+    },
+    "rating": {
+      "type": "number",
+      "default": 0
+    },
+    "followers_count": {
+      "type": "number",
+      "default": 0
+    },
+    "products_count": {
+      "type": "number",
+      "default": 0
+    },
+    "orders_count": {
+      "type": "number",
+      "default": 0
+    },
+    "delivery_info": {
+      "type": "string"
+    },
+    "commission_rate": {
+      "type": "number",
+      "default": 10
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "active",
+        "suspended"
+      ],
+      "default": "active"
+    }
+  },
+  "required": [
+    "name",
+    "slug"
+  ]
+}

@@ -6,7 +6,51 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ScrollToTop from './components/ScrollToTop';
-// Add page imports here
+import { CartProvider } from '@/lib/cart';
+import { CurrencyProvider } from '@/lib/currency';
+import AppLayout from '@/components/layout/AppLayout';
+
+// Customer
+import Home from '@/pages/Home';
+import Discover from '@/pages/Discover';
+import Categories from '@/pages/Categories';
+import Search from '@/pages/Search';
+import ProductDetail from '@/pages/ProductDetail';
+import Store from '@/pages/Store';
+import Cart from '@/pages/Cart';
+import Checkout from '@/pages/Checkout';
+import OrderConfirmation from '@/pages/OrderConfirmation';
+import TrackOrder from '@/pages/TrackOrder';
+import Wishlist from '@/pages/Wishlist';
+import Profile from '@/pages/Profile';
+import Wallet from '@/pages/Wallet';
+import Coupons from '@/pages/Coupons';
+import Referral from '@/pages/Referral';
+import Returns from '@/pages/Returns';
+import Notifications from '@/pages/Notifications';
+import Support from '@/pages/Support';
+
+// Seller
+import SellerDashboard from '@/pages/seller/SellerDashboard';
+import SellerProducts from '@/pages/seller/SellerProducts';
+import SellerOrders from '@/pages/seller/SellerOrders';
+import SellerImport from '@/pages/seller/SellerImport';
+import SellerWallet from '@/pages/seller/SellerWallet';
+import SellerSettings from '@/pages/seller/SellerSettings';
+
+// Admin
+import AdminDashboard from '@/pages/admin/AdminDashboard';
+import AdminProducts from '@/pages/admin/AdminProducts';
+import AdminSuppliers from '@/pages/admin/AdminSuppliers';
+import AdminOrders from '@/pages/admin/AdminOrders';
+import AdminReturns from '@/pages/admin/AdminReturns';
+import AdminUsers from '@/pages/admin/AdminUsers';
+import AdminLogistics from '@/pages/admin/AdminLogistics';
+import AdminPromotions from '@/pages/admin/AdminPromotions';
+import AdminSettings from '@/pages/admin/AdminSettings';
+
+// Creator
+import CreatorDashboard from '@/pages/CreatorDashboard';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -34,7 +78,44 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <Routes>
-      {/* Add your page Route elements here */}
+      <Route element={<AppLayout />}>
+        <Route path="/" element={<Home />} />
+        <Route path="/discover" element={<Discover />} />
+        <Route path="/categories" element={<Categories />} />
+        <Route path="/search" element={<Search />} />
+        <Route path="/product/:id" element={<ProductDetail />} />
+        <Route path="/store/:slug" element={<Store />} />
+        <Route path="/cart" element={<Cart />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/order/:id" element={<OrderConfirmation />} />
+        <Route path="/track" element={<TrackOrder />} />
+        <Route path="/wishlist" element={<Wishlist />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/wallet" element={<Wallet />} />
+        <Route path="/coupons" element={<Coupons />} />
+        <Route path="/referral" element={<Referral />} />
+        <Route path="/returns" element={<Returns />} />
+        <Route path="/notifications" element={<Notifications />} />
+        <Route path="/support" element={<Support />} />
+        <Route path="/creator" element={<CreatorDashboard />} />
+
+        <Route path="/seller" element={<SellerDashboard />} />
+        <Route path="/seller/products" element={<SellerProducts />} />
+        <Route path="/seller/orders" element={<SellerOrders />} />
+        <Route path="/seller/import" element={<SellerImport />} />
+        <Route path="/seller/wallet" element={<SellerWallet />} />
+        <Route path="/seller/settings" element={<SellerSettings />} />
+
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/products" element={<AdminProducts />} />
+        <Route path="/admin/suppliers" element={<AdminSuppliers />} />
+        <Route path="/admin/orders" element={<AdminOrders />} />
+        <Route path="/admin/returns" element={<AdminReturns />} />
+        <Route path="/admin/users" element={<AdminUsers />} />
+        <Route path="/admin/logistics" element={<AdminLogistics />} />
+        <Route path="/admin/promotions" element={<AdminPromotions />} />
+        <Route path="/admin/settings" element={<AdminSettings />} />
+      </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
@@ -48,7 +129,11 @@ function App() {
       <QueryClientProvider client={queryClientInstance}>
         <Router>
           <ScrollToTop />
-          <AuthenticatedApp />
+          <CartProvider>
+            <CurrencyProvider>
+              <AuthenticatedApp />
+            </CurrencyProvider>
+          </CartProvider>
         </Router>
         <Toaster />
       </QueryClientProvider>

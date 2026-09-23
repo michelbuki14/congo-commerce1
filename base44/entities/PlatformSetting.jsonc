@@ -1,0 +1,25 @@
+{
+  "name": "PlatformSetting",
+  "type": "object",
+  "properties": {
+    "key": {
+      "type": "string"
+    },
+    "label": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "group": {
+      "type": "string",
+      "default": "general"
+    },
+    "value": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "key"
+  ]
+}

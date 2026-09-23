@@ -1,0 +1,38 @@
+{
+  "name": "AffiliateClick",
+  "type": "object",
+  "properties": {
+    "creator_id": {
+      "type": "string"
+    },
+    "creator_name": {
+      "type": "string"
+    },
+    "referral_code": {
+      "type": "string"
+    },
+    "session_id": {
+      "type": "string"
+    },
+    "product_id": {
+      "type": "string"
+    },
+    "product_title": {
+      "type": "string"
+    },
+    "converted": {
+      "type": "boolean",
+      "default": false
+    },
+    "order_number": {
+      "type": "string"
+    },
+    "commission_usd": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "referral_code"
+  ]
+}

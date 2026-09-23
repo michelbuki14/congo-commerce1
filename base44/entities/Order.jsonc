@@ -1,0 +1,128 @@
+{
+  "name": "Order",
+  "type": "object",
+  "properties": {
+    "order_number": {
+      "type": "string"
+    },
+    "session_id": {
+      "type": "string"
+    },
+    "customer_name": {
+      "type": "string"
+    },
+    "customer_phone": {
+      "type": "string"
+    },
+    "customer_email": {
+      "type": "string"
+    },
+    "city": {
+      "type": "string"
+    },
+    "address": {
+      "type": "string"
+    },
+    "delivery_method": {
+      "type": "string",
+      "enum": [
+        "home_delivery",
+        "pickup_point"
+      ],
+      "default": "home_delivery"
+    },
+    "pickup_point_id": {
+      "type": "string"
+    },
+    "pickup_point_name": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "subtotal_usd": {
+      "type": "number",
+      "default": 0
+    },
+    "shipping_usd": {
+      "type": "number",
+      "default": 0
+    },
+    "discount_usd": {
+      "type": "number",
+      "default": 0
+    },
+    "total_usd": {
+      "type": "number",
+      "default": 0
+    },
+    "total_cdf": {
+      "type": "number",
+      "default": 0
+    },
+    "currency": {
+      "type": "string",
+      "default": "USD"
+    },
+    "payment_method": {
+      "type": "string"
+    },
+    "payment_provider": {
+      "type": "string"
+    },
+    "payment_status": {
+      "type": "string",
+      "enum": [
+        "PENDING",
+        "AUTHORIZED",
+        "PAID",
+        "FAILED",
+        "REFUNDED",
+        "PARTIALLY_REFUNDED",
+        "CANCELLED"
+      ],
+      "default": "PENDING"
+    },
+    "payment_reference": {
+      "type": "string"
+    },
+    "coupon_code": {
+      "type": "string"
+    },
+    "affiliate_code": {
+      "type": "string"
+    },
+    "creator_id": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "PENDING",
+        "CONFIRMED",
+        "PROCESSING",
+        "SHIPPED",
+        "DELIVERED",
+        "CANCELLED"
+      ],
+      "default": "PENDING"
+    },
+    "fulfillment_count": {
+      "type": "number",
+      "default": 0
+    },
+    "is_demo": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "order_number"
+  ]
+}
