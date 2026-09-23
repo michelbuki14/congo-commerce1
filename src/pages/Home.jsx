@@ -21,19 +21,22 @@ export default function Home() {
   useEffect(() => {
     let alive = true;
     (async () => {
-      await loadPlatformConfig();
-      const [p, c, s, ct] = await Promise.all([
-        base44.entities.Product.filter({ status: 'published' }, '-created_date', 60),
-        base44.entities.Category.list('sort_order', 20),
-        base44.entities.Seller.filter({ status: 'active' }, '-rating', 8),
-        base44.entities.Content.filter({ status: 'published' }, '-likes_count', 10),
-      ]);
-      if (!alive) return;
-      setProducts(p);
-      setCategories(c);
-      setSellers(s);
-      setContent(ct);
-      setLoading(false);
+      try {
+        await loadPlatformConfig();
+        const [p, c, s, ct] = await Promise.all([
+          base44.entities.Product.filter({ status: 'published' }, '-created_date', 60),
+          base44.entities.Category.list('sort_order', 20),
+          base44.entities.Seller.filter({ status: 'active' }, '-rating', 8),
+          base44.entities.Content.filter({ status: 'published' }, '-likes_count', 10),
+        ]);
+        if (!alive) return;
+        setProducts(p);
+        setCategories(c);
+        setSellers(s);
+        setContent(ct);
+      } finally {
+        if (alive) setLoading(false);
+      }
     })();
     return () => {
       alive = false;

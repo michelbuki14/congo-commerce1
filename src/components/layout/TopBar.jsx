@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Search, ShoppingBag, Heart, Bell, Store, ShieldCheck } from 'lucide-react';
 import { useCart } from '@/lib/cart';
 import CurrencyToggle from '@/components/CurrencyToggle';
+import BrandLogo from '@/components/BrandLogo';
 
 export default function TopBar() {
   const navigate = useNavigate();
@@ -17,13 +18,8 @@ export default function TopBar() {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur">
       <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-3 py-2.5 md:px-6">
-        <Link to="/" className="flex shrink-0 items-center gap-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-black text-primary-foreground">
-            CC
-          </span>
-          <span className="hidden text-base font-black leading-none tracking-tight sm:block">
-            Congo<span className="text-primary">Commerce</span>
-          </span>
+        <Link to="/" className="flex shrink-0 items-center" aria-label="Congo Commerce">
+          <BrandLogo />
         </Link>
 
         <form onSubmit={submit} className="relative flex-1">
