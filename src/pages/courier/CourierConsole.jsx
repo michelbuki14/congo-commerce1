@@ -84,6 +84,7 @@ export default function CourierConsole() {
     try {
       const updated = await respondToShipment({ shipment, accepted });
       setShipments((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+      if (accepted) setTab('active');
     } finally {
       setBusy('');
     }
