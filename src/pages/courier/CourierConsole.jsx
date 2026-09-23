@@ -163,6 +163,10 @@ export default function CourierConsole() {
         ))}
       </div>
 
+      {error && (
+        <p className="rounded-xl border border-destructive bg-card p-3 text-xs font-medium text-destructive">{error}</p>
+      )}
+
       {loading ? (
         <div className="h-40 animate-pulse rounded-2xl bg-secondary" />
       ) : visible.length === 0 ? (
