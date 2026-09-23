@@ -52,6 +52,9 @@ import AdminSettings from '@/pages/admin/AdminSettings';
 // Creator
 import CreatorDashboard from '@/pages/CreatorDashboard';
 
+// Courier
+import CourierConsole from '@/pages/courier/CourierConsole';
+
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
 
@@ -98,6 +101,7 @@ const AuthenticatedApp = () => {
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/support" element={<Support />} />
         <Route path="/creator" element={<CreatorDashboard />} />
+        <Route path="/courier" element={<CourierConsole />} />
 
         <Route path="/seller" element={<SellerDashboard />} />
         <Route path="/seller/products" element={<SellerProducts />} />

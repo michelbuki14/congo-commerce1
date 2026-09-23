@@ -511,3 +511,56 @@ export async function advanceFulfillment(fulfillment, status) {
   }
   return updated;
 }
+
+/** Courier accepts or declines an offered delivery job. */
+export async function respondToShipment({ shipment, accepted }) {
+  const events = [
+    ...(shipment.events || []),
+    {
+      status: shipment.status,
+      label: accepted ? 'Course acceptée par le transporteur' : 'Course refusée par le transporteur',
+      at: new Date().toISOString(),
+    },
+  ];
+  return base44.entities.Shipment.update(shipment.id, {
+    courier_response: accepted ? 'accepted' : 'declined',
+    events,
+  });
+}
+
+/** Pays the courier the delivery fee of a completed course. Ledger-only, never a direct balance write. */
+async function creditCourierEarnings(fulfillment) {
+  const amount = round2(Number(fulfillment.shipping_usd) || 0);
+  if (amount <= 0 || !fulfillment.courier_name) return;
+  const wallet = await getOrCreateWallet('courier', fulfillment.courier_name, '', fulfillment.courier_id);
+  await postTransaction(wallet, {
+    type: 'PAYOUT',
+    direction: 'credit',
+    amount,
+    description: `Course livrée — ${fulfillment.fulfillment_number}`,
+    reference: fulfillment.fulfillment_number,
+    orderId: fulfillment.order_id || '',
+    orderNumber: fulfillment.order_number || '',
+    idempotencyKey: `courier:${fulfillment.fulfillment_number}`,
+  });
+}
+
+/**
+ * Courier-side transition. Mirrors the shipment status onto its fulfillment order,
+ * releases the seller payout on delivery, and credits the courier's earnings.
+ */
+export async function courierUpdateShipment({ shipment, fulfillment, status, label, extra = {} }) {
+  const events = [
+    ...(shipment.events || []),
+    { status, label: label || status, at: new Date().toISOString() },
+  ];
+  await base44.entities.Shipment.update(shipment.id, { status, events, ...extra });
+  if (fulfillment) {
+    await base44.entities.FulfillmentOrder.update(fulfillment.id, { status });
+    if (status === 'DELIVERED' && shipment.status !== 'DELIVERED') {
+      await releaseFulfillmentPayout(fulfillment);
+      await creditCourierEarnings(fulfillment);
+    }
+  }
+  return true;
+}

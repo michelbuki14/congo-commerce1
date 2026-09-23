@@ -21,6 +21,15 @@
       "type": "string",
       "default": "PENDING"
     },
+    "courier_response": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "accepted",
+        "declined"
+      ],
+      "default": "pending"
+    },
     "events": {
       "type": "array",
       "items": {

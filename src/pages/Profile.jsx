@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Wallet, Ticket, Gift, RotateCcw, Bell, Headphones, Heart, MapPin, Save, Store, ShieldCheck, Sparkles,
+  Wallet, Ticket, Gift, RotateCcw, Bell, Headphones, Heart, MapPin, Save, Store, ShieldCheck, Sparkles, Truck,
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { getProfile, saveProfile, getOrderIds } from '@/lib/session';
@@ -139,7 +139,7 @@ export default function Profile() {
         ))}
       </section>
 
-      <section className="grid gap-2 md:grid-cols-3">
+      <section className="grid gap-2 md:grid-cols-2">
         <Link to="/seller" className="flex items-center gap-3 rounded-xl border border-border bg-card p-3.5">
           <Store className="h-4 w-4 text-primary" />
           <div>
@@ -152,6 +152,13 @@ export default function Profile() {
           <div>
             <p className="text-sm font-semibold">Espace créateur</p>
             <p className="text-[11px] text-muted-foreground">Affiliation & contenus</p>
+          </div>
+        </Link>
+        <Link to="/courier" className="flex items-center gap-3 rounded-xl border border-border bg-card p-3.5">
+          <Truck className="h-4 w-4 text-primary" />
+          <div>
+            <p className="text-sm font-semibold">Espace livreur</p>
+            <p className="text-[11px] text-muted-foreground">Courses & gains</p>
           </div>
         </Link>
         <Link to="/admin" className="flex items-center gap-3 rounded-xl border border-border bg-card p-3.5">
