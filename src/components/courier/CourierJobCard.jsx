@@ -49,12 +49,12 @@ export default function CourierJobCard({ shipment, fulfillment, order, busy, onR
   };
 
   const confirmDelivery = async () => {
-    await onAdvance(shipment, 'DELIVERED', `Livré à ${recipient || 'client'}`, {
+    const saved = await onAdvance(shipment, 'DELIVERED', `Livré à ${recipient || 'client'}`, {
       delivered_to: recipient,
       delivered_at: new Date().toISOString(),
       proof_of_delivery: proofUri || shipment.proof_of_delivery || '',
     });
-    setProofOpen(false);
+    if (saved) setProofOpen(false);
   };
 
   return (

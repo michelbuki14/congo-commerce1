@@ -19,6 +19,7 @@ export default function CourierConsole() {
   const [tab, setTab] = useState('offers');
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState('');
+  const [error, setError] = useState('');
 
   useEffect(() => {
     base44.entities.Courier.list('name', 50)
@@ -81,10 +82,15 @@ export default function CourierConsole() {
 
   const respond = async (shipment, accepted) => {
     setBusy(shipment.id);
+    setError('');
     try {
       const updated = await respondToShipment({ shipment, accepted });
       setShipments((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
       if (accepted) setTab('active');
+      return true;
+    } catch (e) {
+      setError("L'action n'a pas pu être enregistrée. Vérifiez votre connexion et réessayez.");
+      return false;
     } finally {
       setBusy('');
     }
@@ -92,6 +98,7 @@ export default function CourierConsole() {
 
   const advance = async (shipment, status, label, extra) => {
     setBusy(shipment.id);
+    setError('');
     try {
       await courierUpdateShipment({
         shipment,
@@ -101,6 +108,10 @@ export default function CourierConsole() {
         extra,
       });
       await load(selected);
+      return true;
+    } catch (e) {
+      setError("L'action n'a pas pu être enregistrée. Vérifiez votre connexion et réessayez.");
+      return false;
     } finally {
       setBusy('');
     }
