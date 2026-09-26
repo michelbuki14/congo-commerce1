@@ -25,6 +25,7 @@ export default function ProductDetail() {
   const [product, setProduct] = useState(null);
   const [related, setRelated] = useState([]);
   const [zone, setZone] = useState(null);
+  const [sellerSlug, setSellerSlug] = useState('');
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
@@ -51,13 +52,15 @@ export default function ProductDetail() {
         setSelection(initial);
 
         const city = getProfile().city;
-        const [rel, zones] = await Promise.all([
+        const [rel, zones, seller] = await Promise.all([
           base44.entities.Product.filter({ category_id: p.category_id, status: 'published' }, '-sold_count', 12).catch(() => []),
           base44.entities.DeliveryZone.filter({ city }).catch(() => []),
+          p.seller_id ? base44.entities.Seller.get(p.seller_id).catch(() => null) : Promise.resolve(null),
         ]);
         if (!alive) return;
         setRelated(rel.filter((r) => r.id !== p.id).slice(0, 8));
         setZone(zones[0] || null);
+        setSellerSlug(seller?.slug || '');
       } catch {
         if (alive) setNotFound(true);
       } finally {
@@ -272,9 +275,9 @@ export default function ProductDetail() {
 
           <PriceBreakdown breakdown={breakdown} />
 
-          {product.seller_id && (
+          {product.seller_id && sellerSlug && (
             <Link
-              to={`/store/${product.seller_slug || product.seller_id}`}
+              to={`/store/${sellerSlug}`}
               className="flex items-center gap-3 rounded-xl border border-border bg-card p-3"
             >
               <StoreIcon className="h-5 w-5 text-primary" />
