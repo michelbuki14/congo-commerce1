@@ -314,7 +314,7 @@ export default function Checkout() {
           <input
             value={couponInput}
             onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-            placeholder="Ex : BIENVENUE10"
+            placeholder="Saisissez votre code"
             className="h-11 flex-1 rounded-lg border border-border bg-background px-3 text-sm uppercase"
           />
           <button type="button" onClick={applyCoupon} className="rounded-lg bg-secondary px-4 text-sm font-semibold">
