@@ -10,13 +10,14 @@ import { getProfile, isWishlisted, toggleWishlist } from '@/lib/session';
 import RatingStars from '@/components/RatingStars';
 import QuantityStepper from '@/components/QuantityStepper';
 import PriceBreakdown from '@/components/PriceBreakdown';
+import MobileActionBar from '@/components/MobileActionBar';
 import ProductRow from '@/components/ProductRow';
 import ProductReviews from '@/components/ProductReviews';
 import SectionHeader from '@/components/SectionHeader';
 import { compactNumber } from '@/lib/format';
 
 export default function ProductDetail() {
-  const { id } = useParams();
+  const { slug } = useParams();
   const navigate = useNavigate();
   const { addItem } = useCart();
   const { format } = useCurrency();
@@ -38,7 +39,8 @@ export default function ProductDetail() {
     setNotFound(false);
     (async () => {
       try {
-        const p = await base44.entities.Product.get(id);
+        const bySlug = await base44.entities.Product.filter({ slug });
+        const p = bySlug[0] || (await base44.entities.Product.get(slug));
         if (!alive) return;
         setProduct(p);
         setLiked(isWishlisted(p.id));
@@ -65,7 +67,7 @@ export default function ProductDetail() {
     return () => {
       alive = false;
     };
-  }, [id]);
+  }, [slug]);
 
   const breakdown = useMemo(() => (product ? computePriceBreakdown(product) : null), [product]);
 
@@ -119,7 +121,7 @@ export default function ProductDetail() {
   const outOfStock = Number(product.stock) <= 0;
 
   return (
-    <div className="space-y-6 pb-6">
+    <div className="space-y-6 pb-28 md:pb-6">
       {toast && (
         <div className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 rounded-full bg-foreground px-4 py-2 text-xs font-semibold text-background">
           {toast}
@@ -220,7 +222,7 @@ export default function ProductDetail() {
             </span>
           </div>
 
-          <div className="flex gap-2">
+          <div className="hidden gap-2 md:flex">
             <button
               type="button"
               disabled={outOfStock}
@@ -319,6 +321,26 @@ export default function ProductDetail() {
           <ProductRow products={related} />
         </section>
       )}
+
+      <MobileActionBar>
+        <span className="shrink-0 text-base font-black">{format(product.price_usd)}</span>
+        <button
+          type="button"
+          disabled={outOfStock}
+          onClick={() => add(false)}
+          className="flex-1 rounded-full border border-primary py-2.5 text-sm font-semibold text-primary disabled:opacity-40"
+        >
+          Ajouter
+        </button>
+        <button
+          type="button"
+          disabled={outOfStock}
+          onClick={() => add(true)}
+          className="flex-1 rounded-full bg-primary py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-40"
+        >
+          Acheter
+        </button>
+      </MobileActionBar>
     </div>
   );
 }

@@ -56,11 +56,11 @@ export default function Cart() {
       <div className="space-y-2.5">
         {items.map((item) => (
           <div key={`${item.product_id}-${item.variant || ''}`} className="flex gap-3 rounded-xl border border-border bg-card p-2.5">
-            <Link to={`/product/${item.product_id}`} className="h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-secondary">
+            <Link to={`/product/${item.slug || item.product_id}`} className="h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-secondary">
               <Image src={item.image} alt={item.title} className="h-full w-full object-cover" />
             </Link>
             <div className="min-w-0 flex-1">
-              <Link to={`/product/${item.product_id}`} className="line-clamp-2 text-sm font-medium">
+              <Link to={`/product/${item.slug || item.product_id}`} className="line-clamp-2 text-sm font-medium">
                 {item.title}
               </Link>
               {item.variant && <p className="text-[11px] text-muted-foreground">{item.variant}</p>}

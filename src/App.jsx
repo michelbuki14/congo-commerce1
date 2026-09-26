@@ -99,11 +99,11 @@ const AuthenticatedApp = () => {
         <Route path="/discover" element={<Discover />} />
         <Route path="/categories" element={<Categories />} />
         <Route path="/search" element={<Search />} />
-        <Route path="/product/:id" element={<ProductDetail />} />
+        <Route path="/product/:slug" element={<ProductDetail />} />
         <Route path="/store/:slug" element={<Store />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/checkout" element={<Checkout />} />
-        <Route path="/order/:id" element={<OrderConfirmation />} />
+        <Route path="/order/:number" element={<OrderConfirmation />} />
         <Route path="/track" element={<TrackOrder />} />
         <Route path="/wishlist" element={<Wishlist />} />
         <Route path="/profile" element={<Profile />} />

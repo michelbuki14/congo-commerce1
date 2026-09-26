@@ -8,7 +8,7 @@ import { formatUSD, formatDateTime } from '@/lib/format';
 import { SHIPMENT_STATUS_LABELS } from '@/lib/logistics';
 
 export default function OrderConfirmation() {
-  const { id } = useParams();
+  const { number } = useParams();
   const [order, setOrder] = useState(null);
   const [fulfillments, setFulfillments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,7 +17,8 @@ export default function OrderConfirmation() {
   useEffect(() => {
     (async () => {
       try {
-        const o = await base44.entities.Order.get(id);
+        const byNumber = await base44.entities.Order.filter({ order_number: number });
+        const o = byNumber[0] || (await base44.entities.Order.get(number));
         const f = await base44.entities.FulfillmentOrder.filter({ order_id: o.id }, 'fulfillment_number', 50);
         setOrder(o);
         setFulfillments(f);
@@ -27,7 +28,7 @@ export default function OrderConfirmation() {
         setLoading(false);
       }
     })();
-  }, [id]);
+  }, [number]);
 
   if (loading) {
     return <div className="mx-auto h-64 w-full max-w-2xl animate-pulse rounded-2xl bg-secondary" />;

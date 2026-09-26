@@ -13,6 +13,7 @@ import EmptyState from '@/components/EmptyState';
 import { formatUSD } from '@/lib/format';
 import { splitVat, getVatRate } from '@/lib/tax';
 import CheckoutConsent from '@/components/CheckoutConsent';
+import MobileActionBar from '@/components/MobileActionBar';
 
 export default function Checkout() {
   const { items, clear, count } = useCart();
@@ -130,7 +131,7 @@ export default function Checkout() {
         consent,
       });
       clear();
-      navigate(`/order/${result.order.id}`);
+      navigate(`/order/${result.order.order_number}`);
     } catch (err) {
       setError(err.message || 'Le paiement a échoué. Vérifiez vos informations et réessayez.');
     } finally {
@@ -168,7 +169,7 @@ export default function Checkout() {
   }
 
   return (
-    <form onSubmit={submit} className="space-y-5 pb-6">
+    <form onSubmit={submit} className="space-y-5 pb-28 md:pb-6">
       <h1 className="text-lg font-bold md:text-xl">Paiement</h1>
 
       {error && (
@@ -397,11 +398,26 @@ export default function Checkout() {
       <button
         type="submit"
         disabled={submitting || loadingQuote}
-        className="flex w-full items-center justify-center gap-2 rounded-full bg-primary py-4 text-sm font-bold text-primary-foreground disabled:opacity-50"
+        className="hidden w-full items-center justify-center gap-2 rounded-full bg-primary py-4 text-sm font-bold text-primary-foreground disabled:opacity-50 md:flex"
       >
         <ShieldCheck className="h-4 w-4" />
         {submitting ? 'Traitement du paiement…' : `Payer ${quote ? formatUSD(quote.total) : ''}`}
       </button>
+
+      <MobileActionBar>
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Total</p>
+          <p className="text-base font-black leading-tight">{quote ? formatUSD(quote.total) : '—'}</p>
+        </div>
+        <button
+          type="submit"
+          disabled={submitting || loadingQuote}
+          className="flex items-center gap-2 rounded-full bg-primary px-6 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50"
+        >
+          <ShieldCheck className="h-4 w-4" />
+          {submitting ? 'Traitement…' : 'Payer'}
+        </button>
+      </MobileActionBar>
     </form>
   );
 }

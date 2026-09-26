@@ -39,7 +39,8 @@ export default function Discover() {
   };
 
   const share = async (content) => {
-    const url = `${window.location.origin}/product/${content.product_id}`;
+    const product = await base44.entities.Product.get(content.product_id).catch(() => null);
+    const url = `${window.location.origin}/product/${product?.slug || content.product_id}`;
     try {
       if (navigator.share) {
         await navigator.share({ title: content.title, url });

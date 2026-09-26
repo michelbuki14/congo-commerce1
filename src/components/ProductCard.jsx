@@ -22,7 +22,7 @@ export default function ProductCard({ product }) {
 
   return (
     <div className="group relative overflow-hidden rounded-xl border border-border bg-card">
-      <Link to={`/product/${product.id}`} className="block">
+      <Link to={`/product/${product.slug || product.id}`} className="block">
         <div className="relative aspect-square w-full overflow-hidden bg-secondary">
           <Image
             src={product.images?.[0]}

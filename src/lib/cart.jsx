@@ -44,6 +44,7 @@ export function CartProvider({ children }) {
         ...prev,
         {
           product_id: product.id,
+          slug: product.slug || null,
           title: product.title,
           image: product.images?.[0] || '',
           price_usd: Number(product.price_usd) || 0,

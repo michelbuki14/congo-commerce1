@@ -106,7 +106,7 @@ export default function Profile() {
             {orders.map((o) => (
               <Link
                 key={o.id}
-                to={`/order/${o.id}`}
+                to={`/order/${o.order_number}`}
                 className="flex items-center justify-between rounded-xl border border-border px-3 py-2.5"
               >
                 <div>

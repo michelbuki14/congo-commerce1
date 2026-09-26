@@ -51,7 +51,7 @@ export default function Invoice() {
   return (
     <div className="mx-auto max-w-3xl space-y-4 pb-10">
       <div className="flex flex-wrap items-center justify-between gap-2 print:hidden">
-        <Link to={`/order/${order.id}`} className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+        <Link to={`/order/${order.order_number}`} className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
           <ArrowLeft className="h-3.5 w-3.5" /> Retour à la commande
         </Link>
         <button

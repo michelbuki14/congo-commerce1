@@ -200,7 +200,7 @@ export default function TrackOrder() {
             );
           })}
 
-          <Link to={`/order/${order.id}`} className="block rounded-full border border-border bg-card py-3 text-center text-sm font-semibold">
+          <Link to={`/order/${order.order_number}`} className="block rounded-full border border-border bg-card py-3 text-center text-sm font-semibold">
             Voir le détail complet
           </Link>
         </>
