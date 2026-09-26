@@ -78,8 +78,8 @@ export default function Cart() {
                   <button
                     type="button"
                     onClick={() => removeItem(item.product_id, item.variant)}
-                    className="text-muted-foreground hover:text-destructive"
-                    aria-label="Retirer"
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary hover:text-destructive"
+                    aria-label="Retirer du panier"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
