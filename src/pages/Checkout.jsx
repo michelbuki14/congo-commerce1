@@ -11,6 +11,8 @@ import { buildCheckoutQuote, findCoupon, placeOrder } from '@/lib/orderService';
 import { getProfile, saveProfile } from '@/lib/session';
 import EmptyState from '@/components/EmptyState';
 import { formatUSD } from '@/lib/format';
+import { splitVat, getVatRate } from '@/lib/tax';
+import CheckoutConsent from '@/components/CheckoutConsent';
 
 export default function Checkout() {
   const { items, clear, count } = useCart();
@@ -29,13 +31,15 @@ export default function Checkout() {
   const [pickupPoints, setPickupPoints] = useState([]);
   const [quote, setQuote] = useState(null);
   const [loadingQuote, setLoadingQuote] = useState(true);
+  const [consent, setConsent] = useState({ terms: false, marketing: false });
+  const [vatRate, setVatRate] = useState(getVatRate());
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
   const providers = useMemo(() => listPaymentProviders(), []);
 
   useEffect(() => {
-    loadPlatformConfig();
+    loadPlatformConfig().then(() => setVatRate(getVatRate()));
     (async () => {
       const [z, p] = await Promise.all([
         base44.entities.DeliveryZone.filter({ active: true }).catch(() => []),
@@ -103,6 +107,10 @@ export default function Checkout() {
       setError('Choisissez un point de retrait.');
       return;
     }
+    if (!consent.terms) {
+      setError('Vous devez accepter les conditions générales de vente et la politique de confidentialité.');
+      return;
+    }
     setSubmitting(true);
     saveProfile(profile);
     try {
@@ -119,6 +127,7 @@ export default function Checkout() {
         },
         couponCode: coupon?.code || '',
         paymentMethodId: paymentMethod,
+        consent,
       });
       clear();
       navigate(`/order/${result.order.id}`);
@@ -365,6 +374,12 @@ export default function Checkout() {
                 <span className="text-muted-foreground">Livraison</span>
                 <span className="font-semibold">{quote.shipping === 0 ? 'Offerte' : formatUSD(quote.shipping)}</span>
               </div>
+              {vatRate > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">dont TVA ({vatRate} %)</span>
+                  <span className="font-semibold">{formatUSD(splitVat(quote.total, vatRate).vat)}</span>
+                </div>
+              )}
               <div className="flex justify-between border-t border-border pt-2 text-base font-bold">
                 <span>Total</span>
                 <span className="text-primary">{formatUSD(quote.total)}</span>
@@ -376,6 +391,8 @@ export default function Checkout() {
           </>
         )}
       </section>
+
+      <CheckoutConsent value={consent} onChange={setConsent} />
 
       <button
         type="submit"

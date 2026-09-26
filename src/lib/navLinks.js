@@ -8,6 +8,7 @@ export const ADMIN_LINKS = [
   { to: '/admin/logistics', label: 'Logistique' },
   { to: '/admin/promotions', label: 'Promotions' },
   { to: '/admin/users', label: 'Utilisateurs' },
+  { to: '/admin/compliance', label: 'Conformité' },
   { to: '/admin/settings', label: 'Paramètres' },
 ];
 

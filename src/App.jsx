@@ -36,6 +36,10 @@ import Returns from '@/pages/Returns';
 import Disputes from '@/pages/Disputes';
 import Notifications from '@/pages/Notifications';
 import Support from '@/pages/Support';
+import Invoice from '@/pages/Invoice';
+import MentionsLegales from '@/pages/legal/MentionsLegales';
+import CGV from '@/pages/legal/CGV';
+import Confidentialite from '@/pages/legal/Confidentialite';
 
 // Seller
 import SellerDashboard from '@/pages/seller/SellerDashboard';
@@ -56,6 +60,7 @@ import AdminUsers from '@/pages/admin/AdminUsers';
 import AdminLogistics from '@/pages/admin/AdminLogistics';
 import AdminPromotions from '@/pages/admin/AdminPromotions';
 import AdminSettings from '@/pages/admin/AdminSettings';
+import AdminCompliance from '@/pages/admin/AdminCompliance';
 
 // Creator
 import CreatorDashboard from '@/pages/CreatorDashboard';
@@ -109,6 +114,10 @@ const AuthenticatedApp = () => {
         <Route path="/disputes" element={<Disputes />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/support" element={<Support />} />
+        <Route path="/invoice/:id" element={<Invoice />} />
+        <Route path="/mentions-legales" element={<MentionsLegales />} />
+        <Route path="/cgv" element={<CGV />} />
+        <Route path="/confidentialite" element={<Confidentialite />} />
         <Route path="/creator" element={<CreatorDashboard />} />
 
         <Route element={<RequireLogin />}>
@@ -132,6 +141,7 @@ const AuthenticatedApp = () => {
             <Route path="/admin/logistics" element={<AdminLogistics />} />
             <Route path="/admin/promotions" element={<AdminPromotions />} />
             <Route path="/admin/settings" element={<AdminSettings />} />
+            <Route path="/admin/compliance" element={<AdminCompliance />} />
           </Route>
         </Route>
       </Route>

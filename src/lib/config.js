@@ -28,6 +28,34 @@ export const DEFAULT_COUNTRY_CONFIG = {
   cities: ['Kinshasa', 'Lubumbashi', 'Goma', 'Bukavu', 'Matadi', 'Kananga', 'Kisangani', 'Mbuji-Mayi', 'Kolwezi', 'Bunia'],
 };
 
+/** TVA and invoicing rules. */
+export const DEFAULT_TAX_CONFIG = {
+  enabled: true,
+  vat_rate: 16,
+  invoice_note: 'Prix TTC — TVA acquittée sur les encaissements.',
+};
+
+/** Legal identity feeding the legal pages, the footer and every invoice header. */
+export const DEFAULT_COMPANY_CONFIG = {
+  legal_name: '',
+  trade_name: 'Congo Commerce',
+  legal_form: '',
+  rccm: '',
+  nif: '',
+  vat_number: '',
+  capital: '',
+  address: '',
+  city: 'Kinshasa',
+  country: 'République Démocratique du Congo',
+  email: '',
+  phone: '',
+  publisher: '',
+  data_contact: '',
+  host_name: '',
+  host_address: '',
+  host_contact: '',
+};
+
 let cache = null;
 let inflight = null;
 
@@ -37,17 +65,21 @@ export async function loadPlatformConfig(force = false) {
   inflight = (async () => {
     let pricing = DEFAULT_PRICING_CONFIG;
     let country = DEFAULT_COUNTRY_CONFIG;
+    let tax = DEFAULT_TAX_CONFIG;
+    let company = DEFAULT_COMPANY_CONFIG;
     try {
       const rows = await base44.entities.PlatformSetting.list();
       const byKey = {};
       rows.forEach((r) => { byKey[r.key] = r.value || {}; });
       pricing = { ...DEFAULT_PRICING_CONFIG, ...(byKey.pricing || {}) };
       country = { ...DEFAULT_COUNTRY_CONFIG, ...(byKey.country || {}) };
+      tax = { ...DEFAULT_TAX_CONFIG, ...(byKey.tax || {}) };
+      company = { ...DEFAULT_COMPANY_CONFIG, ...(byKey.company || {}) };
     } catch {
       // Settings unavailable — fall back to defaults so the storefront still works.
     }
     setCdfRate(country.usd_to_cdf_rate);
-    cache = { pricing, country };
+    cache = { pricing, country, tax, company };
     return cache;
   })();
   return inflight;
@@ -59,6 +91,14 @@ export function getPricingConfig() {
 
 export function getCountryConfig() {
   return cache?.country || DEFAULT_COUNTRY_CONFIG;
+}
+
+export function getTaxConfig() {
+  return cache?.tax || DEFAULT_TAX_CONFIG;
+}
+
+export function getCompanyConfig() {
+  return cache?.company || DEFAULT_COMPANY_CONFIG;
 }
 
 export function getCities() {

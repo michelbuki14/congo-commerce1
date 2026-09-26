@@ -1,0 +1,48 @@
+{
+  "name": "DataRequest",
+  "type": "object",
+  "properties": {
+    "request_number": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "access",
+        "rectification",
+        "deletion",
+        "opposition"
+      ],
+      "default": "access"
+    },
+    "name": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "details": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "received",
+        "in_progress",
+        "completed",
+        "rejected"
+      ],
+      "default": "received"
+    },
+    "resolution_notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "type",
+    "name"
+  ]
+}

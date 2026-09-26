@@ -158,6 +158,12 @@ export default function OrderConfirmation() {
             <span className="text-muted-foreground">Livraison</span>
             <span>{order.shipping_usd === 0 ? 'Offerte' : formatUSD(order.shipping_usd)}</span>
           </div>
+          {Number(order.vat_usd) > 0 && (
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">dont TVA ({order.vat_rate} %)</span>
+              <span>{formatUSD(order.vat_usd)}</span>
+            </div>
+          )}
           <div className="flex justify-between border-t border-border pt-2 text-base font-bold">
             <span>Total payé</span>
             <span className="text-primary">{formatUSD(order.total_usd)}</span>
@@ -176,6 +182,9 @@ export default function OrderConfirmation() {
       <div className="flex flex-wrap gap-2">
         <Link to="/track" className="rounded-full border border-border bg-card px-5 py-2.5 text-sm font-semibold">
           Suivre une commande
+        </Link>
+        <Link to={`/invoice/${order.id}`} className="rounded-full border border-border bg-card px-5 py-2.5 text-sm font-semibold">
+          Voir la facture
         </Link>
         <Link to="/returns" className="rounded-full border border-border bg-card px-5 py-2.5 text-sm font-semibold">
           Ouvrir un retour

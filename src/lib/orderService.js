@@ -3,6 +3,7 @@ import { getPricingConfig } from './config';
 import { getPaymentProvider } from './payments';
 import { selectCourierFor, getCourier } from './logistics';
 import { round2, usdToCdf } from './format';
+import { splitVat, getVatRate, formatInvoiceNumber } from './tax';
 import { getSessionId, rememberOrder, getReferralCode } from './session';
 
 export function generateOrderNumber() {
@@ -18,6 +19,26 @@ function generateFulfillmentNumber(orderNumber, index) {
 /** 4-digit handover code the customer gives the courier at a pickup point. */
 function generatePickupCode() {
   return String(Math.floor(1000 + Math.random() * 9000));
+}
+
+/** Continuous invoice numbering per year: FA-<année>-<séquence>. */
+async function nextInvoiceNumber() {
+  const year = new Date().getFullYear();
+  const rows = await base44.entities.PlatformSetting.filter({ key: 'invoice_counter' });
+  const current = rows[0];
+  const previous = current?.value?.year === year ? Number(current.value.seq) || 0 : 0;
+  const value = { year, seq: previous + 1 };
+  if (current) {
+    await base44.entities.PlatformSetting.update(current.id, { value });
+  } else {
+    await base44.entities.PlatformSetting.create({
+      key: 'invoice_counter',
+      label: 'Compteur de factures',
+      group: 'compliance',
+      value,
+    });
+  }
+  return formatInvoiceNumber(year, value.seq);
 }
 
 /**
@@ -147,7 +168,7 @@ async function postTransaction(wallet, payload) {
  * MAIN COMMERCE ENGINE ENTRY POINT
  * Order → payment → split fulfillment → ledger. Idempotent per order number.
  */
-export async function placeOrder({ items, profile, delivery, couponCode, paymentMethodId }) {
+export async function placeOrder({ items, profile, delivery, couponCode, paymentMethodId, consent }) {
   const cfg = getPricingConfig();
   const sessionId = getSessionId();
   const provider = getPaymentProvider(paymentMethodId);
@@ -168,6 +189,15 @@ export async function placeOrder({ items, profile, delivery, couponCode, payment
   if (provider.requiresPhone && !profile?.phone) {
     throw new Error(`Un numéro de téléphone est requis pour ${provider.name}.`);
   }
+  if (consent?.terms !== true) {
+    throw new Error('Vous devez accepter les conditions générales de vente et la politique de confidentialité.');
+  }
+
+  // TVA: prices are displayed TTC, so the tax is extracted from the total and
+  // detailed on the invoice — it is never added on top of the customer's price.
+  const vatRate = getVatRate();
+  const { ht: totalHt, vat: vatAmount } = splitVat(quote.total, vatRate);
+  const invoiceNumber = await nextInvoiceNumber();
 
   // ---- 1. Split one customer order into fulfillment orders -----------------
   const groups = new Map();
@@ -251,6 +281,13 @@ export async function placeOrder({ items, profile, delivery, couponCode, payment
     creator_id: creator?.id || '',
     status: 'PENDING',
     fulfillment_count: plan.length,
+    vat_rate: vatRate,
+    vat_usd: vatAmount,
+    total_ht_usd: totalHt,
+    invoice_number: invoiceNumber,
+    consent_terms: true,
+    consent_marketing: consent?.marketing === true,
+    consent_at: new Date().toISOString(),
   });
 
   // ---- 3. Charge through the payment abstraction ---------------------------
@@ -447,7 +484,6 @@ export async function placeOrder({ items, profile, delivery, couponCode, payment
     type: 'order',
     audience: 'customer',
     order_number: orderNumber,
-    is_demo: true,
   });
 
   await base44.entities.AuditLog.create({
@@ -463,6 +499,8 @@ export async function placeOrder({ items, profile, delivery, couponCode, payment
       payment_status: paymentResult.status,
       fulfillments: plan.length,
       affiliate_code: creator?.referral_code || null,
+      invoice_number: invoiceNumber,
+      vat_usd: vatAmount,
     },
   });
 

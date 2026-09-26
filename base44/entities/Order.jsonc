@@ -120,6 +120,32 @@
       "type": "number",
       "default": 0
     },
+    "vat_rate": {
+      "type": "number",
+      "default": 0
+    },
+    "vat_usd": {
+      "type": "number",
+      "default": 0
+    },
+    "total_ht_usd": {
+      "type": "number",
+      "default": 0
+    },
+    "invoice_number": {
+      "type": "string"
+    },
+    "consent_terms": {
+      "type": "boolean",
+      "default": false
+    },
+    "consent_marketing": {
+      "type": "boolean",
+      "default": false
+    },
+    "consent_at": {
+      "type": "string"
+    },
     "is_demo": {
       "type": "boolean",
       "default": false
