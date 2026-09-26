@@ -10,6 +10,8 @@ import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
+import RequireLogin from '@/components/RequireLogin';
+import AdminOnly from '@/components/AdminOnly';
 import { CartProvider } from '@/lib/cart';
 import { CurrencyProvider } from '@/lib/currency';
 import AppLayout from '@/components/layout/AppLayout';
@@ -108,25 +110,30 @@ const AuthenticatedApp = () => {
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/support" element={<Support />} />
         <Route path="/creator" element={<CreatorDashboard />} />
-        <Route path="/courier" element={<CourierConsole />} />
 
-        <Route path="/seller" element={<SellerDashboard />} />
-        <Route path="/seller/products" element={<SellerProducts />} />
-        <Route path="/seller/orders" element={<SellerOrders />} />
-        <Route path="/seller/import" element={<SellerImport />} />
-        <Route path="/seller/wallet" element={<SellerWallet />} />
-        <Route path="/seller/settings" element={<SellerSettings />} />
+        <Route element={<RequireLogin />}>
+          <Route path="/courier" element={<CourierConsole />} />
 
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/admin/products" element={<AdminProducts />} />
-        <Route path="/admin/suppliers" element={<AdminSuppliers />} />
-        <Route path="/admin/orders" element={<AdminOrders />} />
-        <Route path="/admin/returns" element={<AdminReturns />} />
-        <Route path="/admin/payouts" element={<AdminPayouts />} />
-        <Route path="/admin/users" element={<AdminUsers />} />
-        <Route path="/admin/logistics" element={<AdminLogistics />} />
-        <Route path="/admin/promotions" element={<AdminPromotions />} />
-        <Route path="/admin/settings" element={<AdminSettings />} />
+          <Route path="/seller" element={<SellerDashboard />} />
+          <Route path="/seller/products" element={<SellerProducts />} />
+          <Route path="/seller/orders" element={<SellerOrders />} />
+          <Route path="/seller/import" element={<SellerImport />} />
+          <Route path="/seller/wallet" element={<SellerWallet />} />
+          <Route path="/seller/settings" element={<SellerSettings />} />
+
+          <Route element={<AdminOnly />}>
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/products" element={<AdminProducts />} />
+            <Route path="/admin/suppliers" element={<AdminSuppliers />} />
+            <Route path="/admin/orders" element={<AdminOrders />} />
+            <Route path="/admin/returns" element={<AdminReturns />} />
+            <Route path="/admin/payouts" element={<AdminPayouts />} />
+            <Route path="/admin/users" element={<AdminUsers />} />
+            <Route path="/admin/logistics" element={<AdminLogistics />} />
+            <Route path="/admin/promotions" element={<AdminPromotions />} />
+            <Route path="/admin/settings" element={<AdminSettings />} />
+          </Route>
+        </Route>
       </Route>
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />

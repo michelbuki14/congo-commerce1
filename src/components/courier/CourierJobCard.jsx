@@ -22,6 +22,7 @@ export default function CourierJobCard({ shipment, fulfillment, order, busy, onR
   const [recipient, setRecipient] = useState(order?.customer_name || '');
   const [proofUri, setProofUri] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
   const [code, setCode] = useState('');
   const [codeError, setCodeError] = useState('');
 
@@ -33,10 +34,13 @@ export default function CourierJobCard({ shipment, fulfillment, order, busy, onR
 
   const uploadProof = async (file) => {
     if (!file) return;
+    setUploadError('');
     setUploading(true);
     try {
       const res = await base44.integrations.Core.UploadPrivateFile({ file });
       setProofUri(res.file_uri);
+    } catch {
+      setUploadError("La photo n'a pas pu être envoyée. Réessayez.");
     } finally {
       setUploading(false);
     }
@@ -188,12 +192,27 @@ export default function CourierJobCard({ shipment, fulfillment, order, busy, onR
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(e) => uploadProof(e.target.files?.[0])}
+                  onChange={(e) => {
+                    uploadProof(e.target.files?.[0]);
+                    e.target.value = '';
+                  }}
                   className="text-[11px]"
                 />
               </label>
               {uploading && <p className="text-[11px] text-muted-foreground">Envoi de la photo…</p>}
-              {proofUri && <p className="text-[11px] font-medium text-primary">Photo ajoutée</p>}
+              {uploadError && <p className="text-[11px] text-destructive">{uploadError}</p>}
+              {proofUri && (
+                <p className="flex items-center gap-2 text-[11px] font-medium text-primary">
+                  Photo ajoutée
+                  <button
+                    type="button"
+                    onClick={() => setProofUri('')}
+                    className="font-semibold text-muted-foreground underline"
+                  >
+                    Retirer
+                  </button>
+                </p>
+              )}
               <button
                 type="button"
                 disabled={disabled || uploading}
