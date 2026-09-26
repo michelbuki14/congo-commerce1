@@ -94,7 +94,7 @@ export default function Home() {
             {categories.map((c) => (
               <Link
                 key={c.id}
-                to={`/search?category=${c.id}`}
+                to={`/search?category=${c.slug}`}
                 className="shrink-0 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-medium hover:border-primary"
               >
                 {c.name}

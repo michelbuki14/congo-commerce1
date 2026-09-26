@@ -184,7 +184,7 @@ export default function OrderConfirmation() {
         <Link to="/track" className="rounded-full border border-border bg-card px-5 py-2.5 text-sm font-semibold">
           Suivre une commande
         </Link>
-        <Link to={`/invoice/${order.id}`} className="rounded-full border border-border bg-card px-5 py-2.5 text-sm font-semibold">
+        <Link to={`/invoice/${order.order_number}`} className="rounded-full border border-border bg-card px-5 py-2.5 text-sm font-semibold">
           Voir la facture
         </Link>
         <Link to="/returns" className="rounded-full border border-border bg-card px-5 py-2.5 text-sm font-semibold">

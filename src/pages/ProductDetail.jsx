@@ -26,6 +26,7 @@ export default function ProductDetail() {
   const [related, setRelated] = useState([]);
   const [zone, setZone] = useState(null);
   const [sellerSlug, setSellerSlug] = useState('');
+  const [categorySlug, setCategorySlug] = useState('');
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
@@ -52,15 +53,17 @@ export default function ProductDetail() {
         setSelection(initial);
 
         const city = getProfile().city;
-        const [rel, zones, seller] = await Promise.all([
+        const [rel, zones, seller, category] = await Promise.all([
           base44.entities.Product.filter({ category_id: p.category_id, status: 'published' }, '-sold_count', 12).catch(() => []),
           base44.entities.DeliveryZone.filter({ city }).catch(() => []),
           p.seller_id ? base44.entities.Seller.get(p.seller_id).catch(() => null) : Promise.resolve(null),
+          p.category_id ? base44.entities.Category.get(p.category_id).catch(() => null) : Promise.resolve(null),
         ]);
         if (!alive) return;
         setRelated(rel.filter((r) => r.id !== p.id).slice(0, 8));
         setZone(zones[0] || null);
         setSellerSlug(seller?.slug || '');
+        setCategorySlug(category?.slug || '');
       } catch {
         if (alive) setNotFound(true);
       } finally {
@@ -173,8 +176,8 @@ export default function ProductDetail() {
               <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${isIntl ? 'bg-sky-100 text-sky-900' : 'bg-emerald-100 text-emerald-900'}`}>
                 {isIntl ? 'Import international' : 'Vendeur local RDC'}
               </span>
-              {product.category_name && (
-                <Link to={`/search?category=${product.category_id}`} className="text-[11px] text-muted-foreground underline">
+              {product.category_name && categorySlug && (
+                <Link to={`/search?category=${categorySlug}`} className="text-[11px] text-muted-foreground underline">
                   {product.category_name}
                 </Link>
               )}
@@ -320,7 +323,7 @@ export default function ProductDetail() {
 
       {!!related.length && (
         <section>
-          <SectionHeader title="Articles similaires" to={`/search?category=${product.category_id}`} />
+          <SectionHeader title="Articles similaires" to={`/search?category=${categorySlug}`} />
           <ProductRow products={related} />
         </section>
       )}

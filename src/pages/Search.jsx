@@ -71,12 +71,18 @@ export default function Search() {
     setVisible(24);
   }, [params]);
 
+  // The URL carries the category slug; the catalogue stores category ids.
+  const categoryId = useMemo(() => {
+    if (!category) return '';
+    return categories.find((c) => c.slug === category)?.id || category;
+  }, [category, categories]);
+
   const results = useMemo(() => {
     const t = normalize(term.trim());
     let list = products.map((p) => ({ p, s: score(p, t) }));
     if (t) list = list.filter((x) => x.s > 0);
     let out = list.map((x) => x.p);
-    if (category) out = out.filter((p) => p.category_id === category);
+    if (categoryId) out = out.filter((p) => p.category_id === categoryId);
     if (source === 'local') out = out.filter((p) => p.source_type !== 'international_supplier');
     if (source === 'international') out = out.filter((p) => p.source_type === 'international_supplier');
     if (maxPrice) out = out.filter((p) => Number(p.price_usd) <= Number(maxPrice));
@@ -90,7 +96,7 @@ export default function Search() {
     else if (sort === 'sold') sorted.sort((a, b) => (b.sold_count || 0) - (a.sold_count || 0));
     else if (sort === 'new') sorted.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     return sorted;
-  }, [products, term, category, source, sort, maxPrice, minRating, inStock]);
+  }, [products, term, categoryId, source, sort, maxPrice, minRating, inStock]);
 
   const applyTerm = (value) => {
     const next = new URLSearchParams(params);
@@ -156,7 +162,7 @@ export default function Search() {
             >
               <option value="">Toutes</option>
               {categories.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
+                <option key={c.id} value={c.slug}>{c.name}</option>
               ))}
             </select>
           </div>

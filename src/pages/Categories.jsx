@@ -40,7 +40,7 @@ export default function Categories() {
           {categories.map((c) => (
             <Link
               key={c.id}
-              to={`/search?category=${c.id}`}
+              to={`/search?category=${c.slug}`}
               className="group overflow-hidden rounded-xl border border-border bg-card"
             >
               <div className="relative aspect-[4/3] w-full overflow-hidden bg-secondary">

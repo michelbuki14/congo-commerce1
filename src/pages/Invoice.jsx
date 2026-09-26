@@ -8,7 +8,7 @@ import { getCompanyConfig, getTaxConfig } from '@/lib/config';
 import { splitVat, getVatRate } from '@/lib/tax';
 
 export default function Invoice() {
-  const { id } = useParams();
+  const { number } = useParams();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -16,14 +16,15 @@ export default function Invoice() {
   useEffect(() => {
     (async () => {
       try {
-        setOrder(await base44.entities.Order.get(id));
+        const byNumber = await base44.entities.Order.filter({ order_number: number });
+        setOrder(byNumber[0] || (await base44.entities.Order.get(number)));
       } catch {
         setNotFound(true);
       } finally {
         setLoading(false);
       }
     })();
-  }, [id]);
+  }, [number]);
 
   if (loading) {
     return <div className="mx-auto h-64 w-full max-w-3xl animate-pulse rounded-2xl bg-secondary" />;

@@ -114,7 +114,7 @@ const AuthenticatedApp = () => {
         <Route path="/disputes" element={<Disputes />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/support" element={<Support />} />
-        <Route path="/invoice/:id" element={<Invoice />} />
+        <Route path="/invoice/:number" element={<Invoice />} />
         <Route path="/mentions-legales" element={<MentionsLegales />} />
         <Route path="/cgv" element={<CGV />} />
         <Route path="/confidentialite" element={<Confidentialite />} />
