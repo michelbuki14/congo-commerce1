@@ -4,6 +4,7 @@ export const ADMIN_LINKS = [
   { to: '/admin/products', label: 'Produits' },
   { to: '/admin/suppliers', label: 'Fournisseurs' },
   { to: '/admin/returns', label: 'Retours & litiges' },
+  { to: '/admin/payouts', label: 'Retraits' },
   { to: '/admin/logistics', label: 'Logistique' },
   { to: '/admin/promotions', label: 'Promotions' },
   { to: '/admin/users', label: 'Utilisateurs' },

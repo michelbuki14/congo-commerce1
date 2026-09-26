@@ -8,6 +8,9 @@
     "customer_name": {
       "type": "string"
     },
+    "customer_phone": {
+      "type": "string"
+    },
     "seller_name": {
       "type": "string"
     },

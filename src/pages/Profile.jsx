@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Wallet, Ticket, Gift, RotateCcw, Bell, Headphones, Heart, MapPin, Save, Store, ShieldCheck, Sparkles, Truck,
+  Wallet, Ticket, Gift, RotateCcw, Bell, Headphones, Heart, MapPin, Save, Store, ShieldCheck, Sparkles, Truck, Gavel,
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { getProfile, saveProfile, getOrderIds } from '@/lib/session';
@@ -14,6 +14,7 @@ const LINKS = [
   { to: '/coupons', label: 'Codes promo', icon: Ticket },
   { to: '/referral', label: 'Parrainage & commissions', icon: Gift },
   { to: '/returns', label: 'Retours & remboursements', icon: RotateCcw },
+  { to: '/disputes', label: 'Litiges & protection acheteur', icon: Gavel },
   { to: '/notifications', label: 'Notifications', icon: Bell },
   { to: '/wishlist', label: 'Mes favoris', icon: Heart },
   { to: '/track', label: 'Suivre une commande', icon: MapPin },

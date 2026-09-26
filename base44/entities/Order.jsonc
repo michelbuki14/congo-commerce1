@@ -37,6 +37,9 @@
     "pickup_point_name": {
       "type": "string"
     },
+    "pickup_code": {
+      "type": "string"
+    },
     "notes": {
       "type": "string"
     },

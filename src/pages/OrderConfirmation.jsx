@@ -118,6 +118,12 @@ export default function OrderConfirmation() {
             : `${order.address}, ${order.city}`}
         </p>
         <p className="text-xs text-muted-foreground">{order.customer_phone}</p>
+        {order.delivery_method === 'pickup_point' && order.pickup_code && (
+          <div className="rounded-xl border border-primary/30 bg-primary/5 p-3">
+            <p className="text-[11px] font-semibold text-muted-foreground">Code de retrait à présenter au livreur</p>
+            <p className="mt-1 text-2xl font-black tracking-[0.3em] text-primary">{order.pickup_code}</p>
+          </div>
+        )}
         {order.notes && <p className="text-xs text-muted-foreground">Note : {order.notes}</p>}
       </section>
 

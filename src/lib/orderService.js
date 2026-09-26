@@ -15,6 +15,11 @@ function generateFulfillmentNumber(orderNumber, index) {
   return `${orderNumber}-F${index + 1}`;
 }
 
+/** 4-digit handover code the customer gives the courier at a pickup point. */
+function generatePickupCode() {
+  return String(Math.floor(1000 + Math.random() * 9000));
+}
+
 /**
  * Reloads every cart line from the database. Client-supplied prices, stock and
  * supplier costs are ALWAYS discarded — the server records are the truth.
@@ -219,6 +224,7 @@ export async function placeOrder({ items, profile, delivery, couponCode, payment
     delivery_method: delivery.method,
     pickup_point_id: delivery.pickup_point_id || '',
     pickup_point_name: delivery.pickup_point_name || '',
+    pickup_code: delivery.method === 'pickup_point' ? generatePickupCode() : '',
     notes: delivery.notes || '',
     items: quote.lines.map((l) => ({
       product_id: l.product.id,

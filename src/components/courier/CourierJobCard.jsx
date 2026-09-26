@@ -22,6 +22,8 @@ export default function CourierJobCard({ shipment, fulfillment, order, busy, onR
   const [recipient, setRecipient] = useState(order?.customer_name || '');
   const [proofUri, setProofUri] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [code, setCode] = useState('');
+  const [codeError, setCodeError] = useState('');
 
   const accepted = shipment.courier_response === 'accepted';
   const declined = shipment.courier_response === 'declined';
@@ -48,7 +50,14 @@ export default function CourierJobCard({ shipment, fulfillment, order, busy, onR
     window.open(signed_url, '_blank', 'noopener');
   };
 
+  const needsCode = order?.delivery_method === 'pickup_point' && !!order?.pickup_code;
+
   const confirmDelivery = async () => {
+    setCodeError('');
+    if (needsCode && code.trim() !== String(order.pickup_code)) {
+      setCodeError('Code de retrait incorrect. Demandez-le au client avant de valider.');
+      return;
+    }
     const saved = await onAdvance(shipment, 'DELIVERED', `Livré à ${recipient || 'client'}`, {
       delivered_to: recipient,
       delivered_at: new Date().toISOString(),
@@ -161,6 +170,18 @@ export default function CourierJobCard({ shipment, fulfillment, order, busy, onR
                 placeholder="Nom de la personne qui réceptionne"
                 className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
               />
+              {needsCode && (
+                <div className="space-y-1">
+                  <input
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                    inputMode="numeric"
+                    placeholder="Code de retrait à 4 chiffres"
+                    className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
+                  />
+                  {codeError && <p className="text-[11px] text-destructive">{codeError}</p>}
+                </div>
+              )}
               <label className="flex items-center gap-2 text-[11px] text-muted-foreground">
                 <ImageIcon className="h-3.5 w-3.5" />
                 Preuve de livraison (photo)

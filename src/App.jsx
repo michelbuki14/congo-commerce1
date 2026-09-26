@@ -6,6 +6,10 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ScrollToTop from './components/ScrollToTop';
+import Login from '@/pages/Login';
+import Register from '@/pages/Register';
+import ForgotPassword from '@/pages/ForgotPassword';
+import ResetPassword from '@/pages/ResetPassword';
 import { CartProvider } from '@/lib/cart';
 import { CurrencyProvider } from '@/lib/currency';
 import AppLayout from '@/components/layout/AppLayout';
@@ -27,6 +31,7 @@ import Wallet from '@/pages/Wallet';
 import Coupons from '@/pages/Coupons';
 import Referral from '@/pages/Referral';
 import Returns from '@/pages/Returns';
+import Disputes from '@/pages/Disputes';
 import Notifications from '@/pages/Notifications';
 import Support from '@/pages/Support';
 
@@ -44,6 +49,7 @@ import AdminProducts from '@/pages/admin/AdminProducts';
 import AdminSuppliers from '@/pages/admin/AdminSuppliers';
 import AdminOrders from '@/pages/admin/AdminOrders';
 import AdminReturns from '@/pages/admin/AdminReturns';
+import AdminPayouts from '@/pages/admin/AdminPayouts';
 import AdminUsers from '@/pages/admin/AdminUsers';
 import AdminLogistics from '@/pages/admin/AdminLogistics';
 import AdminPromotions from '@/pages/admin/AdminPromotions';
@@ -98,6 +104,7 @@ const AuthenticatedApp = () => {
         <Route path="/coupons" element={<Coupons />} />
         <Route path="/referral" element={<Referral />} />
         <Route path="/returns" element={<Returns />} />
+        <Route path="/disputes" element={<Disputes />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/support" element={<Support />} />
         <Route path="/creator" element={<CreatorDashboard />} />
@@ -115,11 +122,16 @@ const AuthenticatedApp = () => {
         <Route path="/admin/suppliers" element={<AdminSuppliers />} />
         <Route path="/admin/orders" element={<AdminOrders />} />
         <Route path="/admin/returns" element={<AdminReturns />} />
+        <Route path="/admin/payouts" element={<AdminPayouts />} />
         <Route path="/admin/users" element={<AdminUsers />} />
         <Route path="/admin/logistics" element={<AdminLogistics />} />
         <Route path="/admin/promotions" element={<AdminPromotions />} />
         <Route path="/admin/settings" element={<AdminSettings />} />
       </Route>
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
