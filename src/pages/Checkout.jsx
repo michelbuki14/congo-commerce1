@@ -14,6 +14,8 @@ import { formatUSD } from '@/lib/format';
 import { splitVat, getVatRate } from '@/lib/tax';
 import CheckoutConsent from '@/components/CheckoutConsent';
 import MobileActionBar from '@/components/MobileActionBar';
+import MobileMoneyField from '@/components/checkout/MobileMoneyField';
+import { validateMobileMoneyNumber } from '@/lib/mobileMoney';
 
 export default function Checkout() {
   const { items, clear, count } = useCart();
@@ -25,6 +27,7 @@ export default function Checkout() {
   const [pickupPointId, setPickupPointId] = useState('');
   const [notes, setNotes] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('mpesa');
+  const [payPhone, setPayPhone] = useState(() => getProfile().phone || '');
   const [couponInput, setCouponInput] = useState('');
   const [coupon, setCoupon] = useState(null);
   const [couponMessage, setCouponMessage] = useState('');
@@ -38,6 +41,8 @@ export default function Checkout() {
   const [error, setError] = useState('');
 
   const providers = useMemo(() => listPaymentProviders(), []);
+  const activeProvider = providers.find((p) => p.id === paymentMethod) || providers[0];
+  const isMobileMoney = activeProvider?.kind === 'mobile_money';
 
   useEffect(() => {
     loadPlatformConfig().then(() => setVatRate(getVatRate()));
@@ -112,6 +117,15 @@ export default function Checkout() {
       setError('Vous devez accepter les conditions générales de vente et la politique de confidentialité.');
       return;
     }
+    let chargePhone = profile.phone;
+    if (isMobileMoney) {
+      const check = validateMobileMoneyNumber(paymentMethod, payPhone);
+      if (!check.ok) {
+        setError(check.error);
+        return;
+      }
+      chargePhone = check.phone;
+    }
     setSubmitting(true);
     saveProfile(profile);
     try {
@@ -128,6 +142,7 @@ export default function Checkout() {
         },
         couponCode: coupon?.code || '',
         paymentMethodId: paymentMethod,
+        paymentPhone: chargePhone,
         consent,
       });
       clear();
@@ -295,6 +310,15 @@ export default function Checkout() {
             </button>
           ))}
         </div>
+
+        {isMobileMoney && (
+          <MobileMoneyField
+            providerId={paymentMethod}
+            value={payPhone}
+            onChange={setPayPhone}
+            showError={payPhone.replace(/\D/g, '').length >= 9}
+          />
+        )}
       </section>
 
       {/* Fulfillment split preview */}

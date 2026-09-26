@@ -168,10 +168,12 @@ async function postTransaction(wallet, payload) {
  * MAIN COMMERCE ENGINE ENTRY POINT
  * Order → payment → split fulfillment → ledger. Idempotent per order number.
  */
-export async function placeOrder({ items, profile, delivery, couponCode, paymentMethodId, consent }) {
+export async function placeOrder({ items, profile, delivery, couponCode, paymentMethodId, paymentPhone, consent }) {
   const cfg = getPricingConfig();
   const sessionId = getSessionId();
   const provider = getPaymentProvider(paymentMethodId);
+  // The wallet number a gateway debits is not necessarily the delivery phone.
+  const chargePhone = paymentPhone || profile?.phone || '';
   const orderNumber = generateOrderNumber();
 
   let coupon = null;
@@ -186,7 +188,7 @@ export async function placeOrder({ items, profile, delivery, couponCode, payment
   if (coupon && quote.subtotal < (Number(coupon.min_order_usd) || 0)) {
     throw new Error(`Ce code promo nécessite un minimum de ${coupon.min_order_usd} USD d’achat.`);
   }
-  if (provider.requiresPhone && !profile?.phone) {
+  if (provider.requiresPhone && !chargePhone) {
     throw new Error(`Un numéro de téléphone est requis pour ${provider.name}.`);
   }
   if (consent?.terms !== true) {
@@ -248,6 +250,7 @@ export async function placeOrder({ items, profile, delivery, couponCode, payment
     session_id: sessionId,
     customer_name: profile.name,
     customer_phone: profile.phone,
+    payment_phone: provider.kind === 'mobile_money' ? chargePhone : '',
     customer_email: profile.email || '',
     city: profile.city,
     address: delivery.address || profile.address || '',
@@ -296,7 +299,7 @@ export async function placeOrder({ items, profile, delivery, couponCode, payment
     paymentResult = await provider.charge({
       amount: quote.total,
       currency: 'USD',
-      phone: profile.phone,
+      phone: chargePhone,
       orderNumber,
       metadata: { order_id: order.id, session_id: sessionId },
     });

@@ -14,6 +14,9 @@
     "customer_phone": {
       "type": "string"
     },
+    "payment_phone": {
+      "type": "string"
+    },
     "customer_email": {
       "type": "string"
     },
