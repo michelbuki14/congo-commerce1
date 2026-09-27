@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Sparkles, Send } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { shoppingAssistant } from '@/lib/ai';
@@ -52,6 +53,9 @@ export default function ShoppingAssistant() {
       </form>
       {loading && <p className="mt-3 text-xs text-muted-foreground">Recherche en cours…</p>}
       {answer && <p className="mt-3 rounded-xl bg-card p-3 text-xs leading-relaxed">{answer}</p>}
+      <Link to="/assistant" className="mt-3 inline-block text-xs font-semibold underline">
+        Discuter avec l'assistant pour des recommandations personnalisées
+      </Link>
     </div>
   );
 }

@@ -37,6 +37,7 @@ import Disputes from '@/pages/Disputes';
 import Notifications from '@/pages/Notifications';
 import Support from '@/pages/Support';
 import Invoice from '@/pages/Invoice';
+import Assistant from '@/pages/Assistant';
 import MentionsLegales from '@/pages/legal/MentionsLegales';
 import CGV from '@/pages/legal/CGV';
 import Confidentialite from '@/pages/legal/Confidentialite';
@@ -114,6 +115,7 @@ const AuthenticatedApp = () => {
         <Route path="/disputes" element={<Disputes />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/support" element={<Support />} />
+        <Route path="/assistant" element={<Assistant />} />
         <Route path="/invoice/:number" element={<Invoice />} />
         <Route path="/mentions-legales" element={<MentionsLegales />} />
         <Route path="/cgv" element={<CGV />} />
