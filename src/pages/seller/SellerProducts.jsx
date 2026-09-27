@@ -98,6 +98,7 @@ export default function SellerProducts() {
         await base44.entities.Product.update(editingId, payload);
       } else {
         await base44.entities.Product.create({ ...payload, slug: form.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') });
+        base44.analytics.track({ eventName: 'seller_product_published' });
       }
       await load(seller.id);
       setShowForm(false);
