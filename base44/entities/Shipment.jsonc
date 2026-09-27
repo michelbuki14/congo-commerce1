@@ -2,6 +2,10 @@
   "name": "Shipment",
   "type": "object",
   "properties": {
+    "description": {
+      "type": "string",
+      "maxLength": 1000
+    },
     "fulfillment_order_id": {
       "type": "string"
     },

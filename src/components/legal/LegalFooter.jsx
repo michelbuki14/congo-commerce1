@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { getCompanyConfig } from '@/lib/config';
 
 const LINKS = [
+  { to: '/about', label: 'À propos' },
+  { to: '/contact', label: 'Contact' },
   { to: '/mentions-legales', label: 'Mentions légales' },
   { to: '/cgv', label: 'Conditions générales de vente' },
   { to: '/confidentialite', label: 'Confidentialité & données' },

@@ -41,6 +41,8 @@ import Assistant from '@/pages/Assistant';
 import MentionsLegales from '@/pages/legal/MentionsLegales';
 import CGV from '@/pages/legal/CGV';
 import Confidentialite from '@/pages/legal/Confidentialite';
+import About from '@/pages/About';
+import Contact from '@/pages/Contact';
 
 // Seller
 import SellerDashboard from '@/pages/seller/SellerDashboard';
@@ -117,6 +119,8 @@ const AuthenticatedApp = () => {
         <Route path="/support" element={<Support />} />
         <Route path="/assistant" element={<Assistant />} />
         <Route path="/invoice/:number" element={<Invoice />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
         <Route path="/mentions-legales" element={<MentionsLegales />} />
         <Route path="/cgv" element={<CGV />} />
         <Route path="/confidentialite" element={<Confidentialite />} />

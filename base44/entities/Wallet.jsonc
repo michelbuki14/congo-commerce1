@@ -2,6 +2,10 @@
   "name": "Wallet",
   "type": "object",
   "properties": {
+    "description": {
+      "type": "string",
+      "maxLength": 1000
+    },
     "owner_type": {
       "type": "string",
       "enum": [

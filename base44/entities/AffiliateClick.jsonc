@@ -2,6 +2,10 @@
   "name": "AffiliateClick",
   "type": "object",
   "properties": {
+    "description": {
+      "type": "string",
+      "maxLength": 1000
+    },
     "creator_id": {
       "type": "string"
     },
