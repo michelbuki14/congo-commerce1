@@ -6,6 +6,7 @@ import StatusBadge from '@/components/StatusBadge';
 import { ADMIN_LINKS } from '@/lib/navLinks';
 import { formatUSD } from '@/lib/format';
 import { getCities } from '@/lib/config';
+import TenantEmailField from '@/components/admin/TenantEmailField';
 
 const TABS = [
   { id: 'sellers', label: 'Vendeurs' },
@@ -22,7 +23,7 @@ export default function AdminUsers() {
   const [loading, setLoading] = useState(true);
   const [invite, setInvite] = useState({ email: '', role: 'user' });
   const [message, setMessage] = useState('');
-  const [newSeller, setNewSeller] = useState({ name: '', city: getCities()[0], phone: '', commission_rate: 10 });
+  const [newSeller, setNewSeller] = useState({ name: '', email: '', city: getCities()[0], phone: '', commission_rate: 10 });
   const [showSellerForm, setShowSellerForm] = useState(false);
 
   const load = async () => {
@@ -74,7 +75,7 @@ export default function AdminUsers() {
       verified: false,
       delivery_info: 'Livraison locale 2-4 jours, retrait en point relais.',
     });
-    setNewSeller({ name: '', city: getCities()[0], phone: '', commission_rate: 10 });
+    setNewSeller({ name: '', email: '', city: getCities()[0], phone: '', commission_rate: 10 });
     setShowSellerForm(false);
     setMessage('Boutique créée. Validez-la pour la rendre active.');
     await load();
@@ -134,6 +135,7 @@ export default function AdminUsers() {
                 ))}
               </select>
               <input value={newSeller.phone} onChange={(e) => setNewSeller({ ...newSeller, phone: e.target.value })} placeholder="Téléphone" className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
+              <input type="email" value={newSeller.email} onChange={(e) => setNewSeller({ ...newSeller, email: e.target.value })} placeholder="E-mail de connexion du vendeur" className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
               <input type="number" value={newSeller.commission_rate} onChange={(e) => setNewSeller({ ...newSeller, commission_rate: Number(e.target.value) })} placeholder="Commission %" className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
               <button type="submit" className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground md:col-span-2">Créer la boutique</button>
             </form>
@@ -150,7 +152,8 @@ export default function AdminUsers() {
                     {s.city} · {s.phone || 'sans téléphone'} · commission {s.commission_rate ?? 10}%
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <TenantEmailField entity="Seller" record={s} onChange={(u) => setSellers((prev) => prev.map((x) => (x.id === u.id ? u : x)))} />
                   <StatusBadge status={s.status} />
                   <button type="button" onClick={() => verifySeller(s)} className="rounded-full border border-border px-3.5 py-1.5 text-xs font-semibold">
                     {s.verified ? 'Retirer le badge' : 'Vérifier'}
@@ -181,7 +184,8 @@ export default function AdminUsers() {
                   Code {c.referral_code} · commission {c.commission_rate}% · {c.total_conversions || 0} conversion(s) · {formatUSD(c.total_earnings_usd || 0)} générés
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <TenantEmailField entity="Creator" record={c} onChange={(u) => setCreators((prev) => prev.map((x) => (x.id === u.id ? u : x)))} />
                 <StatusBadge status={c.status} />
                 <button
                   type="button"
@@ -211,15 +215,18 @@ export default function AdminUsers() {
                   {k.code} · base {formatUSD(k.base_rate_usd)} + {formatUSD(k.per_kg_usd)}/kg · {k.avg_days} jours · zones : {(k.service_areas || []).join(', ')}
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => toggleCourier(k)}
-                className={`flex items-center gap-1 rounded-full px-3.5 py-1.5 text-xs font-semibold ${
-                  k.active ? 'bg-emerald-100 text-emerald-900' : 'bg-slate-200 text-slate-700'
-                }`}
-              >
-                <Power className="h-3.5 w-3.5" /> {k.active ? 'Actif' : 'Inactif'}
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                <TenantEmailField entity="Courier" record={k} onChange={(u) => setCouriers((prev) => prev.map((x) => (x.id === u.id ? u : x)))} />
+                <button
+                  type="button"
+                  onClick={() => toggleCourier(k)}
+                  className={`flex items-center gap-1 rounded-full px-3.5 py-1.5 text-xs font-semibold ${
+                    k.active ? 'bg-emerald-100 text-emerald-900' : 'bg-slate-200 text-slate-700'
+                  }`}
+                >
+                  <Power className="h-3.5 w-3.5" /> {k.active ? 'Actif' : 'Inactif'}
+                </button>
+              </div>
             </div>
           ))}
         </div>

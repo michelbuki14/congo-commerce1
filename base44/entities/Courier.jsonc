@@ -15,6 +15,9 @@
     "phone": {
       "type": "string"
     },
+    "email": {
+      "type": "string"
+    },
     "service_areas": {
       "type": "array",
       "items": {

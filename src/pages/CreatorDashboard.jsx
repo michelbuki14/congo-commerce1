@@ -4,12 +4,12 @@ import { Copy, Check, Plus, Sparkles, MousePointerClick, ShoppingBag, Coins, Eye
 import { base44 } from '@/api/base44Client';
 import { Image } from '@/components/ui/image';
 import { useCurrency } from '@/lib/currency';
+import { useTenantScope } from '@/lib/tenant';
 import { compactNumber } from '@/lib/format';
 
 export default function CreatorDashboard() {
   const { format } = useCurrency();
-  const [creators, setCreators] = useState([]);
-  const [creator, setCreator] = useState(null);
+  const { tenants: creators, tenant: creator, isAdmin, loading: loadingCreator, selectTenant } = useTenantScope('Creator');
   const [contents, setContents] = useState([]);
   const [products, setProducts] = useState([]);
   const [clicks, setClicks] = useState([]);
@@ -31,24 +31,17 @@ export default function CreatorDashboard() {
 
   useEffect(() => {
     (async () => {
-      const [c, p] = await Promise.all([
-        base44.entities.Creator.list('name', 50).catch(() => []),
-        base44.entities.Product.filter({ status: 'published' }, '-sold_count', 40).catch(() => []),
-      ]);
-      setCreators(c);
+      const p = await base44.entities.Product.filter({ status: 'published' }, '-sold_count', 40).catch(() => []);
       setProducts(p);
-      const first = c[0] || null;
-      setCreator(first);
-      if (first) await loadCreator(first);
       setLoading(false);
     })();
   }, []);
 
-  const switchCreator = async (id) => {
-    const next = creators.find((c) => c.id === id) || null;
-    setCreator(next);
-    await loadCreator(next);
-  };
+  useEffect(() => {
+    if (creator) loadCreator(creator);
+  }, [creator]);
+
+  const switchCreator = (id) => selectTenant(id);
 
   const copyLink = async () => {
     if (!creator) return;
@@ -93,17 +86,22 @@ export default function CreatorDashboard() {
     }
   };
 
-  if (loading) return <div className="h-64 animate-pulse rounded-2xl bg-secondary" />;
+  if (loading || loadingCreator) return <div className="h-64 animate-pulse rounded-2xl bg-secondary" />;
 
   if (!creator) {
     return (
       <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
         <Sparkles className="mx-auto h-8 w-8 text-muted-foreground" />
-        <p className="mt-2 font-semibold">Aucun compte créateur</p>
-        <p className="mt-1 text-sm text-muted-foreground">Les créateurs sont créés par l'équipe Congo Commerce.</p>
-        <Link to="/admin/users" className="mt-4 inline-block rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground">
-          Créer un créateur
-        </Link>
+        <p className="mt-2 font-semibold">Aucun compte créateur associé</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Votre espace créateur n'est relié à aucun compte. L'administration doit le rattacher à l'adresse
+          e-mail avec laquelle vous vous connectez.
+        </p>
+        {isAdmin && (
+          <Link to="/admin/users" className="mt-4 inline-block rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground">
+            Créer un créateur
+          </Link>
+        )}
       </div>
     );
   }
@@ -115,15 +113,19 @@ export default function CreatorDashboard() {
     <div className="space-y-5 pb-8">
       <div className="flex flex-wrap items-center gap-2">
         <h1 className="text-lg font-bold md:text-xl">Espace créateur</h1>
-        <select
-          value={creator.id}
-          onChange={(e) => switchCreator(e.target.value)}
-          className="ml-auto h-9 rounded-lg border border-border bg-card px-2 text-sm"
-        >
-          {creators.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
+        {isAdmin ? (
+          <select
+            value={creator.id}
+            onChange={(e) => switchCreator(e.target.value)}
+            className="ml-auto h-9 rounded-lg border border-border bg-card px-2 text-sm"
+          >
+            {creators.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+        ) : (
+          <span className="ml-auto text-sm font-semibold">{creator.name}</span>
+        )}
       </div>
 
       <section className="rounded-2xl border border-border bg-card p-4">

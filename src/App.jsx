@@ -118,9 +118,8 @@ const AuthenticatedApp = () => {
         <Route path="/mentions-legales" element={<MentionsLegales />} />
         <Route path="/cgv" element={<CGV />} />
         <Route path="/confidentialite" element={<Confidentialite />} />
-        <Route path="/creator" element={<CreatorDashboard />} />
-
         <Route element={<RequireLogin />}>
+          <Route path="/creator" element={<CreatorDashboard />} />
           <Route path="/courier" element={<CourierConsole />} />
 
           <Route path="/seller" element={<SellerDashboard />} />

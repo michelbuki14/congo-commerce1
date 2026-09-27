@@ -2,15 +2,14 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Truck } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { respondToShipment, courierUpdateShipment } from '@/lib/orderService';
+import { useTenantScope } from '@/lib/tenant';
 import CourierJobCard from '@/components/courier/CourierJobCard';
 import CourierEarnings from '@/components/courier/CourierEarnings';
 
 const TERMINAL = ['DELIVERED', 'FAILED', 'RETURNED', 'CANCELLED'];
-const STORAGE_KEY = 'cc_courier_name';
 
 export default function CourierConsole() {
-  const [couriers, setCouriers] = useState([]);
-  const [selected, setSelected] = useState('');
+  const { tenants: couriers, tenant: courier, isAdmin, loading: loadingCourier, selectTenant } = useTenantScope('Courier');
   const [shipments, setShipments] = useState([]);
   const [fulfillments, setFulfillments] = useState({});
   const [orders, setOrders] = useState({});
@@ -21,15 +20,7 @@ export default function CourierConsole() {
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    base44.entities.Courier.list('name', 50)
-      .then((rows) => {
-        setCouriers(rows);
-        const stored = localStorage.getItem(STORAGE_KEY);
-        setSelected(rows.some((c) => c.name === stored) ? stored : rows[0]?.name || '');
-      })
-      .catch(() => setLoading(false));
-  }, []);
+  const selected = courier?.name || '';
 
   const load = useCallback(async (name) => {
     if (!name) {
@@ -64,10 +55,7 @@ export default function CourierConsole() {
     load(selected);
   }, [selected, load]);
 
-  const pickCourier = (name) => {
-    localStorage.setItem(STORAGE_KEY, name);
-    setSelected(name);
-  };
+  const pickCourier = (id) => selectTenant(id);
 
   const buckets = useMemo(
     () => ({
@@ -131,19 +119,27 @@ export default function CourierConsole() {
         <h1 className="flex items-center gap-2 text-lg font-bold md:text-xl">
           <Truck className="h-5 w-5 text-primary" /> Espace livreur
         </h1>
-        <label className="flex items-center gap-2 text-[11px] text-muted-foreground">
-          Je livre pour
-          <select
-            value={selected}
-            onChange={(e) => pickCourier(e.target.value)}
-            className="h-10 rounded-lg border border-border bg-background px-3 text-sm text-foreground"
-          >
-            {couriers.length === 0 && <option value="">Aucun transporteur</option>}
-            {couriers.map((c) => (
-              <option key={c.id} value={c.name}>{c.name}</option>
-            ))}
-          </select>
-        </label>
+        {isAdmin ? (
+          <label className="flex items-center gap-2 text-[11px] text-muted-foreground">
+            Je livre pour
+            <select
+              value={courier?.id || ''}
+              onChange={(e) => pickCourier(e.target.value)}
+              className="h-10 rounded-lg border border-border bg-background px-3 text-sm text-foreground"
+            >
+              {couriers.length === 0 && <option value="">Aucun transporteur</option>}
+              {couriers.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </label>
+        ) : (
+          courier && (
+            <p className="flex items-center gap-2 text-[11px] text-muted-foreground">
+              Je livre pour <span className="text-sm font-semibold text-foreground">{courier.name}</span>
+            </p>
+          )
+        )}
       </div>
 
       <CourierEarnings wallet={wallet} transactions={transactions} />
@@ -167,8 +163,13 @@ export default function CourierConsole() {
         <p className="rounded-xl border border-destructive bg-card p-3 text-xs font-medium text-destructive">{error}</p>
       )}
 
-      {loading ? (
+      {loading || loadingCourier ? (
         <div className="h-40 animate-pulse rounded-2xl bg-secondary" />
+      ) : !courier ? (
+        <p className="rounded-xl border border-dashed border-border bg-card p-4 text-xs text-muted-foreground">
+          Aucun compte livreur n'est relié à votre connexion. L'administration doit rattacher votre flotte à
+          l'adresse e-mail avec laquelle vous vous connectez.
+        </p>
       ) : visible.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border bg-card p-4 text-xs text-muted-foreground">
           {tab === 'offers'

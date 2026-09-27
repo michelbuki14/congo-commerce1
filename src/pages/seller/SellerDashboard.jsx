@@ -26,7 +26,7 @@ const TILES = [
 ];
 
 export default function SellerDashboard() {
-  const { sellers, seller, loading: loadingSeller, selectSeller } = useActiveSeller();
+  const { sellers, seller, isAdmin, loading: loadingSeller, selectSeller } = useActiveSeller();
   const [products, setProducts] = useState([]);
   const [fulfillments, setFulfillments] = useState([]);
   const [wallet, setWallet] = useState(null);
@@ -68,13 +68,16 @@ export default function SellerDashboard() {
     return (
       <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
         <Store className="mx-auto h-8 w-8 text-muted-foreground" />
-        <p className="mt-2 font-semibold">Aucune boutique disponible</p>
+        <p className="mt-2 font-semibold">Aucune boutique associée à votre compte</p>
         <p className="mt-1 text-sm text-muted-foreground">
-          Créez une boutique depuis l'administration pour commencer à vendre.
+          Votre espace vendeur n'est relié à aucune boutique. L'administration doit rattacher une boutique à
+          l'adresse e-mail avec laquelle vous vous connectez.
         </p>
-        <Link to="/admin/users" className="mt-4 inline-block rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground">
-          Créer une boutique
-        </Link>
+        {isAdmin && (
+          <Link to="/admin/users" className="mt-4 inline-block rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground">
+            Créer une boutique
+          </Link>
+        )}
       </div>
     );
   }
@@ -90,15 +93,19 @@ export default function SellerDashboard() {
       <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card p-3">
         <Store className="h-4 w-4 text-primary" />
         <span className="text-xs font-semibold">Boutique gérée :</span>
-        <select
-          value={seller.id}
-          onChange={(e) => selectSeller(e.target.value)}
-          className="h-9 flex-1 rounded-lg border border-border bg-background px-2 text-sm"
-        >
-          {sellers.map((s) => (
-            <option key={s.id} value={s.id}>{s.name}</option>
-          ))}
-        </select>
+        {isAdmin ? (
+          <select
+            value={seller.id}
+            onChange={(e) => selectSeller(e.target.value)}
+            className="h-9 flex-1 rounded-lg border border-border bg-background px-2 text-sm"
+          >
+            {sellers.map((s) => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </select>
+        ) : (
+          <span className="text-sm font-semibold">{seller.name}</span>
+        )}
       </div>
 
       {loading ? (

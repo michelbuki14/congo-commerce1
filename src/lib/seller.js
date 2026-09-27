@@ -1,47 +1,10 @@
-import { useCallback, useEffect, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { useTenantScope } from '@/lib/tenant';
 
-const KEY = 'congo_commerce:active_seller';
-
-export function getStoredSellerId() {
-  try {
-    return localStorage.getItem(KEY) || '';
-  } catch {
-    return '';
-  }
-}
-
-export function storeSellerId(id) {
-  try {
-    localStorage.setItem(KEY, id || '');
-  } catch {
-    /* ignore */
-  }
-}
-
-/** Which storefront the current device is managing (no backend account needed). */
+/**
+ * Which storefront the signed-in account is managing. Multitenancy: a seller only
+ * reaches the shop bound to their login e-mail, while admins keep the switcher.
+ */
 export function useActiveSeller() {
-  const [sellers, setSellers] = useState([]);
-  const [seller, setSeller] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    (async () => {
-      const rows = await base44.entities.Seller.list('name', 100).catch(() => []);
-      setSellers(rows);
-      const stored = getStoredSellerId();
-      setSeller(rows.find((s) => s.id === stored) || rows[0] || null);
-      setLoading(false);
-    })();
-  }, []);
-
-  const selectSeller = useCallback(
-    (id) => {
-      storeSellerId(id);
-      setSeller(sellers.find((s) => s.id === id) || null);
-    },
-    [sellers],
-  );
-
-  return { sellers, seller, loading, selectSeller };
+  const { tenants, tenant, isAdmin, loading, selectTenant } = useTenantScope('Seller');
+  return { sellers: tenants, seller: tenant, isAdmin, loading, selectSeller: selectTenant };
 }

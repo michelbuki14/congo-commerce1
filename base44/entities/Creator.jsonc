@@ -8,6 +8,9 @@
     "handle": {
       "type": "string"
     },
+    "email": {
+      "type": "string"
+    },
     "avatar_url": {
       "type": "string"
     },
