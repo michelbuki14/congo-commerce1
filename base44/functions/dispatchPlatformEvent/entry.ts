@@ -167,11 +167,24 @@ export default async function (req) {
     // automated steps); the dispatcher keeps recording, notifying and auditing.
     // An event payload may never answer a step that is waiting for a human
     // decision — those only ever come from the administrator API.
-    const { decision: _decision, ...safePayload } = payload;
+    // A client-reported event may never answer a human-decision step, nor name
+    // the attribution a workflow pays out: the order's own stored attribution
+    // stays the only source of truth for a commission.
+    const {
+      decision: _decision,
+      creator_id: _creatorId,
+      affiliate_code: _affiliateCode,
+      ...safePayload
+    } = payload;
 
     const owned = workflowForEvent(name);
     let workflowRun = null;
-    if (owned && user && !body.workflow_code) {
+    // Starting an event-owned workflow is a privileged act — the engine runs
+    // its steps as the platform itself. A workflow reserved for administrators
+    // therefore starts only for an administrator, whatever the event claims.
+    const mayStartWorkflow = Boolean(owned) && Boolean(user) && !body.workflow_code
+      && (!owned.admin_only || isAdmin);
+    if (mayStartWorkflow) {
       workflowRun = await startWorkflow(base44, {
         code: owned.code,
         input: {
@@ -192,6 +205,14 @@ export default async function (req) {
         type: 'workflow',
         label: `${owned.name} — ${workflowRun.status || (workflowRun.duplicate ? 'déjà traité' : 'lancé')}`,
         status: workflowRun.status === 'FAILED' ? 'failed' : 'done',
+        at: new Date().toISOString(),
+        detail: owned.code,
+      });
+    } else if (owned && user && owned.admin_only && !isAdmin) {
+      actions.push({
+        type: 'workflow',
+        label: `${owned.name} — réservé aux administrateurs`,
+        status: 'skipped',
         at: new Date().toISOString(),
         detail: owned.code,
       });
