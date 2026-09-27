@@ -75,6 +75,23 @@
     "slug"
   ],
   "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.status": {
+            "$ne": "suspended"
+          }
+        },
+        {
+          "data.email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
     "update": {
       "$or": [
         {
