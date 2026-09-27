@@ -1,0 +1,29 @@
+{
+  "name": "ChatMessage",
+  "type": "object",
+  "properties": {
+    "thread_id": {
+      "type": "string"
+    },
+    "sender_role": {
+      "type": "string",
+      "enum": [
+        "customer",
+        "seller",
+        "support"
+      ]
+    },
+    "sender_name": {
+      "type": "string"
+    },
+    "body": {
+      "type": "string",
+      "maxLength": 2000
+    }
+  },
+  "required": [
+    "thread_id",
+    "sender_role",
+    "body"
+  ]
+}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, ShoppingBag, Heart, Bell, Store, ShieldCheck } from 'lucide-react';
+import { Search, ShoppingBag, Heart, Bell, Store, ShieldCheck, MessageCircle } from 'lucide-react';
 import { useCart } from '@/lib/cart';
 import CurrencyToggle from '@/components/CurrencyToggle';
 import BrandLogo from '@/components/BrandLogo';
@@ -37,6 +37,9 @@ export default function TopBar() {
         <div className="flex items-center gap-1">
           <Link to="/wishlist" className="hidden h-10 w-10 items-center justify-center rounded-full hover:bg-secondary sm:flex">
             <Heart className="h-5 w-5" />
+          </Link>
+          <Link to="/messages" className="hidden h-10 w-10 items-center justify-center rounded-full hover:bg-secondary sm:flex" title="Messages">
+            <MessageCircle className="h-5 w-5" />
           </Link>
           <Link to="/notifications" className="hidden h-10 w-10 items-center justify-center rounded-full hover:bg-secondary sm:flex">
             <Bell className="h-5 w-5" />

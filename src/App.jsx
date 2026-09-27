@@ -97,6 +97,11 @@ import PaymentMethods from '@/pages/PaymentMethods';
 import SellerReports from '@/pages/SellerReports';
 import FinancePortal from '@/pages/FinancePortal';
 import PickupManager from '@/pages/PickupManager';
+import Messages from '@/pages/Messages';
+import SellerMessages from '@/pages/seller/SellerMessages';
+import SupportInbox from '@/pages/admin/SupportInbox';
+import DeveloperPortal from '@/pages/DeveloperPortal';
+import Warehouse from '@/pages/admin/Warehouse';
 
 // Seller
 import SellerDashboard from '@/pages/seller/SellerDashboard';
@@ -229,6 +234,8 @@ const AuthenticatedApp = () => {
         <Route path="/platform-guidelines" element={<PlatformGuidelines />} />
         <Route path="/checkout-success" element={<CheckoutSuccess />} />
         <Route path="/pricing" element={<Pricing />} />
+        <Route path="/messages" element={<Messages />} />
+        <Route path="/developers" element={<DeveloperPortal />} />
         <Route path="/mentions-legales" element={<MentionsLegales />} />
         <Route path="/cgv" element={<CGV />} />
         <Route path="/confidentialite" element={<Confidentialite />} />
@@ -260,6 +267,7 @@ const AuthenticatedApp = () => {
           <Route path="/seller/wallet" element={<SellerWallet />} />
           <Route path="/seller/settings" element={<SellerSettings />} />
           <Route path="/seller-portal" element={<SellerPortal />} />
+          <Route path="/seller/messages" element={<SellerMessages />} />
           <Route path="/payout-history" element={<PayoutHistory />} />
           <Route path="/payout-settings" element={<PayoutSettings />} />
           <Route path="/data-export" element={<DataExport />} />
@@ -295,6 +303,8 @@ const AuthenticatedApp = () => {
             <Route path="/fraud-alerts" element={<FraudAlerts />} />
             <Route path="/finance" element={<FinancePortal />} />
             <Route path="/pickup-manager" element={<PickupManager />} />
+            <Route path="/warehouse" element={<Warehouse />} />
+            <Route path="/support-inbox" element={<SupportInbox />} />
             <Route path="/shipping-config" element={<ShippingConfig />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/products" element={<AdminProducts />} />

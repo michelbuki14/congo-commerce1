@@ -1,0 +1,50 @@
+{
+  "name": "ChatThread",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "seller",
+        "support"
+      ],
+      "default": "seller"
+    },
+    "seller_id": {
+      "type": "string"
+    },
+    "seller_name": {
+      "type": "string"
+    },
+    "customer_session": {
+      "type": "string"
+    },
+    "customer_name": {
+      "type": "string"
+    },
+    "subject": {
+      "type": "string"
+    },
+    "order_number": {
+      "type": "string"
+    },
+    "last_message": {
+      "type": "string"
+    },
+    "last_at": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "closed"
+      ],
+      "default": "open"
+    }
+  },
+  "required": [
+    "type",
+    "customer_session"
+  ]
+}

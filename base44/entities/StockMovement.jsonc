@@ -1,0 +1,62 @@
+{
+  "name": "StockMovement",
+  "type": "object",
+  "properties": {
+    "product_id": {
+      "type": "string"
+    },
+    "product_title": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "receipt",
+        "adjustment",
+        "shipment"
+      ],
+      "default": "receipt"
+    },
+    "quantity": {
+      "type": "number"
+    },
+    "stock_after": {
+      "type": "number"
+    },
+    "location": {
+      "type": "string"
+    },
+    "note": {
+      "type": "string"
+    },
+    "order_number": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "product_id",
+    "quantity"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
