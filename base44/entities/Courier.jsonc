@@ -18,6 +18,9 @@
     "email": {
       "type": "string"
     },
+    "logo_url": {
+      "type": "string"
+    },
     "service_areas": {
       "type": "array",
       "items": {

@@ -17,7 +17,7 @@ const NEXT_STEP = {
   IN_TRANSIT: { status: 'OUT_FOR_DELIVERY', label: 'Passer en livraison' },
 };
 
-export default function CourierJobCard({ shipment, fulfillment, order, busy, onRespond, onAdvance }) {
+export default function CourierJobCard({ shipment, fulfillment, order, busy, onRespond, onAdvance, showFleet }) {
   const [proofOpen, setProofOpen] = useState(false);
   const [recipient, setRecipient] = useState(order?.customer_name || '');
   const [proofUri, setProofUri] = useState('');
@@ -79,9 +79,16 @@ export default function CourierJobCard({ shipment, fulfillment, order, busy, onR
             {shipment.tracking_number || 'Sans numéro de suivi'} · {formatUSD(fulfillment?.shipping_usd || 0)} de course
           </p>
         </div>
-        <span className="rounded-full bg-secondary px-2.5 py-0.5 text-[10px] font-bold">
-          {SHIPMENT_STATUS_LABELS[shipment.status] || shipment.status}
-        </span>
+        <div className="flex items-center gap-2">
+          {showFleet && fulfillment?.courier_name && (
+            <span className="rounded-full bg-secondary px-2.5 py-0.5 text-[10px] font-semibold">
+              {fulfillment.courier_name}
+            </span>
+          )}
+          <span className="rounded-full bg-secondary px-2.5 py-0.5 text-[10px] font-bold">
+            {SHIPMENT_STATUS_LABELS[shipment.status] || shipment.status}
+          </span>
+        </div>
       </div>
 
       <div className="mt-3 space-y-1 text-xs text-muted-foreground">

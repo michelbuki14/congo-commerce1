@@ -3,6 +3,7 @@ import { Truck } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { respondToShipment, courierUpdateShipment } from '@/lib/orderService';
 import { useTenantScope } from '@/lib/tenant';
+import CourierHeader from '@/components/courier/CourierHeader';
 import CourierJobCard from '@/components/courier/CourierJobCard';
 import CourierEarnings from '@/components/courier/CourierEarnings';
 
@@ -10,6 +11,7 @@ const TERMINAL = ['DELIVERED', 'FAILED', 'RETURNED', 'CANCELLED'];
 
 export default function CourierConsole() {
   const { tenants: couriers, tenant: courier, isAdmin, loading: loadingCourier, selectTenant } = useTenantScope('Courier');
+  const [user, setUser] = useState(null);
   const [shipments, setShipments] = useState([]);
   const [fulfillments, setFulfillments] = useState({});
   const [orders, setOrders] = useState({});
@@ -20,31 +22,60 @@ export default function CourierConsole() {
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
 
-  const selected = courier?.name || '';
+  // A courier may work for several fleets: their console covers every fleet they
+  // are bound to, an admin inspects one fleet at a time through the switcher.
+  const fleets = useMemo(
+    () => (isAdmin ? (courier ? [courier] : []) : couriers),
+    [isAdmin, courier, couriers],
+  );
+  const fleetNames = useMemo(() => fleets.map((f) => f.name).filter(Boolean), [fleets]);
+  const fleetKey = fleets.map((f) => f.id).join(',');
 
-  const load = useCallback(async (name) => {
-    if (!name) {
+  const load = useCallback(async (names) => {
+    if (!names.length) {
+      setShipments([]);
+      setFulfillments({});
+      setOrders({});
+      setWallet(null);
+      setTransactions([]);
       setLoading(false);
       return;
     }
     setLoading(true);
     try {
-      const [ships, fos, allOrders, wallets] = await Promise.all([
-        base44.entities.Shipment.filter({ courier_name: name }, '-created_date', 100).catch(() => []),
-        base44.entities.FulfillmentOrder.filter({ courier_name: name }, '-created_date', 100).catch(() => []),
+      const [shipGroups, foGroups, allOrders, walletGroups] = await Promise.all([
+        Promise.all(names.map((n) => base44.entities.Shipment.filter({ courier_name: n }, '-created_date', 100).catch(() => []))),
+        Promise.all(names.map((n) => base44.entities.FulfillmentOrder.filter({ courier_name: n }, '-created_date', 100).catch(() => []))),
         base44.entities.Order.list('-created_date', 100).catch(() => []),
-        base44.entities.Wallet.filter({ owner_type: 'courier', owner_name: name }).catch(() => []),
+        Promise.all(names.map((n) => base44.entities.Wallet.filter({ owner_type: 'courier', owner_name: n }).catch(() => []))),
       ]);
+
+      const ships = shipGroups
+        .flat()
+        .sort((a, b) => String(b.created_date || '').localeCompare(String(a.created_date || '')));
+      const fos = foGroups.flat();
       setShipments(ships);
       setFulfillments(Object.fromEntries(fos.map((f) => [f.id, f])));
       setOrders(Object.fromEntries(allOrders.map((o) => [o.order_number, o])));
 
-      const courierWallet = wallets[0] || null;
-      setWallet(courierWallet);
+      const wallets = walletGroups.flat();
+      setWallet(
+        wallets.length
+          ? {
+              balance_usd: wallets.reduce((s, w) => s + (w.balance_usd || 0), 0),
+              lifetime_credit_usd: wallets.reduce((s, w) => s + (w.lifetime_credit_usd || 0), 0),
+            }
+          : null,
+      );
+
+      const txGroups = await Promise.all(
+        wallets.map((w) => base44.entities.WalletTransaction.filter({ wallet_id: w.id }, '-created_date', 20).catch(() => [])),
+      );
       setTransactions(
-        courierWallet
-          ? await base44.entities.WalletTransaction.filter({ wallet_id: courierWallet.id }, '-created_date', 20).catch(() => [])
-          : [],
+        txGroups
+          .flat()
+          .sort((a, b) => String(b.created_date || '').localeCompare(String(a.created_date || '')))
+          .slice(0, 20),
       );
     } finally {
       setLoading(false);
@@ -52,8 +83,12 @@ export default function CourierConsole() {
   }, []);
 
   useEffect(() => {
-    load(selected);
-  }, [selected, load]);
+    load(fleetNames);
+  }, [fleetKey, load]);
+
+  useEffect(() => {
+    base44.auth.me().then(setUser).catch(() => {});
+  }, []);
 
   const pickCourier = (id) => selectTenant(id);
 
@@ -95,7 +130,7 @@ export default function CourierConsole() {
         label,
         extra,
       });
-      await load(selected);
+      await load(fleetNames);
       return true;
     } catch (e) {
       setError("L'action n'a pas pu être enregistrée. Vérifiez votre connexion et réessayez.");
@@ -115,32 +150,20 @@ export default function CourierConsole() {
 
   return (
     <div className="space-y-5 pb-8">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="flex items-center gap-2 text-lg font-bold md:text-xl">
-          <Truck className="h-5 w-5 text-primary" /> Espace livreur
-        </h1>
-        {isAdmin ? (
-          <label className="flex items-center gap-2 text-[11px] text-muted-foreground">
-            Je livre pour
-            <select
-              value={courier?.id || ''}
-              onChange={(e) => pickCourier(e.target.value)}
-              className="h-10 rounded-lg border border-border bg-background px-3 text-sm text-foreground"
-            >
-              {couriers.length === 0 && <option value="">Aucun transporteur</option>}
-              {couriers.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-          </label>
-        ) : (
-          courier && (
-            <p className="flex items-center gap-2 text-[11px] text-muted-foreground">
-              Je livre pour <span className="text-sm font-semibold text-foreground">{courier.name}</span>
-            </p>
-          )
-        )}
-      </div>
+      <h1 className="flex items-center gap-2 text-lg font-bold md:text-xl">
+        <Truck className="h-5 w-5 text-primary" /> Espace livreur
+      </h1>
+
+      {!loadingCourier && (
+        <CourierHeader
+          user={user}
+          fleets={fleets}
+          activeFleet={isAdmin ? courier : fleets[0] || null}
+          isAdmin={isAdmin}
+          couriers={couriers}
+          onSelectFleet={pickCourier}
+        />
+      )}
 
       <CourierEarnings wallet={wallet} transactions={transactions} />
 
@@ -187,6 +210,7 @@ export default function CourierConsole() {
               fulfillment={fulfillments[s.fulfillment_order_id]}
               order={orders[s.order_number]}
               busy={busy}
+              showFleet={fleets.length > 1}
               onRespond={respond}
               onAdvance={advance}
             />

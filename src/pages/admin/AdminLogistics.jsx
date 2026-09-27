@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Plus, Trash2, Truck, MapPin, Store } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { Image } from '@/components/ui/image';
 import DashboardNav from '@/components/DashboardNav';
 import { ADMIN_LINKS } from '@/lib/navLinks';
 import { getCities } from '@/lib/config';
@@ -41,6 +42,11 @@ export default function AdminLogistics() {
 
   const patchCourier = async (c, field, value) => {
     const updated = await base44.entities.Courier.update(c.id, { [field]: Number(value) || 0 });
+    setCouriers((prev) => prev.map((x) => (x.id === c.id ? updated : x)));
+  };
+
+  const patchCourierLogo = async (c, value) => {
+    const updated = await base44.entities.Courier.update(c.id, { logo_url: value });
     setCouriers((prev) => prev.map((x) => (x.id === c.id ? updated : x)));
   };
 
@@ -95,7 +101,12 @@ export default function AdminLogistics() {
             <div key={c.id} className="rounded-2xl border border-border bg-card p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="flex items-center gap-2 text-sm font-bold">
-                  <Truck className="h-4 w-4 text-primary" /> {c.name}
+                  {c.logo_url ? (
+                    <Image src={c.logo_url} alt={c.name} className="h-5 w-5 rounded object-cover" />
+                  ) : (
+                    <Truck className="h-4 w-4 text-primary" />
+                  )}
+                  {c.name}
                   {c.is_mock && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-900">démo</span>}
                 </p>
                 <span className="text-[11px] text-muted-foreground">
@@ -119,6 +130,15 @@ export default function AdminLogistics() {
                   </label>
                 ))}
               </div>
+              <label className="mt-3 block text-[11px] text-muted-foreground">
+                Logo de la société (URL)
+                <input
+                  defaultValue={c.logo_url || ''}
+                  onBlur={(e) => patchCourierLogo(c, e.target.value.trim())}
+                  placeholder="https://…"
+                  className="mt-1 h-9 w-full rounded-lg border border-border bg-background px-2 text-sm text-foreground"
+                />
+              </label>
               <p className="mt-2 text-[11px] text-muted-foreground">Zones desservies : {(c.service_areas || []).join(', ') || '—'}</p>
             </div>
           ))}
