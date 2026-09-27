@@ -1,0 +1,40 @@
+{
+  "name": "Review Followup",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "create"
+      ],
+      "entity_name": "Review"
+    }
+  },
+  "description": "On every new review: rewards a 5-star review with a seller wallet credit and a thank-you message, and opens a support ticket for a 1-2 star review.",
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "review_followup",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "handle_review": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "reviewFollowup",
+            "args": {
+              "review_id": "${ .trigger.entity_id }"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Traiter le nouvel avis",
+            "description": "Prime vendeur si 5\u2605, ticket support si 1-2\u2605"
+          }
+        }
+      }
+    ]
+  }
+}
