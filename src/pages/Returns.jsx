@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { RotateCcw, ShieldCheck, AlertCircle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '@/components/StatusBadge';
@@ -79,6 +80,14 @@ export default function Returns() {
   return (
     <div className="mx-auto max-w-3xl space-y-5 pb-8">
       <h1 className="text-lg font-bold md:text-xl">Retours & remboursements</h1>
+
+      <Link
+        to="/returns-portal"
+        className="flex items-center justify-between rounded-xl border border-border bg-card p-3.5 text-sm font-semibold"
+      >
+        Portail des retours — sélectionnez vos articles
+        <span className="text-xs text-primary">Ouvrir</span>
+      </Link>
 
       <div className="flex items-start gap-2 rounded-xl border border-primary/30 bg-primary/5 p-3 text-xs">
         <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />

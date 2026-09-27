@@ -4,6 +4,7 @@ export const ADMIN_LINKS = [
   { to: '/admin/products', label: 'Produits' },
   { to: '/admin/suppliers', label: 'Fournisseurs' },
   { to: '/admin/returns', label: 'Retours & litiges' },
+  { to: '/admin/disputes', label: 'Litiges ouverts' },
   { to: '/admin/payouts', label: 'Retraits' },
   { to: '/admin/logistics', label: 'Logistique' },
   { to: '/admin/notifications', label: 'Notifications' },
@@ -22,5 +23,8 @@ export const SELLER_LINKS = [
   { to: '/seller/orders', label: 'Commandes' },
   { to: '/seller/import', label: 'Import fournisseur' },
   { to: '/seller/wallet', label: 'Portefeuille' },
+  { to: '/payout-history', label: 'Retraits' },
+  { to: '/payout-settings', label: 'Paiement' },
+  { to: '/data-export', label: 'Export' },
   { to: '/seller/settings', label: 'Boutique' },
 ];

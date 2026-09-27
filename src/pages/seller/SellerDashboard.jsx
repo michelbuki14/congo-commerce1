@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Package, ShoppingBag, Wallet as WalletIcon, TrendingUp, Sparkles, Store, Upload, Settings, BarChart3, Boxes } from 'lucide-react';
+import { Package, ShoppingBag, Wallet as WalletIcon, TrendingUp, Sparkles, Store, Upload, Settings, BarChart3, Boxes, Banknote, CreditCard, FileDown } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useActiveSeller } from '@/lib/seller';
 import { sellerInsights } from '@/lib/ai';
@@ -25,6 +25,9 @@ const TILES = [
   { to: '/seller/settings', label: 'Configurer ma boutique', icon: Settings },
   { to: '/seller-portal', label: 'Portail vendeur', icon: Store },
   { to: '/inventory-management', label: 'Gestion du stock', icon: Boxes },
+  { to: '/payout-history', label: 'Historique des retraits', icon: Banknote },
+  { to: '/payout-settings', label: 'Coordonnées de paiement', icon: CreditCard },
+  { to: '/data-export', label: 'Exporter mes données', icon: FileDown },
 ];
 
 export default function SellerDashboard() {

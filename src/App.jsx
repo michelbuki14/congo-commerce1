@@ -93,6 +93,11 @@ import AdminCompliance from '@/pages/admin/AdminCompliance';
 import AdminTenants from '@/pages/admin/AdminTenants';
 import AdminNotifications from '@/pages/admin/AdminNotifications';
 import AdminFraud from '@/pages/admin/AdminFraud';
+import AdminDisputes from '@/pages/admin/AdminDisputes';
+import ReturnsPortal from '@/pages/ReturnsPortal';
+import PayoutHistory from '@/pages/PayoutHistory';
+import PayoutSettings from '@/pages/PayoutSettings';
+import DataExport from '@/pages/DataExport';
 
 // Creator
 import CreatorDashboard from '@/pages/CreatorDashboard';
@@ -143,6 +148,7 @@ const AuthenticatedApp = () => {
         <Route path="/coupons" element={<Coupons />} />
         <Route path="/referral" element={<Referral />} />
         <Route path="/returns" element={<Returns />} />
+        <Route path="/returns-portal" element={<ReturnsPortal />} />
         <Route path="/disputes" element={<Disputes />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/support" element={<Support />} />
@@ -185,6 +191,9 @@ const AuthenticatedApp = () => {
           <Route path="/seller/wallet" element={<SellerWallet />} />
           <Route path="/seller/settings" element={<SellerSettings />} />
           <Route path="/seller-portal" element={<SellerPortal />} />
+          <Route path="/payout-history" element={<PayoutHistory />} />
+          <Route path="/payout-settings" element={<PayoutSettings />} />
+          <Route path="/data-export" element={<DataExport />} />
           <Route path="/inventory-management" element={<InventoryManagement />} />
           <Route path="/tenant" element={<TenantConsole />} />
           <Route path="/tenant-onboarding" element={<TenantOnboarding />} />
@@ -205,6 +214,7 @@ const AuthenticatedApp = () => {
             <Route path="/admin/tenants" element={<AdminTenants />} />
             <Route path="/admin/notifications" element={<AdminNotifications />} />
             <Route path="/admin/fraud" element={<AdminFraud />} />
+            <Route path="/admin/disputes" element={<AdminDisputes />} />
           </Route>
         </Route>
       </Route>
