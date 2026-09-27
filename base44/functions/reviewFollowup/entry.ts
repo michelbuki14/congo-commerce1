@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
+import { requireAdmin } from '../../shared/security.ts';
 
 /**
  * Runs on every new review (triggered by the "Review Followup" workflow).
@@ -151,8 +152,28 @@ export default async function (req) {
     const reviewId = String(body.review_id || '').trim();
     if (!reviewId) return Response.json({ error: 'review_id is required' }, { status: 400 });
 
+    // This endpoint pays sellers, so it answers only the platform's own review
+    // workflow and administrators — never an anonymous caller.
+    const auth = await requireAdmin(base44);
+    if (!auth.ok) return auth.response;
+
     const review = await base44.asServiceRole.entities.Review.get(reviewId).catch(() => null);
     if (!review) return Response.json({ error: 'Review not found' }, { status: 404 });
+
+    // A bonus is owed only for a review of an article the customer actually
+    // received: the review must sit on an order that was delivered and that
+    // contains the reviewed product, exactly as the review form requires.
+    const order = review.order_number
+      ? (await base44.asServiceRole.entities.Order.filter({ order_number: review.order_number }).catch(() => []))[0] || null
+      : null;
+    const bought = order && (order.items || []).some((item) => item?.product_id && item.product_id === review.product_id);
+    if (!order || String(order.status || '').toUpperCase() !== 'DELIVERED' || !bought) {
+      return Response.json({
+        review_id: reviewId,
+        skipped: true,
+        reason: 'avis non rattaché à une commande livrée',
+      });
+    }
 
     const tenant = {
       tenant_id: String(review.tenant_id || ''),

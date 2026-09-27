@@ -9,6 +9,7 @@ import {
   resolveFulfillment,
   tenantOf,
 } from '../../shared/fulfillments.ts';
+import { requireAdmin } from '../../shared/security.ts';
 
 /**
  * Still unpaid after 24 hours: the customer gets a 10 % code by e-mail.
@@ -30,6 +31,12 @@ export default async function (req) {
     const fulfillmentId = String(body.fulfillment_id || '').trim();
     if (!fulfillmentId) return Response.json({ error: 'fulfillment_id is required' }, { status: 400 });
 
+    // This mints a discount coupon, so only the platform's own unpaid-order
+    // workflow (or an administrator) may trigger it — and the code is never
+    // handed back to the caller, only to the customer's inbox.
+    const auth = await requireAdmin(base44);
+    if (!auth.ok) return auth.response;
+
     const { fulfillment, order } = await resolveFulfillment(base44, fulfillmentId);
     if (!fulfillment) return Response.json({ error: 'FulfillmentOrder not found' }, { status: 404 });
 
@@ -45,7 +52,7 @@ export default async function (req) {
     const alreadySent = await base44.asServiceRole.entities.OrderNotification
       .filter({ order_number: reference, event: EVENT, status: 'sent' })
       .catch(() => []);
-    if (alreadySent.length) return Response.json({ skipped: true, reason: 'discount already sent', code });
+    if (alreadySent.length) return Response.json({ skipped: true, reason: 'discount already sent' });
 
     const expiresAt = addDays(VALID_DAYS);
     const subject = `Votre commande ${reference} vous attend — ${DISCOUNT_PERCENT} % de remise`;
@@ -77,7 +84,7 @@ export default async function (req) {
         status: 'skipped',
         error: 'Aucun e-mail client',
       });
-      return Response.json({ sent: false, skipped: true, reason: 'no customer email', code, order_number: reference });
+      return Response.json({ sent: false, skipped: true, reason: 'no customer email', order_number: reference });
     }
 
     const coupons = await base44.asServiceRole.entities.Coupon.filter({ code }).catch(() => []);
@@ -138,7 +145,7 @@ export default async function (req) {
         severity: 'warning',
         details: { code, error: String(error?.message || error).slice(0, 300) },
       });
-      return Response.json({ sent: false, reason: 'email refused', code, order_number: reference });
+      return Response.json({ sent: false, reason: 'email refused', order_number: reference });
     }
 
     await base44.asServiceRole.entities.AuditLog.create({
@@ -153,7 +160,6 @@ export default async function (req) {
 
     return Response.json({
       sent: true,
-      code,
       coupon_id: coupon.id,
       expires_at: expiresAt,
       order_number: reference,

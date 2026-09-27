@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
 import { pageUrl } from '../../shared/app.ts';
 import { daysSince, loadPlanContext, sellerEmail, sellerPlan, sendSellerOutreach } from '../../shared/sellers.ts';
+import { requireAdmin } from '../../shared/security.ts';
 
 /**
  * Check-in e-mail for inactive sellers whose tenant is on a paid plan — the
@@ -15,6 +16,11 @@ export default async function (req) {
     const body = await req.json().catch(() => ({}));
     const ids = Array.isArray(body.seller_ids) ? body.seller_ids.filter(Boolean) : [];
     if (!ids.length) return Response.json({ sent: 0, failed: 0, skipped: 0, results: [] });
+
+    // Scheduled outreach, never a user-facing action: only the platform's own
+    // workflow (or an administrator) may send marketing mail to sellers.
+    const auth = await requireAdmin(base44);
+    if (!auth.ok) return auth.response;
 
     const context = await loadPlanContext(base44);
     const dashboard = pageUrl('/seller');

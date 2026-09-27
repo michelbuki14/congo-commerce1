@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
 import { escapeHtml, typeLabel, verificationUrl } from '../../shared/dataRequests.ts';
+import { requireAdmin } from '../../shared/security.ts';
 
 /**
  * Step 1 of the data-request lifecycle: sends the confirmation email that
@@ -10,6 +11,7 @@ import { escapeHtml, typeLabel, verificationUrl } from '../../shared/dataRequest
  */
 
 const RESEND_WINDOW_MS = 10 * 60 * 1000;
+const MAX_PER_ADDRESS_PER_HOUR = 3;
 
 export default async function (req) {
   try {
@@ -20,6 +22,17 @@ export default async function (req) {
 
     const request = await base44.asServiceRole.entities.DataRequest.get(requestId).catch(() => null);
     if (!request) return Response.json({ error: 'DataRequest not found' }, { status: 404 });
+
+    // Only the request lifecycle itself (a platform workflow) and an
+    // administrator may trigger an outgoing verification e-mail.
+    const auth = await requireAdmin(base44);
+    if (!auth.ok) {
+      await base44.asServiceRole.entities.DataRequest.update(requestId, {
+        email_status: 'skipped',
+        email_error: `Envoi refusé — appel non autorisé (${auth.status})`,
+      }).catch(() => null);
+      return auth.response;
+    }
 
     const email = String(request.email || '').trim();
     if (!email) {
@@ -35,6 +48,19 @@ export default async function (req) {
     const lastSent = request.verification_sent_at ? new Date(request.verification_sent_at).getTime() : 0;
     if (lastSent && Date.now() - lastSent < RESEND_WINDOW_MS) {
       return Response.json({ skipped: true, reason: 'verification email already sent recently' });
+    }
+
+    // The window above is per request; a recipient must also be protected
+    // across requests, so a new request cannot be used to flood one inbox.
+    const sameAddress = await base44.asServiceRole.entities.DataRequest
+      .filter({ email }, '-created_date', 20)
+      .catch(() => []);
+    const hourAgo = Date.now() - 3600000;
+    const sentThisHour = sameAddress.filter(
+      (row) => row.verification_sent_at && new Date(row.verification_sent_at).getTime() > hourAgo,
+    ).length;
+    if (sentThisHour >= MAX_PER_ADDRESS_PER_HOUR) {
+      return Response.json({ skipped: true, reason: 'too many verification emails to this address' });
     }
 
     const token = request.verification_token || crypto.randomUUID();

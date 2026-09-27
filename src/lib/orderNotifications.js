@@ -46,32 +46,18 @@ export async function markNotificationSent(record, channel = 'whatsapp') {
   });
 }
 
-/** Sends (or retries) the stored message by email. */
+/**
+ * Sends (or retries) the stored message by email.
+ *
+ * The send itself happens on the server, which reads the recipient and the
+ * text from the record the app already stored — the browser never chooses who
+ * is written to.
+ */
 export async function deliverEmail(record) {
-  const attempts = (Number(record.attempts) || 0) + 1;
-  try {
-    await base44.integrations.Core.SendEmail({
-      to: record.customer_email,
-      subject: record.subject,
-      body: record.message,
-      from_name: 'Congo Commerce',
-    });
-    return base44.entities.OrderNotification.update(record.id, {
-      status: 'sent',
-      channel: 'email',
-      provider: 'email',
-      sent_at: new Date().toISOString(),
-      attempts,
-      error: '',
-    });
-  } catch (error) {
-    return base44.entities.OrderNotification.update(record.id, {
-      status: 'failed',
-      channel: 'email',
-      attempts,
-      error: String(error?.message || error).slice(0, 500),
-    });
-  }
+  const response = await base44.functions.invoke('sendOrderNotificationEmail', { notification_id: record.id });
+  const result = response?.data || {};
+  if (result.notification) return result.notification;
+  return base44.entities.OrderNotification.get(record.id).catch(() => record);
 }
 
 /**

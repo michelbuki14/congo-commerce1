@@ -31,6 +31,19 @@ export default async function (req) {
     if (!request) return Response.json({ error: 'DataRequest not found' }, { status: 404 });
     if (request.report_sent_at) return Response.json({ skipped: true, reason: 'report already sent' });
 
+    // This report carries a person's whole purchase history, so an
+    // administrator must ask for it. The platform's own lifecycle runs without
+    // a session: it may only proceed once compliance has verified the requester
+    // and marked the request ready to send — a state an outsider cannot reach,
+    // because DataRequest updates are administrator-only.
+    const caller = await base44.auth.me().catch(() => null);
+    if (caller && String(caller.role || '') !== 'admin') {
+      return Response.json({ error: 'Réservé aux administrateurs' }, { status: 403 });
+    }
+    if (!caller && !(String(request.status || '') === 'ready' && request.verified_at)) {
+      return Response.json({ error: 'Authentification requise' }, { status: 401 });
+    }
+
     const reference = request.request_number || requestId;
     const email = String(request.email || '').trim();
     const phone = String(request.phone || '').trim();

@@ -13,12 +13,25 @@ import { workflowForEvent } from '../../shared/workflowDefinitions.ts';
  *   3. automate — an automated step changes real data (support ticket, usage);
  *   4. audit   — sensitive events also land in the audit trail.
  *
- * Called from the app (an authenticated user) and from workflows (no session),
- * so it never requires a user — it never returns sensitive data either.
+ * Called from the app (an authenticated user), from the platform's own
+ * workflows (which authenticate as an administrator) and, for guest flows, from
+ * anonymous shoppers. An anonymous caller may only report one of the guest
+ * commerce events below, and only for a record that already exists.
  */
 
 const MAX_DESCRIPTION = 1000;
 const SEVERITIES = ['info', 'warning', 'critical'];
+
+/** Events an anonymous (guest) shopper may legitimately report, and the record that must exist. */
+const GUEST_EVENTS = {
+  order_placed: { entity: 'Order', field: 'order_number' },
+  order_paid: { entity: 'Order', field: 'order_number' },
+  payment_failed: { entity: 'Order', field: 'order_number' },
+  order_delivered: { entity: 'Order', field: 'order_number' },
+  fulfillment_status_changed: { entity: 'Order', field: 'order_number' },
+  dispute_opened: { entity: 'Dispute', field: 'order_number' },
+  return_requested: { entity: 'Return', field: 'order_number' },
+};
 
 /** Notification.type is a closed list — map the event category onto it. */
 function notificationType(category) {
@@ -91,15 +104,34 @@ export default async function (req) {
     if (!name) return Response.json({ error: 'name is required' }, { status: 400 });
 
     const user = await base44.auth.me().catch(() => null);
+    const isAdmin = String(user?.role || '') === 'admin';
     const payload = body.payload && typeof body.payload === 'object' ? body.payload : {};
+    const reference = String(body.reference || '').trim();
+
+    // ---- 0. Trust boundary --------------------------------------------------
+    // Anyone can reach this endpoint. An anonymous caller may only report the
+    // guest-facing commerce events, and only for a record that really exists —
+    // so a fabricated event can neither be recorded, notified, audited, nor
+    // used to start a business workflow. A signed-in caller's identity always
+    // comes from the session; only an administrator (which is what the
+    // platform's own workflows are) may state one.
+    if (!user) {
+      const guest = GUEST_EVENTS[name];
+      const exists = guest && reference
+        ? (await base44.asServiceRole.entities[guest.entity]
+            .filter({ [guest.field]: reference }, '-created_date', 1)
+            .catch(() => [])).length > 0
+        : false;
+      if (!exists) return Response.json({ error: 'Événement non autorisé' }, { status: 401 });
+    }
 
     const ctx = {
       name,
       source: String(body.source || '').trim(),
       sourceId: String(body.source_id || '').trim(),
-      reference: String(body.reference || '').trim(),
-      actorEmail: user?.email || String(body.actor_email || 'system'),
-      actorName: user?.full_name || String(body.actor_name || ''),
+      reference,
+      actorEmail: isAdmin && body.actor_email ? String(body.actor_email) : user?.email || '',
+      actorName: isAdmin && body.actor_name ? String(body.actor_name) : user?.full_name || '',
       tenantId: String(body.tenant_id || ''),
       tenantOwnerEmail: String(body.tenant_owner_email || ''),
       description: String(body.description || '').slice(0, MAX_DESCRIPTION),
@@ -133,13 +165,17 @@ export default async function (req) {
     // ---- 2. Hand over to the workflow engine when one owns this event -------
     // The workflow then performs the whole business process (and its own
     // automated steps); the dispatcher keeps recording, notifying and auditing.
+    // An event payload may never answer a step that is waiting for a human
+    // decision — those only ever come from the administrator API.
+    const { decision: _decision, ...safePayload } = payload;
+
     const owned = workflowForEvent(name);
     let workflowRun = null;
-    if (owned && !body.workflow_code) {
+    if (owned && user && !body.workflow_code) {
       workflowRun = await startWorkflow(base44, {
         code: owned.code,
         input: {
-          ...payload,
+          ...safePayload,
           reference: ctx.reference,
           order_number: payload.order_number || ctx.reference,
           tenant_id: ctx.tenantId,

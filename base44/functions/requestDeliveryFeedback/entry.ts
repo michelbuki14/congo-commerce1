@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
 import { pageUrl } from '../../shared/app.ts';
 import { orderNumber, resolveFulfillment, tenantOf } from '../../shared/fulfillments.ts';
+import { requireAdmin } from '../../shared/security.ts';
 
 /**
  * Three days after a fulfillment order is delivered (see the "Delivered
@@ -37,6 +38,11 @@ export default async function (req) {
     const body = await req.json().catch(() => ({}));
     const fulfillmentId = String(body.fulfillment_id || '').trim();
     if (!fulfillmentId) return Response.json({ error: 'fulfillment_id is required' }, { status: 400 });
+
+    // A customer-facing e-mail goes out, so only the platform's own follow-up
+    // workflow (or an administrator) may trigger it.
+    const auth = await requireAdmin(base44);
+    if (!auth.ok) return auth.response;
 
     const { fulfillment, order } = await resolveFulfillment(base44, fulfillmentId);
     if (!fulfillment) return Response.json({ error: 'FulfillmentOrder not found' }, { status: 404 });
