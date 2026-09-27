@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { RefreshCw, Power, Info, Plus } from 'lucide-react';
+import { RefreshCw, Power, Info, Plus, Layers } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import DashboardNav from '@/components/DashboardNav';
 import { Image } from '@/components/ui/image';
 import { ADMIN_LINKS } from '@/lib/navLinks';
 import { getSupplierAdapter, SUPPLIER_REGISTRY } from '@/lib/suppliers';
+import CategoryMappingPanel from '@/components/suppliers/CategoryMappingPanel';
 import { formatUSD, formatDateTime } from '@/lib/format';
 
 const ADAPTERS = Object.keys(SUPPLIER_REGISTRY);
@@ -15,11 +16,17 @@ export default function AdminSuppliers() {
   const [syncing, setSyncing] = useState('');
   const [message, setMessage] = useState('');
   const [creating, setCreating] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [mappingId, setMappingId] = useState('');
   const [draft, setDraft] = useState({ name: '', code: '', adapter: 'manual', type: 'international', country: 'CN', description: '' });
 
   const load = async () => {
-    const rows = await base44.entities.Supplier.list('name', 100).catch(() => []);
+    const [rows, cats] = await Promise.all([
+      base44.entities.Supplier.list('name', 100).catch(() => []),
+      base44.entities.Category.list('sort_order', 200).catch(() => []),
+    ]);
     setSuppliers(rows);
+    setCategories(cats);
     setLoading(false);
   };
 
@@ -34,6 +41,12 @@ export default function AdminSuppliers() {
 
   const patch = async (s, field, value) => {
     const updated = await base44.entities.Supplier.update(s.id, { [field]: Number(value) || 0 });
+    setSuppliers((prev) => prev.map((x) => (x.id === s.id ? updated : x)));
+  };
+
+  /** Saves the external → platform category mapping for one supplier. */
+  const saveMapping = async (s, map) => {
+    const updated = await base44.entities.Supplier.update(s.id, { category_map: map });
     setSuppliers((prev) => prev.map((x) => (x.id === s.id ? updated : x)));
   };
 
@@ -162,6 +175,15 @@ export default function AdminSuppliers() {
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
+                    onClick={() => setMappingId((id) => (id === s.id ? '' : s.id))}
+                    className={`flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold ${
+                      mappingId === s.id ? 'bg-primary text-primary-foreground' : 'border border-border'
+                    }`}
+                  >
+                    <Layers className="h-3.5 w-3.5" /> Catégories
+                  </button>
+                  <button
+                    type="button"
                     disabled={syncing === s.id}
                     onClick={() => sync(s)}
                     className="flex items-center gap-1.5 rounded-full border border-border px-3.5 py-2 text-xs font-semibold disabled:opacity-50"
@@ -199,6 +221,13 @@ export default function AdminSuppliers() {
                 ))}
               </div>
               {s.description && <p className="mt-2 text-[11px] text-muted-foreground">{s.description}</p>}
+              {mappingId === s.id ? (
+                <CategoryMappingPanel
+                  supplier={s}
+                  categories={categories}
+                  onSave={(map) => saveMapping(s, map)}
+                />
+              ) : null}
             </div>
           ))}
           {!suppliers.length && (

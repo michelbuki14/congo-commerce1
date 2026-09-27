@@ -4,6 +4,7 @@ import { base44 } from '@/api/base44Client';
 import DashboardNav from '@/components/DashboardNav';
 import { ADMIN_LINKS } from '@/lib/navLinks';
 import { DEFAULT_COMPANY_CONFIG, DEFAULT_TAX_CONFIG, loadPlatformConfig } from '@/lib/config';
+import LicenseRegister from '@/components/compliance/LicenseRegister';
 import { formatDateTime } from '@/lib/format';
 
 const COMPANY_FIELDS = [
@@ -49,6 +50,7 @@ export default function AdminCompliance() {
   const [company, setCompany] = useState(DEFAULT_COMPANY_CONFIG);
   const [tax, setTax] = useState(DEFAULT_TAX_CONFIG);
   const [recordIds, setRecordIds] = useState({});
+  const [licenses, setLicenses] = useState([]);
   const [requests, setRequests] = useState([]);
   const [notes, setNotes] = useState({});
   const [loading, setLoading] = useState(true);
@@ -65,6 +67,7 @@ export default function AdminCompliance() {
         ids[r.key] = r.id;
         if (r.key === 'company') setCompany({ ...DEFAULT_COMPANY_CONFIG, ...(r.value || {}) });
         if (r.key === 'tax') setTax({ ...DEFAULT_TAX_CONFIG, ...(r.value || {}) });
+        if (r.key === 'licenses') setLicenses(r.value?.entries || []);
       });
       setRecordIds(ids);
       await loadRequests();
@@ -95,6 +98,11 @@ export default function AdminCompliance() {
   const saveTax = async () => {
     await persist('tax', 'TVA et facturation', 'compliance', tax);
     flash('tax');
+  };
+
+  const saveLicenses = async (next) => {
+    setLicenses(next);
+    await persist('licenses', 'Licences & documents', 'compliance', { entries: next });
   };
 
   const updateRequest = async (request, patch) => {
@@ -189,6 +197,8 @@ export default function AdminCompliance() {
           <Save className="h-4 w-4" /> {saved === 'tax' ? 'Enregistré' : 'Enregistrer la TVA'}
         </button>
       </section>
+
+      <LicenseRegister entries={licenses} onSave={saveLicenses} />
 
       <section className="space-y-3 rounded-2xl border border-border bg-card p-4">
         <h2 className="flex items-center gap-2 text-sm font-bold">

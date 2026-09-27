@@ -72,6 +72,9 @@
     },
     "last_sync_at": {
       "type": "string"
+    },
+    "category_map": {
+      "type": "object"
     }
   },
   "required": [

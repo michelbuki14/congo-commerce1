@@ -18,6 +18,8 @@ export const ADMIN_LINKS = [
   { to: '/admin/promotions', label: 'Promotions' },
   { to: '/marketing-analytics', label: 'Marketing' },
   { to: '/platform-analytics', label: 'Analytique plateforme' },
+  { to: '/platform-health', label: 'Santé plateforme' },
+  { to: '/service-level-monitor', label: 'Niveaux de service' },
   { to: '/admin/users', label: 'Utilisateurs' },
   { to: '/admin/tenants', label: 'Enseignes SaaS' },
   { to: '/admin/compliance', label: 'Conformité' },

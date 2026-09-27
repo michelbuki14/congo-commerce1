@@ -72,6 +72,8 @@ import DisputeResolution from '@/pages/DisputeResolution';
 import OrderReturns from '@/pages/OrderReturns';
 import PlatformAnalytics from '@/pages/PlatformAnalytics';
 import SubscriptionPlans from '@/pages/SubscriptionPlans';
+import PlatformHealth from '@/pages/PlatformHealth';
+import ServiceLevelMonitor from '@/pages/ServiceLevelMonitor';
 
 // Seller
 import SellerDashboard from '@/pages/seller/SellerDashboard';
@@ -170,6 +172,7 @@ const AuthenticatedApp = () => {
         <Route path="/returns" element={<Returns />} />
         <Route path="/returns-portal" element={<ReturnsPortal />} />
         <Route path="/order-returns" element={<OrderReturns />} />
+        <Route path="/vendor-onboarding" element={<SellerApplication />} />
         <Route path="/disputes" element={<Disputes />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/support" element={<Support />} />
@@ -204,6 +207,11 @@ const AuthenticatedApp = () => {
           <Route path="/payout-requests" element={<PayoutRequests />} />
           <Route path="/dispute-resolution" element={<DisputeResolution />} />
           <Route path="/subscription-plans" element={<SubscriptionPlans />} />
+          <Route path="/payout-portal" element={<PayoutRequests />} />
+          <Route path="/courier-dashboard" element={<CourierConsole />} />
+          <Route path="/inventory-manager" element={<InventoryManagement />} />
+          <Route path="/creator-revenue" element={<CreatorDashboard />} />
+          <Route path="/tax-compliance" element={<TaxReports />} />
           <Route path="/creator" element={<CreatorDashboard />} />
           <Route path="/courier" element={<CourierConsole />} />
 
@@ -233,6 +241,12 @@ const AuthenticatedApp = () => {
           <Route element={<AdminOnly />}>
             <Route path="/marketing-analytics" element={<MarketingAnalytics />} />
             <Route path="/platform-analytics" element={<PlatformAnalytics />} />
+            <Route path="/marketplace-promos" element={<AdminPromotions />} />
+            <Route path="/fraud-rules" element={<AdminFraud />} />
+            <Route path="/supplier-integration" element={<AdminSuppliers />} />
+            <Route path="/compliance-center" element={<AdminCompliance />} />
+            <Route path="/platform-health" element={<PlatformHealth />} />
+            <Route path="/service-level-monitor" element={<ServiceLevelMonitor />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/products" element={<AdminProducts />} />
             <Route path="/admin/suppliers" element={<AdminSuppliers />} />
