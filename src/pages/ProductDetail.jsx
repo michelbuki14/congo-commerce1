@@ -14,6 +14,7 @@ import PriceBreakdown from '@/components/PriceBreakdown';
 import MobileActionBar from '@/components/MobileActionBar';
 import ProductRow from '@/components/ProductRow';
 import ProductReviews from '@/components/ProductReviews';
+import Product3DViewer from '@/components/Product3DViewer';
 import SectionHeader from '@/components/SectionHeader';
 import { compactNumber } from '@/lib/format';
 import { inTenantScope, resolveStorefrontScope, scopeRecords } from '@/lib/tenancy';
@@ -32,6 +33,7 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
+  const [view3d, setView3d] = useState(false);
   const [selection, setSelection] = useState({});
   const [qty, setQty] = useState(1);
   const [liked, setLiked] = useState(false);
@@ -41,6 +43,8 @@ export default function ProductDetail() {
     let alive = true;
     setLoading(true);
     setNotFound(false);
+    setView3d(false);
+    setActiveImage(0);
     (async () => {
       try {
         const bySlug = await base44.entities.Product.filter({ slug });
@@ -154,8 +158,30 @@ export default function ProductDetail() {
       <div className="grid gap-5 md:grid-cols-2 md:gap-8">
         {/* Gallery */}
         <div className="space-y-2">
+          {product.model_3d_url && (
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setView3d(false)}
+                className={`rounded-full px-3 py-1 text-xs font-semibold ${!view3d ? 'bg-primary text-primary-foreground' : 'border border-border'}`}
+              >
+                Photo
+              </button>
+              <button
+                type="button"
+                onClick={() => setView3d(true)}
+                className={`rounded-full px-3 py-1 text-xs font-semibold ${view3d ? 'bg-primary text-primary-foreground' : 'border border-border'}`}
+              >
+                Vue 3D
+              </button>
+            </div>
+          )}
           <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-secondary">
-            <Image src={product.images?.[activeImage]} alt={product.title} className="h-full w-full object-cover" />
+            {view3d && product.model_3d_url ? (
+              <Product3DViewer modelUrl={product.model_3d_url} fallbackImage={product.images?.[activeImage]} title={product.title} />
+            ) : (
+              <Image src={product.images?.[activeImage]} alt={product.title} className="h-full w-full object-cover" />
+            )}
             <button
               type="button"
               onClick={() => setLiked(toggleWishlist(product.id).includes(product.id))}

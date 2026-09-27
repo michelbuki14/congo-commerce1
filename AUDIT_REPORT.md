@@ -185,8 +185,9 @@ Un assistant d'achat. Pas d'abstraction multi-fournisseur, pas de services vende
 
 ## 20. Three.js
 
-`three` est installé mais **aucun composant 3D n'existe** dans le dépôt, et aucun modèle GLB n'est
-fourni. Aucun visualiseur produit.
+`three` est installé et `src/components/Product3DViewer.jsx` affiche le modèle
+`Product.model_3d_url` (GLB) avec repli photo systématique ; sans modèle, la
+fiche reste 100 % photo. Aucun modèle GLB n'est fourni dans le dépôt.
 
 ## 21. Mobile
 

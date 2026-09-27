@@ -29,7 +29,7 @@ Statuts : `COMPLETE` · `PARTIAL` · `BROKEN` · `MISSING` · `MOCK` · `NEEDS_H
 | Anti-fraude | MISSING | — | Règles, score, revue | build |
 | Messagerie client ↔ vendeur | MISSING | — | Fils, pièces jointes, modération | build |
 | Analytics & tableaux de bord | PARTIAL | Événements plateforme | Agrégats et écrans | build |
-| Three.js / 3D produit | MISSING | `three` installé, aucun composant | Visualiseur + repli image | build |
+| Three.js / 3D produit | PARTIAL | Visualiseur `Product3DViewer.jsx` (GLB via `model_3d_url`, repli photo, `prefers-reduced-motion`), champ `Product.model_3d_url`, onglets Photo/3D sur fiche produit | Catalogue de modèles, traitement d'assets | build |
 | Traductions EN / Lingala / Swahili | MISSING | Français uniquement | i18n | build |
 | Notifications SMS / push | MISSING | E-mail + in-app | Abstraction fournisseur | blocked |
 | API publique & clés | MISSING | — | Clés, quotas, documentation | blocked |

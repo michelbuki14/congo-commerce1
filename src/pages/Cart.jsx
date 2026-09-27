@@ -11,7 +11,6 @@ import EmptyState from '@/components/EmptyState';
 import ProductRow from '@/components/ProductRow';
 import SectionHeader from '@/components/SectionHeader';
 import { getProfile } from '@/lib/session';
-import { formatUSD } from '@/lib/format';
 
 export default function Cart() {
   const { items, subtotal, updateQuantity, removeItem, count } = useCart();

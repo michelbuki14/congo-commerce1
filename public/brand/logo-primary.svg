@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="330" height="64" viewBox="0 0 330 64" role="img" aria-label="CONGO COMMERCE">
+  <g>
+    <path d="M33.03 43.47 A14 14 0 1 1 33.03 20.53" fill="none" stroke="#12A87A" stroke-width="7" stroke-linecap="round"/>
+    <path d="M30.97 43.47 A14 14 0 1 0 30.97 20.53" fill="none" stroke="#EDF2EE" stroke-width="7" stroke-linecap="round"/>
+    <circle cx="32" cy="32" r="3.6" fill="#19C48D"/>
+  </g>
+  <text x="76" y="41" font-family="Sora, Segoe UI, sans-serif" font-weight="700" font-size="25" letter-spacing="2" fill="#EDF2EE">CONGO <tspan fill="#12A87A">COMMERCE</tspan></text>
+</svg>

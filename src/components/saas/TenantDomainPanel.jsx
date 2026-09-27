@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { formatDate } from '@/lib/format';
-import { slugify } from '@/lib/tenancy';
 
 const STATUS_LABELS = {
   pending: 'En attente',

@@ -35,6 +35,9 @@
     "video_url": {
       "type": "string"
     },
+    "model_3d_url": {
+      "type": "string"
+    },
     "seller_id": {
       "type": "string"
     },

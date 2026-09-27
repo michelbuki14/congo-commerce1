@@ -7,7 +7,7 @@ import RewardsCatalog from '@/components/loyalty/RewardsCatalog';
 import { LOYALTY_TIERS, loadLoyaltyData, loyaltySummary, redeemReward } from '@/lib/loyalty';
 import { getProfile, getSessionId } from '@/lib/session';
 import { emitEvent } from '@/lib/events';
-import { formatDate, formatUSD } from '@/lib/format';
+import { formatDate } from '@/lib/format';
 import { base44 } from '@/api/base44Client';
 
 export default function CustomerLoyalty() {
