@@ -7,6 +7,7 @@ import { splitVat, getVatRate, formatInvoiceNumber } from './tax';
 import { getSessionId, rememberOrder, getReferralCode } from './session';
 import { readActiveTenantId } from './tenancy';
 import { notifyFulfillmentStatus, notifyOrderStatus } from './orderNotifications';
+import { assessCheckoutRisk } from './fraud';
 
 export function generateOrderNumber() {
   const d = new Date();
@@ -528,6 +529,18 @@ export async function placeOrder({ items, profile, delivery, couponCode, payment
 
   // ---- 7. Customer update: the purchase confirmation -----------------------
   await notifyOrderStatus({ order: finalOrder, event: 'order_confirmed' });
+
+  // ---- 8. Fraud & risk scoring (non-blocking) ------------------------------
+  // A paid order is never rejected here: a positive score opens a review case
+  // for the risk desk, which decides from the admin console.
+  await assessCheckoutRisk({
+    order: finalOrder,
+    amountUsd: quote.total,
+    sessionId,
+    profile,
+    couponCode: coupon?.code || '',
+    affiliateCode: creator?.referral_code || '',
+  }).catch(() => null);
 
   rememberOrder(finalOrder);
 
