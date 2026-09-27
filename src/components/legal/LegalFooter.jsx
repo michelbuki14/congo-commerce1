@@ -26,11 +26,13 @@ const RESOURCE_LINKS = [
   { to: '/privacy-settings', label: 'Paramètres de confidentialité' },
   { to: '/order-tracking', label: 'Suivi de livraison' },
   { to: '/dispute-center', label: 'Litiges & remboursements' },
+  { to: '/order-returns', label: 'Initier un retour' },
   { to: '/support-tickets', label: 'Tickets support' },
   { to: '/pickup-points', label: 'Points de retrait' },
   { to: '/shipping-calculator', label: 'Calculateur de livraison' },
   { to: '/seller-application', label: 'Devenir vendeur' },
   { to: '/pricing', label: 'Ouvrir une boutique' },
+  { to: '/subscription-plans', label: 'Formules d’abonnement' },
 ];
 
 export default function LegalFooter() {

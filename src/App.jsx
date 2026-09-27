@@ -68,6 +68,10 @@ import CheckoutSuccess from '@/pages/CheckoutSuccess';
 import Pricing from '@/pages/Pricing';
 import TenantOnboarding from '@/pages/TenantOnboarding';
 import TenantConsole from '@/pages/TenantConsole';
+import DisputeResolution from '@/pages/DisputeResolution';
+import OrderReturns from '@/pages/OrderReturns';
+import PlatformAnalytics from '@/pages/PlatformAnalytics';
+import SubscriptionPlans from '@/pages/SubscriptionPlans';
 
 // Seller
 import SellerDashboard from '@/pages/seller/SellerDashboard';
@@ -165,6 +169,7 @@ const AuthenticatedApp = () => {
         <Route path="/referral" element={<Referral />} />
         <Route path="/returns" element={<Returns />} />
         <Route path="/returns-portal" element={<ReturnsPortal />} />
+        <Route path="/order-returns" element={<OrderReturns />} />
         <Route path="/disputes" element={<Disputes />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/support" element={<Support />} />
@@ -197,6 +202,8 @@ const AuthenticatedApp = () => {
         <Route path="/confidentialite" element={<Confidentialite />} />
         <Route element={<RequireLogin />}>
           <Route path="/payout-requests" element={<PayoutRequests />} />
+          <Route path="/dispute-resolution" element={<DisputeResolution />} />
+          <Route path="/subscription-plans" element={<SubscriptionPlans />} />
           <Route path="/creator" element={<CreatorDashboard />} />
           <Route path="/courier" element={<CourierConsole />} />
 
@@ -225,6 +232,7 @@ const AuthenticatedApp = () => {
 
           <Route element={<AdminOnly />}>
             <Route path="/marketing-analytics" element={<MarketingAnalytics />} />
+            <Route path="/platform-analytics" element={<PlatformAnalytics />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/products" element={<AdminProducts />} />
             <Route path="/admin/suppliers" element={<AdminSuppliers />} />
