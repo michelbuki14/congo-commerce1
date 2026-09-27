@@ -21,9 +21,9 @@ Statuts : `COMPLETE` · `PARTIAL` · `BROKEN` · `MISSING` · `MOCK` · `NEEDS_H
 | Paiement mobile money réel | MOCK | Abstraction + simulacre | Adaptateurs M-Pesa / Airtel / Orange | blocked |
 | Webhooks & remboursements | MISSING | — | Intentions, signatures, réconciliation | blocked |
 | Fournisseurs internationaux | MOCK | Interface + catalogue factice | Adaptateurs API + identifiants | blocked |
-| Abonnements SaaS | MISSING | — | Plans, quotas, facturation | blocked |
-| Domaines clients / marque blanche | MISSING | — | Vérification de domaine, branding | blocked |
-| Multi-tenant par `tenantId` | MISSING | Isolation par e-mail de connexion | Modèle de tenant complet | blocked |
+| Abonnements SaaS | COMPLETE | Entités `Plan` / `Subscription` / `TenantInvoice`, moteur `src/lib/saas.js`, pages `/pricing`, `/tenant`, `/admin/tenants` | Encaissement automatique par prestataire (Builder+) | — |
+| Domaines clients / marque blanche | PARTIAL | Entité `TenantDomain`, enregistrement TXT, application des couleurs par domaine (`src/lib/tenancy.js`) | Provisionnement DNS/SSL automatique (Builder+) | — |
+| Multi-tenant par `tenantId` | PARTIAL | Modèle complet (`Tenant`, `TenantMember`, rôles et permissions), isolation par e-mail de connexion + RLS | Rattachement de `tenant_id` à toutes les entités métier (migration) | build |
 | Recherche & filtres | PARTIAL | Filtrage client | Facettes, index, tri avancé | build |
 | Recommandations | MISSING | — | Moteur à règles | build |
 | Anti-fraude | MISSING | — | Règles, score, revue | build |

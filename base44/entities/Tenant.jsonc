@@ -1,0 +1,125 @@
+{
+  "name": "Tenant",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "slug": {
+      "type": "string"
+    },
+    "owner_name": {
+      "type": "string"
+    },
+    "owner_email": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "country": {
+      "type": "string",
+      "default": "CD"
+    },
+    "city": {
+      "type": "string"
+    },
+    "currency": {
+      "type": "string",
+      "default": "USD"
+    },
+    "default_language": {
+      "type": "string",
+      "default": "fr"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "onboarding",
+        "trial",
+        "active",
+        "suspended",
+        "cancelled"
+      ],
+      "default": "onboarding"
+    },
+    "plan_code": {
+      "type": "string",
+      "default": "STARTER"
+    },
+    "subdomain": {
+      "type": "string"
+    },
+    "logo_url": {
+      "type": "string"
+    },
+    "banner_url": {
+      "type": "string"
+    },
+    "primary_color": {
+      "type": "string",
+      "default": "#0A0A0A"
+    },
+    "accent_color": {
+      "type": "string",
+      "default": "#E4572E"
+    },
+    "email_from_name": {
+      "type": "string"
+    },
+    "commission_rate": {
+      "type": "number",
+      "default": 12
+    },
+    "vat_rate": {
+      "type": "number",
+      "default": 16
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "slug"
+  ],
+  "rls": {
+    "read": null,
+    "create": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

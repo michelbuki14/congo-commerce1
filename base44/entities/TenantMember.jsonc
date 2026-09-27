@@ -1,0 +1,108 @@
+{
+  "name": "TenantMember",
+  "type": "object",
+  "properties": {
+    "tenant_id": {
+      "type": "string"
+    },
+    "tenant_name": {
+      "type": "string"
+    },
+    "owner_email": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "full_name": {
+      "type": "string"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "TENANT_ADMIN",
+        "FINANCE_ADMIN",
+        "SUPPORT",
+        "SELLER",
+        "CREATOR",
+        "COURIER"
+      ],
+      "default": "SUPPORT"
+    },
+    "permissions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "invited",
+        "active",
+        "suspended"
+      ],
+      "default": "invited"
+    },
+    "invited_by": {
+      "type": "string"
+    },
+    "last_active_at": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "tenant_id",
+    "email"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

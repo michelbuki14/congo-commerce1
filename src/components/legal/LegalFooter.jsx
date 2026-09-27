@@ -30,6 +30,7 @@ const RESOURCE_LINKS = [
   { to: '/pickup-points', label: 'Points de retrait' },
   { to: '/shipping-calculator', label: 'Calculateur de livraison' },
   { to: '/seller-application', label: 'Devenir vendeur' },
+  { to: '/pricing', label: 'Ouvrir une boutique' },
 ];
 
 export default function LegalFooter() {

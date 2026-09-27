@@ -1,0 +1,51 @@
+{
+  "name": "TenantUsageEvent",
+  "type": "object",
+  "properties": {
+    "tenant_id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "path": {
+      "type": "string"
+    },
+    "session_id": {
+      "type": "string"
+    },
+    "quantity": {
+      "type": "number",
+      "default": 1
+    },
+    "value_usd": {
+      "type": "number",
+      "default": 0
+    },
+    "metadata": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "tenant_id",
+    "name"
+  ],
+  "rls": {
+    "create": null,
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

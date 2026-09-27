@@ -64,6 +64,9 @@ import TermsOfService from '@/pages/TermsOfService';
 import SupportTickets from '@/pages/SupportTickets';
 import PlatformGuidelines from '@/pages/PlatformGuidelines';
 import CheckoutSuccess from '@/pages/CheckoutSuccess';
+import Pricing from '@/pages/Pricing';
+import TenantOnboarding from '@/pages/TenantOnboarding';
+import TenantConsole from '@/pages/TenantConsole';
 
 // Seller
 import SellerDashboard from '@/pages/seller/SellerDashboard';
@@ -87,6 +90,7 @@ import AdminLogistics from '@/pages/admin/AdminLogistics';
 import AdminPromotions from '@/pages/admin/AdminPromotions';
 import AdminSettings from '@/pages/admin/AdminSettings';
 import AdminCompliance from '@/pages/admin/AdminCompliance';
+import AdminTenants from '@/pages/admin/AdminTenants';
 
 // Creator
 import CreatorDashboard from '@/pages/CreatorDashboard';
@@ -163,6 +167,7 @@ const AuthenticatedApp = () => {
         <Route path="/support-tickets" element={<SupportTickets />} />
         <Route path="/platform-guidelines" element={<PlatformGuidelines />} />
         <Route path="/checkout-success" element={<CheckoutSuccess />} />
+        <Route path="/pricing" element={<Pricing />} />
         <Route path="/mentions-legales" element={<MentionsLegales />} />
         <Route path="/cgv" element={<CGV />} />
         <Route path="/confidentialite" element={<Confidentialite />} />
@@ -179,6 +184,8 @@ const AuthenticatedApp = () => {
           <Route path="/seller/settings" element={<SellerSettings />} />
           <Route path="/seller-portal" element={<SellerPortal />} />
           <Route path="/inventory-management" element={<InventoryManagement />} />
+          <Route path="/tenant" element={<TenantConsole />} />
+          <Route path="/tenant-onboarding" element={<TenantOnboarding />} />
 
           <Route element={<AdminOnly />}>
             <Route path="/marketing-analytics" element={<MarketingAnalytics />} />
@@ -193,6 +200,7 @@ const AuthenticatedApp = () => {
             <Route path="/admin/promotions" element={<AdminPromotions />} />
             <Route path="/admin/settings" element={<AdminSettings />} />
             <Route path="/admin/compliance" element={<AdminCompliance />} />
+            <Route path="/admin/tenants" element={<AdminTenants />} />
           </Route>
         </Route>
       </Route>

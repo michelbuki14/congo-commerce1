@@ -1,0 +1,128 @@
+{
+  "name": "Subscription",
+  "type": "object",
+  "properties": {
+    "tenant_id": {
+      "type": "string"
+    },
+    "tenant_name": {
+      "type": "string"
+    },
+    "owner_email": {
+      "type": "string"
+    },
+    "plan_id": {
+      "type": "string"
+    },
+    "plan_code": {
+      "type": "string",
+      "default": "STARTER"
+    },
+    "billing_cycle": {
+      "type": "string",
+      "enum": [
+        "monthly",
+        "yearly"
+      ],
+      "default": "monthly"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "trialing",
+        "active",
+        "past_due",
+        "cancelled",
+        "expired"
+      ],
+      "default": "trialing"
+    },
+    "amount_usd": {
+      "type": "number",
+      "default": 0
+    },
+    "currency": {
+      "type": "string",
+      "default": "USD"
+    },
+    "started_at": {
+      "type": "string"
+    },
+    "trial_end": {
+      "type": "string"
+    },
+    "current_period_start": {
+      "type": "string"
+    },
+    "current_period_end": {
+      "type": "string"
+    },
+    "cancel_at_period_end": {
+      "type": "boolean",
+      "default": false
+    },
+    "cancelled_at": {
+      "type": "string"
+    },
+    "last_payment_at": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "tenant_id",
+    "plan_code"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

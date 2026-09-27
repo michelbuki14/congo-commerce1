@@ -1,0 +1,97 @@
+{
+  "name": "TenantDomain",
+  "type": "object",
+  "properties": {
+    "tenant_id": {
+      "type": "string"
+    },
+    "tenant_name": {
+      "type": "string"
+    },
+    "owner_email": {
+      "type": "string"
+    },
+    "hostname": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "subdomain",
+        "custom"
+      ],
+      "default": "subdomain"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "dns_pending",
+        "verified",
+        "failed"
+      ],
+      "default": "pending"
+    },
+    "verification_token": {
+      "type": "string"
+    },
+    "verified_at": {
+      "type": "string"
+    },
+    "ssl_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "active"
+      ],
+      "default": "pending"
+    },
+    "is_primary": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "tenant_id",
+    "hostname"
+  ],
+  "rls": {
+    "read": null,
+    "create": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -9,6 +9,7 @@ export const ADMIN_LINKS = [
   { to: '/admin/promotions', label: 'Promotions' },
   { to: '/marketing-analytics', label: 'Marketing' },
   { to: '/admin/users', label: 'Utilisateurs' },
+  { to: '/admin/tenants', label: 'Enseignes SaaS' },
   { to: '/admin/compliance', label: 'Conformité' },
   { to: '/admin/settings', label: 'Paramètres' },
 ];

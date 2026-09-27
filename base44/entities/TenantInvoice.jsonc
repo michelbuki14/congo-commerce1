@@ -1,0 +1,124 @@
+{
+  "name": "TenantInvoice",
+  "type": "object",
+  "properties": {
+    "tenant_id": {
+      "type": "string"
+    },
+    "tenant_name": {
+      "type": "string"
+    },
+    "owner_email": {
+      "type": "string"
+    },
+    "invoice_number": {
+      "type": "string"
+    },
+    "plan_code": {
+      "type": "string"
+    },
+    "billing_cycle": {
+      "type": "string",
+      "enum": [
+        "monthly",
+        "yearly"
+      ],
+      "default": "monthly"
+    },
+    "period_start": {
+      "type": "string"
+    },
+    "period_end": {
+      "type": "string"
+    },
+    "subtotal_usd": {
+      "type": "number",
+      "default": 0
+    },
+    "vat_usd": {
+      "type": "number",
+      "default": 0
+    },
+    "total_usd": {
+      "type": "number",
+      "default": 0
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "open",
+        "paid",
+        "past_due",
+        "void"
+      ],
+      "default": "open"
+    },
+    "issued_at": {
+      "type": "string"
+    },
+    "due_at": {
+      "type": "string"
+    },
+    "paid_at": {
+      "type": "string"
+    },
+    "payment_reference": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "tenant_id",
+    "invoice_number"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}
