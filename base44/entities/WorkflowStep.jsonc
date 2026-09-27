@@ -1,0 +1,98 @@
+{
+  "name": "WorkflowStep",
+  "type": "object",
+  "properties": {
+    "execution_id": {
+      "type": "string"
+    },
+    "workflow_code": {
+      "type": "string"
+    },
+    "tenant_id": {
+      "type": "string"
+    },
+    "step_index": {
+      "type": "number",
+      "default": 0
+    },
+    "name": {
+      "type": "string"
+    },
+    "label": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "PENDING",
+        "RUNNING",
+        "COMPLETED",
+        "FAILED",
+        "SKIPPED",
+        "COMPENSATED"
+      ],
+      "default": "PENDING"
+    },
+    "attempts": {
+      "type": "number",
+      "default": 0
+    },
+    "max_attempts": {
+      "type": "number",
+      "default": 3
+    },
+    "critical": {
+      "type": "boolean",
+      "default": true
+    },
+    "started_at": {
+      "type": "string"
+    },
+    "completed_at": {
+      "type": "string"
+    },
+    "duration_ms": {
+      "type": "number",
+      "default": 0
+    },
+    "output": {
+      "type": "object"
+    },
+    "error": {
+      "type": "string"
+    },
+    "compensated": {
+      "type": "boolean",
+      "default": false
+    },
+    "compensation_error": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "execution_id",
+    "name"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

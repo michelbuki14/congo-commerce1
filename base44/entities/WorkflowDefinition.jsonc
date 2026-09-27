@@ -1,0 +1,111 @@
+{
+  "name": "WorkflowDefinition",
+  "type": "object",
+  "properties": {
+    "code": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string",
+      "default": "1.0"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "onboarding",
+        "billing",
+        "commerce",
+        "risk",
+        "ops"
+      ],
+      "default": "ops"
+    },
+    "trigger": {
+      "type": "string",
+      "enum": [
+        "manual",
+        "event",
+        "schedule"
+      ],
+      "default": "manual"
+    },
+    "event_names": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "tenant_scoped": {
+      "type": "boolean",
+      "default": true
+    },
+    "admin_only": {
+      "type": "boolean",
+      "default": false
+    },
+    "idempotent": {
+      "type": "boolean",
+      "default": true
+    },
+    "max_attempts": {
+      "type": "number",
+      "default": 3
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    },
+    "run_count": {
+      "type": "number",
+      "default": 0
+    },
+    "last_run_at": {
+      "type": "string"
+    },
+    "last_status": {
+      "type": "string"
+    },
+    "avg_duration_ms": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "code",
+    "name"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

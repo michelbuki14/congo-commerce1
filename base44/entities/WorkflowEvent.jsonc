@@ -1,0 +1,73 @@
+{
+  "name": "WorkflowEvent",
+  "type": "object",
+  "properties": {
+    "event_id": {
+      "type": "string"
+    },
+    "event_type": {
+      "type": "string"
+    },
+    "tenant_id": {
+      "type": "string"
+    },
+    "tenant_owner_email": {
+      "type": "string"
+    },
+    "aggregate_type": {
+      "type": "string"
+    },
+    "aggregate_id": {
+      "type": "string"
+    },
+    "workflow_code": {
+      "type": "string"
+    },
+    "execution_id": {
+      "type": "string"
+    },
+    "version": {
+      "type": "number",
+      "default": 1
+    },
+    "source": {
+      "type": "string",
+      "default": "workflow_engine"
+    },
+    "payload": {
+      "type": "object"
+    },
+    "published_at": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000
+    }
+  },
+  "required": [
+    "event_type"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

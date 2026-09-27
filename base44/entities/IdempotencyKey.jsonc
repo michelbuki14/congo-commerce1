@@ -1,0 +1,70 @@
+{
+  "name": "IdempotencyKey",
+  "type": "object",
+  "properties": {
+    "key": {
+      "type": "string"
+    },
+    "scope": {
+      "type": "string"
+    },
+    "workflow_code": {
+      "type": "string"
+    },
+    "execution_id": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "reserved",
+        "completed",
+        "failed"
+      ],
+      "default": "reserved"
+    },
+    "attempts": {
+      "type": "number",
+      "default": 1
+    },
+    "result": {
+      "type": "object"
+    },
+    "error": {
+      "type": "string"
+    },
+    "expires_at": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000
+    }
+  },
+  "required": [
+    "key",
+    "scope"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

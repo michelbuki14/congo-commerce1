@@ -1,0 +1,135 @@
+{
+  "name": "WorkflowExecution",
+  "type": "object",
+  "properties": {
+    "workflow_code": {
+      "type": "string"
+    },
+    "workflow_name": {
+      "type": "string"
+    },
+    "execution_number": {
+      "type": "string"
+    },
+    "tenant_id": {
+      "type": "string"
+    },
+    "tenant_owner_email": {
+      "type": "string"
+    },
+    "trigger": {
+      "type": "string",
+      "default": "manual"
+    },
+    "trigger_reference": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "PENDING",
+        "RUNNING",
+        "WAITING",
+        "COMPLETED",
+        "FAILED",
+        "CANCELLED",
+        "RETRYING"
+      ],
+      "default": "PENDING"
+    },
+    "current_step": {
+      "type": "string"
+    },
+    "current_step_index": {
+      "type": "number",
+      "default": 0
+    },
+    "total_steps": {
+      "type": "number",
+      "default": 0
+    },
+    "completed_steps": {
+      "type": "number",
+      "default": 0
+    },
+    "failed_steps": {
+      "type": "number",
+      "default": 0
+    },
+    "attempts": {
+      "type": "number",
+      "default": 1
+    },
+    "max_attempts": {
+      "type": "number",
+      "default": 3
+    },
+    "idempotency_key": {
+      "type": "string"
+    },
+    "input": {
+      "type": "object"
+    },
+    "output": {
+      "type": "object"
+    },
+    "error": {
+      "type": "string"
+    },
+    "dead_letter": {
+      "type": "boolean",
+      "default": false
+    },
+    "next_retry_at": {
+      "type": "string"
+    },
+    "waiting_reason": {
+      "type": "string"
+    },
+    "external_ids": {
+      "type": "object"
+    },
+    "started_at": {
+      "type": "string"
+    },
+    "completed_at": {
+      "type": "string"
+    },
+    "duration_ms": {
+      "type": "number",
+      "default": 0
+    },
+    "actor_email": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000
+    }
+  },
+  "required": [
+    "workflow_code"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
