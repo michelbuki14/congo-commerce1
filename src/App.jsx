@@ -90,6 +90,7 @@ import IntegrationLogs from '@/pages/IntegrationLogs';
 import CategoryManager from '@/pages/CategoryManager';
 import UserProfile from '@/pages/UserProfile';
 import DeliveryMap from '@/pages/DeliveryMap';
+import CommandCenter from '@/pages/admin/CommandCenter';
 import SupplierPortal from '@/pages/SupplierPortal';
 import FraudAlerts from '@/pages/FraudAlerts';
 import PaymentMethods from '@/pages/PaymentMethods';
@@ -287,6 +288,7 @@ const AuthenticatedApp = () => {
             <Route path="/integration-logs" element={<IntegrationLogs />} />
             <Route path="/category-manager" element={<CategoryManager />} />
             <Route path="/delivery-map" element={<DeliveryMap />} />
+            <Route path="/admin/command-center" element={<CommandCenter />} />
             <Route path="/supplier-portal" element={<SupplierPortal />} />
             <Route path="/fraud-alerts" element={<FraudAlerts />} />
             <Route path="/shipping-config" element={<ShippingConfig />} />

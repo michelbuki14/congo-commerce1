@@ -6,6 +6,7 @@ export const ADMIN_LINKS = [
   { to: '/inventory-sheets', label: 'Stocks Google Sheets' },
   { to: '/integration-logs', label: "Journaux d'intégration" },
   { to: '/category-manager', label: 'Catégories' },
+  { to: '/admin/command-center', label: 'Centre de commande' },
   { to: '/supplier-portal', label: 'Portail fournisseurs' },
   { to: '/delivery-map', label: 'Carte des livraisons' },
   { to: '/fraud-alerts', label: 'Alertes de fraude' },
