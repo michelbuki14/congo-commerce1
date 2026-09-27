@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { Image } from '@/components/ui/image';
 import { useCart } from '@/lib/cart';
 import { useCurrency } from '@/lib/currency';
-import { getLikedContent, toggleLikedContent } from '@/lib/session';
+import { getLikedContent, getReferralCode, toggleLikedContent } from '@/lib/session';
 import { compactNumber } from '@/lib/format';
 
 export default function Discover() {
@@ -40,7 +40,9 @@ export default function Discover() {
 
   const share = async (content) => {
     const product = await base44.entities.Product.get(content.product_id).catch(() => null);
-    const url = `${window.location.origin}/product/${product?.slug || content.product_id}`;
+    const base = `${window.location.origin}/product/${product?.slug || content.product_id}`;
+    const code = getReferralCode();
+    const url = code ? `${base}?ref=${encodeURIComponent(code)}` : base;
     try {
       if (navigator.share) {
         await navigator.share({ title: content.title, url });
