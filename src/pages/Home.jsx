@@ -85,6 +85,9 @@ export default function Home() {
             <Link to="/categories" className="rounded-full bg-background/20 px-4 py-2 text-xs font-semibold backdrop-blur md:text-sm">
               Parcourir les catégories
             </Link>
+            <Link to="/creator" className="w-full text-[11px] font-medium text-background/80 underline md:text-xs">
+              Devenir créateur →
+            </Link>
           </div>
         </div>
       </section>
