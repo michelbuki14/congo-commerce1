@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import {
-  Phone, MapPin, Navigation, PackageCheck, CheckCircle2, XCircle, Loader2, Image as ImageIcon,
+  Phone, MapPin, Navigation, PackageCheck, CheckCircle2, XCircle, Loader2,
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { SHIPMENT_STATUS_LABELS } from '@/lib/logistics';
 import { formatUSD } from '@/lib/format';
+import CourierProofForm from './CourierProofForm';
 
 const TERMINAL = ['DELIVERED', 'FAILED', 'RETURNED', 'CANCELLED'];
 
@@ -19,12 +20,6 @@ const NEXT_STEP = {
 
 export default function CourierJobCard({ shipment, fulfillment, order, busy, onRespond, onAdvance, showFleet }) {
   const [proofOpen, setProofOpen] = useState(false);
-  const [recipient, setRecipient] = useState(order?.customer_name || '');
-  const [proofUri, setProofUri] = useState('');
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState('');
-  const [code, setCode] = useState('');
-  const [codeError, setCodeError] = useState('');
 
   const accepted = shipment.courier_response === 'accepted';
   const declined = shipment.courier_response === 'declined';
@@ -32,42 +27,12 @@ export default function CourierJobCard({ shipment, fulfillment, order, busy, onR
   const next = NEXT_STEP[shipment.status];
   const disabled = busy === shipment.id;
 
-  const uploadProof = async (file) => {
-    if (!file) return;
-    setUploadError('');
-    setUploading(true);
-    try {
-      const res = await base44.integrations.Core.UploadPrivateFile({ file });
-      setProofUri(res.file_uri);
-    } catch {
-      setUploadError("La photo n'a pas pu être envoyée. Réessayez.");
-    } finally {
-      setUploading(false);
-    }
-  };
-
   const viewProof = async () => {
     const { signed_url } = await base44.integrations.Core.CreateFileSignedUrl({
       file_uri: shipment.proof_of_delivery,
       expires_in: 300,
     });
     window.open(signed_url, '_blank', 'noopener');
-  };
-
-  const needsCode = order?.delivery_method === 'pickup_point' && !!order?.pickup_code;
-
-  const confirmDelivery = async () => {
-    setCodeError('');
-    if (needsCode && code.trim() !== String(order.pickup_code)) {
-      setCodeError('Code de retrait incorrect. Demandez-le au client avant de valider.');
-      return;
-    }
-    const saved = await onAdvance(shipment, 'DELIVERED', `Livré à ${recipient || 'client'}`, {
-      delivered_to: recipient,
-      delivered_at: new Date().toISOString(),
-      proof_of_delivery: proofUri || shipment.proof_of_delivery || '',
-    });
-    if (saved) setProofOpen(false);
   };
 
   return (
@@ -174,61 +139,15 @@ export default function CourierJobCard({ shipment, fulfillment, order, busy, onR
           </div>
 
           {proofOpen && (
-            <div className="space-y-2 rounded-xl border border-border p-3">
-              <input
-                value={recipient}
-                onChange={(e) => setRecipient(e.target.value)}
-                placeholder="Nom de la personne qui réceptionne"
-                className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
-              />
-              {needsCode && (
-                <div className="space-y-1">
-                  <input
-                    value={code}
-                    onChange={(e) => setCode(e.target.value)}
-                    inputMode="numeric"
-                    placeholder="Code de retrait à 4 chiffres"
-                    className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
-                  />
-                  {codeError && <p className="text-[11px] text-destructive">{codeError}</p>}
-                </div>
-              )}
-              <label className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                <ImageIcon className="h-3.5 w-3.5" />
-                Preuve de livraison (photo)
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    uploadProof(e.target.files?.[0]);
-                    e.target.value = '';
-                  }}
-                  className="text-[11px]"
-                />
-              </label>
-              {uploading && <p className="text-[11px] text-muted-foreground">Envoi de la photo…</p>}
-              {uploadError && <p className="text-[11px] text-destructive">{uploadError}</p>}
-              {proofUri && (
-                <p className="flex items-center gap-2 text-[11px] font-medium text-primary">
-                  Photo ajoutée
-                  <button
-                    type="button"
-                    onClick={() => setProofUri('')}
-                    className="font-semibold text-muted-foreground underline"
-                  >
-                    Retirer
-                  </button>
-                </p>
-              )}
-              <button
-                type="button"
-                disabled={disabled || uploading}
-                onClick={confirmDelivery}
-                className="w-full rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-60"
-              >
-                Marquer comme livré
-              </button>
-            </div>
+            <CourierProofForm
+              order={order}
+              shipment={shipment}
+              busy={disabled}
+              onConfirm={async (extra) => {
+                const saved = await onAdvance(shipment, 'DELIVERED', `Livré à ${extra.delivered_to || 'client'}`, extra);
+                if (saved) setProofOpen(false);
+              }}
+            />
           )}
         </div>
       )}

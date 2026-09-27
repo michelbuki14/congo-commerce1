@@ -5,6 +5,7 @@ import { respondToShipment, courierUpdateShipment } from '@/lib/orderService';
 import { useTenantScope } from '@/lib/tenant';
 import CourierHeader from '@/components/courier/CourierHeader';
 import CourierJobCard from '@/components/courier/CourierJobCard';
+import CourierTrackingView from '@/components/courier/CourierTrackingView';
 import CourierEarnings from '@/components/courier/CourierEarnings';
 
 const TERMINAL = ['DELIVERED', 'FAILED', 'RETURNED', 'CANCELLED'];
@@ -143,6 +144,7 @@ export default function CourierConsole() {
   const TABS = [
     { id: 'offers', label: `Nouvelles courses (${buckets.offers.length})` },
     { id: 'active', label: `En cours (${buckets.active.length})` },
+    { id: 'tracking', label: `Suivi (${buckets.active.length})` },
     { id: 'done', label: `Terminées (${buckets.done.length})` },
   ];
 
@@ -193,6 +195,15 @@ export default function CourierConsole() {
           Aucun compte livreur n'est relié à votre connexion. L'administration doit rattacher votre flotte à
           l'adresse e-mail avec laquelle vous vous connectez.
         </p>
+      ) : tab === 'tracking' ? (
+        <CourierTrackingView
+          shipments={buckets.active}
+          fulfillments={fulfillments}
+          orders={orders}
+          busy={busy}
+          showFleet={fleets.length > 1}
+          onAdvance={advance}
+        />
       ) : visible.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border bg-card p-4 text-xs text-muted-foreground">
           {tab === 'offers'
