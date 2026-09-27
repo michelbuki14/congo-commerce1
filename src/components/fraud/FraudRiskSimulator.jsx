@@ -19,7 +19,15 @@ export default function FraudRiskSimulator({ onSimulate }) {
     setBusy(true);
     setResult(null);
     try {
-      setResult(await onSimulate({ ...form, amount_usd: Number(form.amount_usd) || 0 }));
+      setResult(
+        await onSimulate({
+          amountUsd: Number(form.amount_usd) || 0,
+          phone: form.customer_phone,
+          sessionId: form.session_id,
+          couponCode: form.coupon_code,
+          affiliateCode: form.affiliate_code,
+        }),
+      );
     } finally {
       setBusy(false);
     }
