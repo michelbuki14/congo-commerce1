@@ -1,0 +1,113 @@
+{
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "0 9 * * 1",
+      "one_time_date": null,
+      "timezone": "America/New_York",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "description": "Every week, reaches out to sellers whose fulfillment orders have been untouched for 30 days: a check-in e-mail for tenants on a paid plan, a limited-time upgrade offer for free tiers.",
+  "name": "Inactive Seller Outreach",
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "inactive_seller_outreach",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "find_inactive_sellers": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "findInactiveSellers",
+            "args": {}
+          },
+          "then": "branch_paid_plan",
+          "x-base44": {
+            "title": "Rep\u00e9rer les vendeurs inactifs",
+            "description": "Commandes sans mouvement depuis 30 jours"
+          }
+        }
+      },
+      {
+        "branch_paid_plan": {
+          "switch": [
+            {
+              "when": "${ (.find_inactive_sellers.paid_ids // []) | length > 0 }",
+              "then": "checkin_paid_sellers"
+            },
+            {
+              "when": "${ true }",
+              "then": "branch_free_tier"
+            }
+          ],
+          "x-base44": {
+            "title": "Plan payant actif ?",
+            "description": "Vendeurs sous plan payant"
+          }
+        }
+      },
+      {
+        "checkin_paid_sellers": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "sendSellerCheckinEmails",
+            "args": {
+              "seller_ids": "${ .find_inactive_sellers.paid_ids }"
+            }
+          },
+          "then": "branch_free_tier",
+          "x-base44": {
+            "title": "E-mail de prise de contact",
+            "description": "Vendeurs sous plan payant"
+          }
+        }
+      },
+      {
+        "branch_free_tier": {
+          "switch": [
+            {
+              "when": "${ (.find_inactive_sellers.free_ids // []) | length > 0 }",
+              "then": "offer_upgrade"
+            },
+            {
+              "when": "${ true }",
+              "then": "end"
+            }
+          ],
+          "x-base44": {
+            "title": "Formule gratuite ?",
+            "description": "Vendeurs sans plan payant"
+          }
+        }
+      },
+      {
+        "offer_upgrade": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "sendUpgradeOfferEmails",
+            "args": {
+              "seller_ids": "${ .find_inactive_sellers.free_ids }"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Offre de mise \u00e0 niveau",
+            "description": "R\u00e9duction limit\u00e9e dans le temps"
+          }
+        }
+      }
+    ]
+  }
+}
