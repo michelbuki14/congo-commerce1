@@ -157,3 +157,29 @@ export function isTenantOwner(tenant, me) {
 export function tenantScope(tenant) {
   return tenant?.id ? { tenant_id: tenant.id } : {};
 }
+
+/**
+ * A catalogue record is visible on the current storefront when:
+ *  - the visitor is on a store's own verified domain: only that store's records;
+ *  - otherwise: the platform's own stock (no tenant_id) plus the selected store's.
+ */
+export function inTenantScope(record, scope) {
+  const owner = String(record?.tenant_id || '');
+  if (scope?.hostTenant?.id) return owner === scope.hostTenant.id;
+  if (scope?.tenant?.id) return !owner || owner === scope.tenant.id;
+  return !owner;
+}
+
+export function scopeRecords(records, scope) {
+  return (records || []).filter((r) => inTenantScope(r, scope));
+}
+
+/** Resolves the storefront's store once per page load: host domain first, then the account's selection. */
+export async function resolveStorefrontScope() {
+  const hostTenant = await resolveTenantByHost();
+  if (hostTenant) return { tenant: hostTenant, hostTenant };
+  const id = readActiveTenantId();
+  if (!id) return { tenant: null, hostTenant: null };
+  const rows = await base44.entities.Tenant.filter({ id }).catch(() => []);
+  return { tenant: rows[0] || null, hostTenant: null };
+}

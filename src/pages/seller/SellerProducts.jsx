@@ -6,6 +6,7 @@ import DashboardNav from '@/components/DashboardNav';
 import StatusBadge from '@/components/StatusBadge';
 import { Image } from '@/components/ui/image';
 import { formatUSD } from '@/lib/format';
+import { readActiveTenantId } from '@/lib/tenancy';
 
 const LINKS = [
   { to: '/seller', label: 'Tableau de bord', end: true },
@@ -76,6 +77,7 @@ export default function SellerProducts() {
     setSaving(true);
     const category = categories.find((c) => c.id === form.category_id);
     const payload = {
+      tenant_id: seller.tenant_id || readActiveTenantId() || '',
       title: form.title,
       description: form.description,
       price_usd: Number(form.price_usd) || 0,

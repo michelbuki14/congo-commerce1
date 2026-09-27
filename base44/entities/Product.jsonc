@@ -2,6 +2,9 @@
   "name": "Product",
   "type": "object",
   "properties": {
+    "tenant_id": {
+      "type": "string"
+    },
     "title": {
       "type": "string"
     },

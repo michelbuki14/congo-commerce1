@@ -2,6 +2,9 @@
   "name": "Order",
   "type": "object",
   "properties": {
+    "tenant_id": {
+      "type": "string"
+    },
     "order_number": {
       "type": "string"
     },

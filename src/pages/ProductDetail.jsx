@@ -16,6 +16,7 @@ import ProductRow from '@/components/ProductRow';
 import ProductReviews from '@/components/ProductReviews';
 import SectionHeader from '@/components/SectionHeader';
 import { compactNumber } from '@/lib/format';
+import { inTenantScope, resolveStorefrontScope, scopeRecords } from '@/lib/tenancy';
 
 export default function ProductDetail() {
   const { slug } = useParams();
@@ -44,7 +45,12 @@ export default function ProductDetail() {
       try {
         const bySlug = await base44.entities.Product.filter({ slug });
         const p = bySlug[0] || (await base44.entities.Product.get(slug));
+        const scope = await resolveStorefrontScope();
         if (!alive) return;
+        if (!inTenantScope(p, scope)) {
+          setNotFound(true);
+          return;
+        }
         setProduct(p);
         setLiked(isWishlisted(p.id));
         const initial = {};
@@ -61,7 +67,7 @@ export default function ProductDetail() {
           p.category_id ? base44.entities.Category.get(p.category_id).catch(() => null) : Promise.resolve(null),
         ]);
         if (!alive) return;
-        setRelated(rel.filter((r) => r.id !== p.id).slice(0, 8));
+        setRelated(scopeRecords(rel, scope).filter((r) => r.id !== p.id).slice(0, 8));
         setZone(zones[0] || null);
         setSellerSlug(seller?.slug || '');
         setCategorySlug(category?.slug || '');

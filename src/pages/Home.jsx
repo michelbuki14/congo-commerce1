@@ -10,6 +10,7 @@ import ProductGrid from '@/components/ProductGrid';
 import SellerCard from '@/components/SellerCard';
 import ShoppingAssistant from '@/components/ShoppingAssistant';
 import EmptyState from '@/components/EmptyState';
+import { resolveStorefrontScope, scopeRecords } from '@/lib/tenancy';
 
 export default function Home() {
   const [products, setProducts] = useState([]);
@@ -23,6 +24,7 @@ export default function Home() {
     (async () => {
       try {
         await loadPlatformConfig();
+        const scope = await resolveStorefrontScope();
         const [p, c, s, ct] = await Promise.all([
           base44.entities.Product.filter({ status: 'published' }, '-created_date', 60),
           base44.entities.Category.list('sort_order', 20),
@@ -30,9 +32,9 @@ export default function Home() {
           base44.entities.Content.filter({ status: 'published' }, '-likes_count', 10),
         ]);
         if (!alive) return;
-        setProducts(p);
+        setProducts(scopeRecords(p, scope));
         setCategories(c);
-        setSellers(s);
+        setSellers(scopeRecords(s, scope));
         setContent(ct);
       } finally {
         if (alive) setLoading(false);

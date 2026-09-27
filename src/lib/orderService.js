@@ -5,6 +5,7 @@ import { selectCourierFor, getCourier } from './logistics';
 import { round2, usdToCdf } from './format';
 import { splitVat, getVatRate, formatInvoiceNumber } from './tax';
 import { getSessionId, rememberOrder, getReferralCode } from './session';
+import { readActiveTenantId } from './tenancy';
 
 export function generateOrderNumber() {
   const d = new Date();
@@ -201,6 +202,9 @@ export async function placeOrder({ items, profile, delivery, couponCode, payment
   const { ht: totalHt, vat: vatAmount } = splitVat(quote.total, vatRate);
   const invoiceNumber = await nextInvoiceNumber();
 
+  // The sale belongs to the store the article came from; platform stock stays unassigned.
+  const orderTenantId = quote.lines.map((l) => l.product.tenant_id).find(Boolean) || readActiveTenantId() || '';
+
   // ---- 1. Split one customer order into fulfillment orders -----------------
   const groups = new Map();
   quote.lines.forEach((line) => {
@@ -246,6 +250,7 @@ export async function placeOrder({ items, profile, delivery, couponCode, payment
 
   // ---- 2. Create the single customer-facing order --------------------------
   const order = await base44.entities.Order.create({
+    tenant_id: orderTenantId,
     order_number: orderNumber,
     session_id: sessionId,
     customer_name: profile.name,

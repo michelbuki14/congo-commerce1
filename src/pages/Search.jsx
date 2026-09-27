@@ -4,6 +4,7 @@ import { Search as SearchIcon, SlidersHorizontal, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import ProductGrid from '@/components/ProductGrid';
 import EmptyState from '@/components/EmptyState';
+import { resolveStorefrontScope, scopeRecords } from '@/lib/tenancy';
 
 const SORTS = [
   { id: 'relevance', label: 'Pertinence' },
@@ -53,11 +54,12 @@ export default function Search() {
 
   useEffect(() => {
     (async () => {
+      const scope = await resolveStorefrontScope();
       const [p, c] = await Promise.all([
         base44.entities.Product.filter({ status: 'published' }, '-created_date', 200),
         base44.entities.Category.list('sort_order', 40),
       ]);
-      setProducts(p);
+      setProducts(scopeRecords(p, scope));
       setCategories(c);
       setLoading(false);
     })();

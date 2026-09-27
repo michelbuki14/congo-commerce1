@@ -8,6 +8,7 @@ import RatingStars from '@/components/RatingStars';
 import EmptyState from '@/components/EmptyState';
 import { getFollowedIds, toggleFollowId } from '@/lib/session';
 import { compactNumber } from '@/lib/format';
+import { inTenantScope, resolveStorefrontScope, scopeRecords } from '@/lib/tenancy';
 
 export default function Store() {
   const { slug } = useParams();
@@ -25,14 +26,15 @@ export default function Store() {
         let rows = await base44.entities.Seller.filter({ slug });
         if (!rows.length) rows = await base44.entities.Seller.filter({ id: slug }).catch(() => []);
         const found = rows[0];
-        if (!found) {
+        const scope = await resolveStorefrontScope();
+        if (!found || !inTenantScope(found, scope)) {
           if (alive) setNotFound(true);
           return;
         }
         const items = await base44.entities.Product.filter({ seller_id: found.id, status: 'published' }, '-created_date', 100);
         if (!alive) return;
         setSeller(found);
-        setProducts(items);
+        setProducts(scopeRecords(items, scope));
         setFollowing(getFollowedIds().includes(found.id));
       } catch {
         if (alive) setNotFound(true);
