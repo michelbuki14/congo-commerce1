@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Trash2, ShoppingBag, Ticket, Truck } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { trackEvent } from '@/lib/tracking';
 import { Image } from '@/components/ui/image';
 import { useCart } from '@/lib/cart';
 import { useCurrency } from '@/lib/currency';
@@ -117,7 +118,7 @@ export default function Cart() {
       <button
         type="button"
         onClick={() => {
-          base44.analytics.track({ eventName: 'order_checkout_started' });
+          trackEvent('order_checkout_started', { value_usd: subtotal });
           navigate('/checkout');
         }}
         className="w-full rounded-full bg-primary py-3.5 text-sm font-bold text-primary-foreground"

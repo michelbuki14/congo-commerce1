@@ -43,6 +43,18 @@ import CGV from '@/pages/legal/CGV';
 import Confidentialite from '@/pages/legal/Confidentialite';
 import About from '@/pages/About';
 import Contact from '@/pages/Contact';
+import Faq from '@/pages/Faq';
+import HelpCenter from '@/pages/HelpCenter';
+import ShippingInfo from '@/pages/ShippingInfo';
+import BuyerProtection from '@/pages/BuyerProtection';
+import SellWithUs from '@/pages/SellWithUs';
+import PrivacySettings from '@/pages/PrivacySettings';
+import OrderHistory from '@/pages/OrderHistory';
+import MyWallet from '@/pages/MyWallet';
+import ReferralProgram from '@/pages/ReferralProgram';
+import CreatorShowcase from '@/pages/CreatorShowcase';
+import PayoutRequests from '@/pages/PayoutRequests';
+import MarketingAnalytics from '@/pages/MarketingAnalytics';
 
 // Seller
 import SellerDashboard from '@/pages/seller/SellerDashboard';
@@ -121,10 +133,21 @@ const AuthenticatedApp = () => {
         <Route path="/invoice/:number" element={<Invoice />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/faq" element={<Faq />} />
+        <Route path="/help-center" element={<HelpCenter />} />
+        <Route path="/shipping-info" element={<ShippingInfo />} />
+        <Route path="/buyer-protection" element={<BuyerProtection />} />
+        <Route path="/sell-with-us" element={<SellWithUs />} />
+        <Route path="/privacy-settings" element={<PrivacySettings />} />
+        <Route path="/order-history" element={<OrderHistory />} />
+        <Route path="/my-wallet" element={<MyWallet />} />
+        <Route path="/referral-program" element={<ReferralProgram />} />
+        <Route path="/creator-showcase" element={<CreatorShowcase />} />
         <Route path="/mentions-legales" element={<MentionsLegales />} />
         <Route path="/cgv" element={<CGV />} />
         <Route path="/confidentialite" element={<Confidentialite />} />
         <Route element={<RequireLogin />}>
+          <Route path="/payout-requests" element={<PayoutRequests />} />
           <Route path="/creator" element={<CreatorDashboard />} />
           <Route path="/courier" element={<CourierConsole />} />
 
@@ -136,6 +159,7 @@ const AuthenticatedApp = () => {
           <Route path="/seller/settings" element={<SellerSettings />} />
 
           <Route element={<AdminOnly />}>
+            <Route path="/marketing-analytics" element={<MarketingAnalytics />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/products" element={<AdminProducts />} />
             <Route path="/admin/suppliers" element={<AdminSuppliers />} />

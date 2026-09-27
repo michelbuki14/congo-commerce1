@@ -1,0 +1,43 @@
+{
+  "name": "AnalyticsEvent",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "session_id": {
+      "type": "string"
+    },
+    "product_id": {
+      "type": "string"
+    },
+    "path": {
+      "type": "string"
+    },
+    "value_usd": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "name"
+  ],
+  "rls": {
+    "create": null,
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

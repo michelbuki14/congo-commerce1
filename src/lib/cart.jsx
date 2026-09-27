@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { trackEvent } from '@/lib/tracking';
 
 const CartContext = createContext(null);
 const KEY = 'congo_commerce:cart';
@@ -33,7 +33,7 @@ export function CartProvider({ children }) {
   }, [items]);
 
   const addItem = useCallback((product, quantity = 1, variant = null) => {
-    base44.analytics.track({ eventName: 'cart_add' });
+    trackEvent('cart_add', { product_id: product.id, value_usd: product.price_usd });
     setItems((prev) => {
       const key = lineKey(product.id, variant);
       const existing = prev.find((i) => lineKey(i.product_id, i.variant) === key);

@@ -7,6 +7,7 @@ import { useCart } from '@/lib/cart';
 import { useCurrency } from '@/lib/currency';
 import { computePriceBreakdown } from '@/lib/pricing';
 import { getProfile, isWishlisted, toggleWishlist } from '@/lib/session';
+import { trackEvent } from '@/lib/tracking';
 import RatingStars from '@/components/RatingStars';
 import QuantityStepper from '@/components/QuantityStepper';
 import PriceBreakdown from '@/components/PriceBreakdown';
@@ -91,7 +92,7 @@ export default function ProductDetail() {
     if (!product) return;
     addItem(product, qty, variantLabel);
     if (goToCheckout) {
-      base44.analytics.track({ eventName: 'order_checkout_started' });
+      trackEvent('order_checkout_started', { product_id: product.id, value_usd: product.price_usd });
       navigate('/checkout');
     } else {
       flash('Ajouté au panier');

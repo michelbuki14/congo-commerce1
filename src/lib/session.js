@@ -104,8 +104,23 @@ export function setReferralCode(code) {
   write('referral_code', code || '');
 }
 
+export function getPrivacyPreferences() {
+  return read('privacy', {
+    personalized_tracking: true,
+    anonymous_analytics: true,
+    share_with_partners: true,
+    marketing_emails: false,
+  });
+}
+
+export function savePrivacyPreferences(preferences) {
+  const next = { ...getPrivacyPreferences(), ...preferences };
+  write('privacy', next);
+  return next;
+}
+
 export function clearLocalSession() {
-  ['wishlist', 'liked_content', 'follows', 'order_ids', 'profile'].forEach((k) => {
+  ['wishlist', 'liked_content', 'follows', 'order_ids', 'profile', 'privacy'].forEach((k) => {
     try {
       localStorage.removeItem(PREFIX + k);
     } catch {
