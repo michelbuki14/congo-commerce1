@@ -18,10 +18,14 @@ export default function Home() {
   const [sellers, setSellers] = useState([]);
   const [content, setContent] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let alive = true;
     (async () => {
+      setLoading(true);
+      setLoadFailed(false);
       try {
         await loadPlatformConfig();
         const scope = await resolveStorefrontScope();
@@ -36,6 +40,9 @@ export default function Home() {
         setCategories(c);
         setSellers(scopeRecords(s, scope));
         setContent(ct);
+      } catch {
+        // Une coupure réseau ne doit pas vider la page : on propose de réessayer.
+        if (alive) setLoadFailed(true);
       } finally {
         if (alive) setLoading(false);
       }
@@ -43,7 +50,7 @@ export default function Home() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [reloadKey]);
 
   const sections = useMemo(() => {
     const local = products.filter((p) => p.source_type !== 'international_supplier');
@@ -60,6 +67,21 @@ export default function Home() {
 
   return (
     <div className="space-y-7 pb-6">
+      {loadFailed && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-border bg-card p-4">
+          <p className="text-xs text-muted-foreground">
+            Certains contenus n'ont pas pu être chargés. Vérifiez votre connexion.
+          </p>
+          <button
+            type="button"
+            onClick={() => setReloadKey((k) => k + 1)}
+            className="rounded-full bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-foreground"
+          >
+            Réessayer
+          </button>
+        </div>
+      )}
+
       {/* Hero */}
       <section className="relative overflow-hidden rounded-2xl">
         <Image
