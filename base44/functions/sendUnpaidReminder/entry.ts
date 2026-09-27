@@ -7,6 +7,7 @@ import {
   resolveFulfillment,
   tenantOf,
 } from '../../shared/fulfillments.ts';
+import { requireAdmin } from '../../shared/security.ts';
 
 /**
  * One hour after an unpaid fulfillment order is created: a reminder lands in
@@ -20,6 +21,11 @@ export default async function (req) {
     const body = await req.json().catch(() => ({}));
     const fulfillmentId = String(body.fulfillment_id || '').trim();
     if (!fulfillmentId) return Response.json({ error: 'fulfillment_id is required' }, { status: 400 });
+
+    // Posts a payment reminder to a customer, so only the follow-up workflow
+    // (or an administrator) may trigger it.
+    const auth = await requireAdmin(base44);
+    if (!auth.ok) return auth.response;
 
     const { fulfillment, order } = await resolveFulfillment(base44, fulfillmentId);
     if (!fulfillment) return Response.json({ error: 'FulfillmentOrder not found' }, { status: 404 });

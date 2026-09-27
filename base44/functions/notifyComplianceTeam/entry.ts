@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
 import { typeLabel } from '../../shared/dataRequests.ts';
+import { requireAdmin } from '../../shared/security.ts';
 
 /**
  * Step 2: once the requester confirmed their address, the compliance team is
@@ -13,6 +14,12 @@ export default async function (req) {
     const body = await req.json().catch(() => ({}));
     const requestId = String(body.request_id || '').trim();
     if (!requestId) return Response.json({ error: 'request_id is required' }, { status: 400 });
+
+    // Only the request lifecycle (or an administrator) may alert the team: an
+    // outsider could otherwise mark a request as "notified" and suppress the
+    // compliance alert that is owed to the requester.
+    const auth = await requireAdmin(base44);
+    if (!auth.ok) return auth.response;
 
     const request = await base44.asServiceRole.entities.DataRequest.get(requestId).catch(() => null);
     if (!request) return Response.json({ error: 'DataRequest not found' }, { status: 404 });

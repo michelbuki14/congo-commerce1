@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
 import { orderNumber, paymentState, resolveFulfillment } from '../../shared/fulfillments.ts';
+import { requireAdmin } from '../../shared/security.ts';
 
 /**
  * Payment check used by both branches of the "Unpaid Fulfillment Followup"
@@ -16,6 +17,11 @@ export default async function (req) {
     const body = await req.json().catch(() => ({}));
     const fulfillmentId = String(body.fulfillment_id || '').trim();
     if (!fulfillmentId) return Response.json({ error: 'fulfillment_id is required' }, { status: 400 });
+
+    // A payment status for an arbitrary order: only the follow-up workflow (or
+    // an administrator) may read it.
+    const auth = await requireAdmin(base44);
+    if (!auth.ok) return auth.response;
 
     const { fulfillment, order } = await resolveFulfillment(base44, fulfillmentId);
     if (!fulfillment) return Response.json({ error: 'FulfillmentOrder not found' }, { status: 404 });

@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
 import { STUCK_AFTER_MS, listStuckExecutions, resumeExecution, startWorkflow } from '../../shared/workflow.ts';
+import { requireAdmin } from '../../shared/security.ts';
 
 /**
  * WORKFLOW QUEUE RUNNER — the background job behind every long-running
@@ -21,6 +22,25 @@ export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
     await req.json().catch(() => ({}));
+
+    // Runs on the hourly schedule. Only the platform's own automation (or an
+    // administrator) may trigger a pass: otherwise anyone could force early
+    // retries and push tenants into dunning on demand. A refusal is recorded so
+    // a wrongly-assumed caller can never break this job silently.
+    const auth = await requireAdmin(base44);
+    if (!auth.ok) {
+      await base44.asServiceRole.entities.AuditLog.create({
+        action: 'workflow.queue_refused',
+        actor: 'system',
+        entity: 'WorkflowExecution',
+        entity_id: 'queue_runner',
+        reference: 'queue_runner',
+        severity: 'warning',
+        details: { reason: 'appel non administrateur' },
+      }).catch(() => null);
+      return auth.response;
+    }
+
     const now = Date.now();
     const summary = { timed_out: [], retried: [], dunning: [] };
 

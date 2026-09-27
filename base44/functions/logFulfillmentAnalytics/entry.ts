@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
 import { orderNumber, resolveFulfillment } from '../../shared/fulfillments.ts';
+import { requireAdmin } from '../../shared/security.ts';
 
 /**
  * The customer paid: the follow-up stops and the payment is recorded as an
@@ -17,6 +18,11 @@ export default async function (req) {
     const fulfillmentId = String(body.fulfillment_id || '').trim();
     const stage = String(body.stage || '1h').toLowerCase() === '24h' ? '24h' : '1h';
     if (!fulfillmentId) return Response.json({ error: 'fulfillment_id is required' }, { status: 400 });
+
+    // Writes analytics and audit rows, so only the follow-up workflow (or an
+    // administrator) may log one.
+    const auth = await requireAdmin(base44);
+    if (!auth.ok) return auth.response;
 
     const { fulfillment, order } = await resolveFulfillment(base44, fulfillmentId);
     if (!fulfillment) return Response.json({ error: 'FulfillmentOrder not found' }, { status: 404 });

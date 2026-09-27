@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
 import { daysSince, loadPlanContext, sellerEmail, sellerPlan } from '../../shared/sellers.ts';
+import { requireAdmin } from '../../shared/security.ts';
 
 /**
  * Weekly scan behind the "Inactive Seller Outreach" workflow: sellers whose
@@ -17,6 +18,12 @@ export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
     const body = await req.json().catch(() => ({}));
+
+    // Returns sellers' names and e-mail addresses, so it answers only the
+    // weekly outreach workflow (or an administrator).
+    const auth = await requireAdmin(base44);
+    if (!auth.ok) return auth.response;
+
     const requested = Number(body.inactive_days);
     const days = Number.isFinite(requested) && requested >= 0 ? requested : INACTIVE_DAYS;
     const cutoffTime = Date.now() - days * 86400000;
