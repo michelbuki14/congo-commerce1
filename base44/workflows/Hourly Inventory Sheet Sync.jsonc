@@ -1,0 +1,45 @@
+{
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "0 * * * *",
+      "one_time_date": null,
+      "timezone": "America/New_York",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "hourly_inventory_sheet_sync",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "sync_sheets": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "syncInventorySheets",
+            "args": {}
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Synchroniser les stocks",
+            "description": "Google Sheets \u2192 produits"
+          }
+        }
+      }
+    ]
+  },
+  "name": "Hourly Inventory Sheet Sync",
+  "description": "Every hour, reads the supplier inventory Google Sheets and updates product stock levels."
+}

@@ -3,6 +3,7 @@ export const ADMIN_LINKS = [
   { to: '/admin/orders', label: 'Commandes' },
   { to: '/admin/products', label: 'Produits' },
   { to: '/admin/suppliers', label: 'Fournisseurs' },
+  { to: '/inventory-sheets', label: 'Stocks Google Sheets' },
   { to: '/admin/returns', label: 'Retours & litiges' },
   { to: '/admin/disputes', label: 'Litiges ouverts' },
   { to: '/dispute-resolution', label: 'Résolution des litiges' },

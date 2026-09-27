@@ -75,6 +75,7 @@ import SubscriptionPlans from '@/pages/SubscriptionPlans';
 import PlatformHealth from '@/pages/PlatformHealth';
 import ServiceLevelMonitor from '@/pages/ServiceLevelMonitor';
 import LogisticsRates from '@/pages/admin/LogisticsRates';
+import InventorySheets from '@/pages/admin/InventorySheets';
 import ShippingConfig from '@/pages/ShippingConfig';
 import CustomerLoyalty from '@/pages/CustomerLoyalty';
 import VendorRatings from '@/pages/VendorRatings';
@@ -269,6 +270,7 @@ const AuthenticatedApp = () => {
             <Route path="/platform-health" element={<PlatformHealth />} />
             <Route path="/service-level-monitor" element={<ServiceLevelMonitor />} />
             <Route path="/logistics-rates" element={<LogisticsRates />} />
+            <Route path="/inventory-sheets" element={<InventorySheets />} />
             <Route path="/shipping-config" element={<ShippingConfig />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/products" element={<AdminProducts />} />

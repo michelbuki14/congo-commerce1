@@ -1,0 +1,81 @@
+{
+  "name": "InventorySheetSource",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "spreadsheet_id": {
+      "type": "string"
+    },
+    "sheet_range": {
+      "type": "string",
+      "default": "A:Z"
+    },
+    "supplier_id": {
+      "type": "string"
+    },
+    "supplier_name": {
+      "type": "string"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    },
+    "last_synced_at": {
+      "type": "string"
+    },
+    "last_status": {
+      "type": "string",
+      "enum": [
+        "never",
+        "success",
+        "failed"
+      ],
+      "default": "never"
+    },
+    "last_error": {
+      "type": "string"
+    },
+    "last_rows": {
+      "type": "number",
+      "default": 0
+    },
+    "last_updated": {
+      "type": "number",
+      "default": 0
+    },
+    "last_unmatched": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "name",
+    "spreadsheet_id"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
