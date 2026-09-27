@@ -89,6 +89,11 @@ import ActivityFeed from '@/pages/ActivityFeed';
 import IntegrationLogs from '@/pages/IntegrationLogs';
 import CategoryManager from '@/pages/CategoryManager';
 import UserProfile from '@/pages/UserProfile';
+import DeliveryMap from '@/pages/DeliveryMap';
+import SupplierPortal from '@/pages/SupplierPortal';
+import FraudAlerts from '@/pages/FraudAlerts';
+import PaymentMethods from '@/pages/PaymentMethods';
+import SellerReports from '@/pages/SellerReports';
 
 // Seller
 import SellerDashboard from '@/pages/seller/SellerDashboard';
@@ -238,6 +243,8 @@ const AuthenticatedApp = () => {
           <Route path="/newsletter-signup" element={<NewsletterSignup />} />
           <Route path="/saved-addresses" element={<SavedAddresses />} />
           <Route path="/user-profile" element={<UserProfile />} />
+          <Route path="/payment-methods" element={<PaymentMethods />} />
+          <Route path="/seller-reports" element={<SellerReports />} />
           <Route path="/account-activity" element={<SecurityActivity />} />
           <Route path="/tax-documents" element={<TaxReports />} />
           <Route path="/creator" element={<CreatorDashboard />} />
@@ -279,6 +286,9 @@ const AuthenticatedApp = () => {
             <Route path="/inventory-sheets" element={<InventorySheets />} />
             <Route path="/integration-logs" element={<IntegrationLogs />} />
             <Route path="/category-manager" element={<CategoryManager />} />
+            <Route path="/delivery-map" element={<DeliveryMap />} />
+            <Route path="/supplier-portal" element={<SupplierPortal />} />
+            <Route path="/fraud-alerts" element={<FraudAlerts />} />
             <Route path="/shipping-config" element={<ShippingConfig />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/products" element={<AdminProducts />} />
