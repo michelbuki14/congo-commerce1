@@ -1,0 +1,178 @@
+{
+  "name": "Unpaid Fulfillment Followup",
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "unpaid_fulfillment_followup",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "wait_1h": {
+          "wait": "PT1H",
+          "then": "check_payment_1",
+          "x-base44": {
+            "title": "Attendre 1 heure",
+            "description": "D\u00e9lai avant la relance"
+          }
+        }
+      },
+      {
+        "check_payment_1": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "checkFulfillmentPayment",
+            "args": {
+              "fulfillment_id": "${ .trigger.entity_id }"
+            }
+          },
+          "then": "route_first_check",
+          "x-base44": {
+            "title": "V\u00e9rifier le paiement",
+            "description": "\u00c9tat de paiement de la commande"
+          }
+        }
+      },
+      {
+        "route_first_check": {
+          "switch": [
+            {
+              "when": "${ .check_payment_1.paid }",
+              "then": "log_paid_1"
+            },
+            {
+              "when": "${ .check_payment_1.closed }",
+              "then": "end"
+            },
+            {
+              "when": "${ true }",
+              "then": "send_reminder"
+            }
+          ]
+        }
+      },
+      {
+        "log_paid_1": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "logFulfillmentAnalytics",
+            "args": {
+              "fulfillment_id": "${ .trigger.entity_id }",
+              "stage": "1h"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Journaliser le paiement",
+            "description": "Commande r\u00e9gl\u00e9e avant la relance \u2014 fin du suivi"
+          }
+        }
+      },
+      {
+        "send_reminder": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "sendUnpaidReminder",
+            "args": {
+              "fulfillment_id": "${ .trigger.entity_id }"
+            }
+          },
+          "then": "wait_until_24h",
+          "x-base44": {
+            "title": "Envoyer la relance",
+            "description": "Notification au client dans son fil"
+          }
+        }
+      },
+      {
+        "wait_until_24h": {
+          "wait": "PT23H",
+          "then": "check_payment_2",
+          "x-base44": {
+            "title": "Attendre 24 heures",
+            "description": "24 h au total depuis la cr\u00e9ation"
+          }
+        }
+      },
+      {
+        "check_payment_2": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "checkFulfillmentPayment",
+            "args": {
+              "fulfillment_id": "${ .trigger.entity_id }"
+            }
+          },
+          "then": "route_second_check",
+          "x-base44": {
+            "title": "V\u00e9rifier le paiement",
+            "description": "Toujours impay\u00e9 apr\u00e8s 24 h ?"
+          }
+        }
+      },
+      {
+        "route_second_check": {
+          "switch": [
+            {
+              "when": "${ .check_payment_2.paid }",
+              "then": "log_paid_2"
+            },
+            {
+              "when": "${ .check_payment_2.closed }",
+              "then": "end"
+            },
+            {
+              "when": "${ true }",
+              "then": "send_discount_email"
+            }
+          ]
+        }
+      },
+      {
+        "log_paid_2": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "logFulfillmentAnalytics",
+            "args": {
+              "fulfillment_id": "${ .trigger.entity_id }",
+              "stage": "24h"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Journaliser le paiement",
+            "description": "Commande r\u00e9gl\u00e9e avant la remise \u2014 fin du suivi"
+          }
+        }
+      },
+      {
+        "send_discount_email": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "sendUnpaidDiscountEmail",
+            "args": {
+              "fulfillment_id": "${ .trigger.entity_id }"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Envoyer le code de remise 10 %",
+            "description": "E-mail au client avec coupon valable 7 jours"
+          }
+        }
+      }
+    ]
+  },
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "create"
+      ],
+      "entity_name": "FulfillmentOrder"
+    }
+  },
+  "description": "On every new fulfillment order: one hour later, remind the customer if the parent order is still unpaid; 24 hours later, e-mail a 10 % discount code. Payment at any check stops the follow-up and logs an analytics event."
+}
