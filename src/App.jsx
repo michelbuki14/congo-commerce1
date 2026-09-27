@@ -85,6 +85,10 @@ import NewsletterSignup from '@/pages/NewsletterSignup';
 import SavedAddresses from '@/pages/SavedAddresses';
 import ProductComparison from '@/pages/ProductComparison';
 import PartnerDirectory from '@/pages/PartnerDirectory';
+import ActivityFeed from '@/pages/ActivityFeed';
+import IntegrationLogs from '@/pages/IntegrationLogs';
+import CategoryManager from '@/pages/CategoryManager';
+import UserProfile from '@/pages/UserProfile';
 
 // Seller
 import SellerDashboard from '@/pages/seller/SellerDashboard';
@@ -189,6 +193,7 @@ const AuthenticatedApp = () => {
         <Route path="/vendor-ratings" element={<VendorRatings />} />
         <Route path="/product-comparison" element={<ProductComparison />} />
         <Route path="/partner-directory" element={<PartnerDirectory />} />
+        <Route path="/activity-feed" element={<ActivityFeed />} />
         <Route path="/disputes" element={<Disputes />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/support" element={<Support />} />
@@ -232,6 +237,7 @@ const AuthenticatedApp = () => {
           <Route path="/notification-settings" element={<NotificationSettings />} />
           <Route path="/newsletter-signup" element={<NewsletterSignup />} />
           <Route path="/saved-addresses" element={<SavedAddresses />} />
+          <Route path="/user-profile" element={<UserProfile />} />
           <Route path="/account-activity" element={<SecurityActivity />} />
           <Route path="/tax-documents" element={<TaxReports />} />
           <Route path="/creator" element={<CreatorDashboard />} />
@@ -271,6 +277,8 @@ const AuthenticatedApp = () => {
             <Route path="/service-level-monitor" element={<ServiceLevelMonitor />} />
             <Route path="/logistics-rates" element={<LogisticsRates />} />
             <Route path="/inventory-sheets" element={<InventorySheets />} />
+            <Route path="/integration-logs" element={<IntegrationLogs />} />
+            <Route path="/category-manager" element={<CategoryManager />} />
             <Route path="/shipping-config" element={<ShippingConfig />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/products" element={<AdminProducts />} />

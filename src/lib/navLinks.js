@@ -4,6 +4,8 @@ export const ADMIN_LINKS = [
   { to: '/admin/products', label: 'Produits' },
   { to: '/admin/suppliers', label: 'Fournisseurs' },
   { to: '/inventory-sheets', label: 'Stocks Google Sheets' },
+  { to: '/integration-logs', label: "Journaux d'intégration" },
+  { to: '/category-manager', label: 'Catégories' },
   { to: '/admin/returns', label: 'Retours & litiges' },
   { to: '/admin/disputes', label: 'Litiges ouverts' },
   { to: '/dispute-resolution', label: 'Résolution des litiges' },

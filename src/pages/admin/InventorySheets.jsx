@@ -18,7 +18,7 @@ export default function InventorySheets() {
 
   const sync = async (id) => {
     setSyncing(id || 'all');
-    await base44.functions.invoke('syncInventorySheets', id ? { source_id: id } : {});
+    await base44.functions.invoke('syncInventorySheets', id ? { source_id: id, trigger: 'manual' } : { trigger: 'manual' });
     await load();
     setSyncing(null);
   };
