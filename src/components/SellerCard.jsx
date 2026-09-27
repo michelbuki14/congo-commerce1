@@ -1,11 +1,33 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { BadgeCheck, MapPin } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
 import { Image } from '@/components/ui/image';
 import RatingStars from './RatingStars';
 import { compactNumber } from '@/lib/format';
 
 export default function SellerCard({ seller }) {
+  const [sales, setSales] = useState(Number(seller.total_sales) || 0);
+
+  // Social proof: the seller's own counter when set, otherwise the units sold
+  // across their published catalogue.
+  useEffect(() => {
+    const declared = Number(seller.total_sales) || 0;
+    if (declared > 0) {
+      setSales(declared);
+      return undefined;
+    }
+    let alive = true;
+    base44.entities.Product.filter({ seller_id: seller.id })
+      .then((rows) => {
+        if (alive) setSales(rows.reduce((sum, p) => sum + (Number(p.sold_count) || 0), 0));
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [seller.id, seller.total_sales]);
+
   return (
     <Link
       to={`/store/${seller.slug}`}
@@ -26,7 +48,10 @@ export default function SellerCard({ seller }) {
           <span>·</span>
           <span>{compactNumber(seller.followers_count || 0)} abonnés</span>
         </div>
-        <RatingStars rating={seller.rating || 0} count={seller.products_count || 0} />
+        <div className="flex items-center gap-2">
+          <RatingStars rating={seller.rating || 0} count={seller.products_count || 0} />
+          {sales > 0 && <span className="text-[11px] text-muted-foreground">{compactNumber(sales)} ventes</span>}
+        </div>
       </div>
     </Link>
   );
