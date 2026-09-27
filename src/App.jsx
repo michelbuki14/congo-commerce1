@@ -91,6 +91,7 @@ import AdminPromotions from '@/pages/admin/AdminPromotions';
 import AdminSettings from '@/pages/admin/AdminSettings';
 import AdminCompliance from '@/pages/admin/AdminCompliance';
 import AdminTenants from '@/pages/admin/AdminTenants';
+import AdminNotifications from '@/pages/admin/AdminNotifications';
 
 // Creator
 import CreatorDashboard from '@/pages/CreatorDashboard';
@@ -201,6 +202,7 @@ const AuthenticatedApp = () => {
             <Route path="/admin/settings" element={<AdminSettings />} />
             <Route path="/admin/compliance" element={<AdminCompliance />} />
             <Route path="/admin/tenants" element={<AdminTenants />} />
+            <Route path="/admin/notifications" element={<AdminNotifications />} />
           </Route>
         </Route>
       </Route>

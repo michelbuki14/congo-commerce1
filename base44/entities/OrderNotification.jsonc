@@ -1,0 +1,90 @@
+{
+  "name": "OrderNotification",
+  "type": "object",
+  "properties": {
+    "tenant_id": {
+      "type": "string"
+    },
+    "order_id": {
+      "type": "string"
+    },
+    "order_number": {
+      "type": "string"
+    },
+    "fulfillment_number": {
+      "type": "string"
+    },
+    "event": {
+      "type": "string"
+    },
+    "label": {
+      "type": "string"
+    },
+    "customer_name": {
+      "type": "string"
+    },
+    "customer_email": {
+      "type": "string"
+    },
+    "customer_phone": {
+      "type": "string"
+    },
+    "channel": {
+      "type": "string",
+      "enum": [
+        "email",
+        "whatsapp",
+        "sms"
+      ],
+      "default": "email"
+    },
+    "subject": {
+      "type": "string"
+    },
+    "message": {
+      "type": "string",
+      "maxLength": 1000
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "queued",
+        "sent",
+        "failed",
+        "skipped"
+      ],
+      "default": "queued"
+    },
+    "provider": {
+      "type": "string"
+    },
+    "error": {
+      "type": "string"
+    },
+    "sent_at": {
+      "type": "string"
+    },
+    "attempts": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "order_number",
+    "event"
+  ],
+  "rls": {
+    "create": null,
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": null,
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

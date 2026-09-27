@@ -6,6 +6,7 @@ import { round2, usdToCdf } from './format';
 import { splitVat, getVatRate, formatInvoiceNumber } from './tax';
 import { getSessionId, rememberOrder, getReferralCode } from './session';
 import { readActiveTenantId } from './tenancy';
+import { notifyFulfillmentStatus, notifyOrderStatus } from './orderNotifications';
 
 export function generateOrderNumber() {
   const d = new Date();
@@ -508,6 +509,9 @@ export async function placeOrder({ items, profile, delivery, couponCode, payment
     },
   });
 
+  // ---- 7. Customer update: the purchase confirmation -----------------------
+  await notifyOrderStatus({ order: finalOrder, event: 'order_confirmed' });
+
   rememberOrder(finalOrder);
 
   return { order: finalOrder, fulfillments, shipments, payment: paymentResult, quote, creator };
@@ -557,6 +561,7 @@ export async function advanceFulfillment(fulfillment, status) {
   if (status === 'DELIVERED') {
     await releaseFulfillmentPayout(updated);
   }
+  await notifyFulfillmentStatus(updated, status);
   return updated;
 }
 
@@ -609,6 +614,7 @@ export async function courierUpdateShipment({ shipment, fulfillment, status, lab
       await releaseFulfillmentPayout(fulfillment);
       await creditCourierEarnings(fulfillment);
     }
+    await notifyFulfillmentStatus({ ...fulfillment, status }, status);
   }
   return true;
 }

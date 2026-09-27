@@ -6,6 +6,7 @@ export const ADMIN_LINKS = [
   { to: '/admin/returns', label: 'Retours & litiges' },
   { to: '/admin/payouts', label: 'Retraits' },
   { to: '/admin/logistics', label: 'Logistique' },
+  { to: '/admin/notifications', label: 'Notifications' },
   { to: '/admin/promotions', label: 'Promotions' },
   { to: '/marketing-analytics', label: 'Marketing' },
   { to: '/admin/users', label: 'Utilisateurs' },
