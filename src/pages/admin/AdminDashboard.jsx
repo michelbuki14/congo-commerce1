@@ -4,6 +4,7 @@ import { ShoppingBag, TrendingUp, AlertTriangle, Users, Package, Wallet as Walle
 import { base44 } from '@/api/base44Client';
 import DashboardNav from '@/components/DashboardNav';
 import StatusBadge from '@/components/StatusBadge';
+import AdminLiveOverview from '@/components/admin/AdminLiveOverview';
 import { ADMIN_LINKS } from '@/lib/navLinks';
 import { formatUSD, formatDateTime } from '@/lib/format';
 
@@ -51,6 +52,8 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-5 pb-8">
       <DashboardNav title="Administration" links={ADMIN_LINKS} />
+
+      <AdminLiveOverview />
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {kpis.map((k) => (
