@@ -3,7 +3,7 @@
  * (verification email -> compliance processing -> data report).
  */
 
-export const APP_URL = 'https://congocommerce.base44.app';
+import { APP_URL } from './app.ts';
 
 export const TYPE_LABELS = {
   access: 'Accès à vos données',

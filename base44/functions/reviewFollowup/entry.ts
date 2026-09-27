@@ -96,6 +96,11 @@ async function openSupportCase(base44, review, tenant) {
     .catch(() => []);
   if (existing.length) return { skipped: true, reason: 'ticket already open', ticket_id: existing[0].id };
 
+  // The outreach needs contact details, which live on the order the review is attached to.
+  const order = review.order_number
+    ? (await base44.asServiceRole.entities.Order.filter({ order_number: review.order_number }).catch(() => []))[0] || null
+    : null;
+
   const priority = rating === 1 ? 'high' : 'normal';
   const ticket = await base44.asServiceRole.entities.SupportTicket.create({
     ...tenant,
@@ -104,12 +109,15 @@ async function openSupportCase(base44, review, tenant) {
     category: 'other',
     status: 'open',
     priority,
-    customer_name: review.customer_name || '',
+    assigned_to: 'shopping_assistant',
+    customer_name: review.customer_name || order?.customer_name || '',
+    customer_email: order?.customer_email || '',
+    customer_phone: order?.customer_phone || '',
     order_number: review.order_number || '',
     session_id: review.session_id || '',
     messages: [{
       author: 'system',
-      body: `Avis client ${rating}/5 sur « ${review.product_title || 'un article'} ».${review.comment ? ` Commentaire : ${review.comment}` : ''} À traiter par l'équipe support.`,
+      body: `Avis client ${rating}/5 sur « ${review.product_title || 'un article'} ».${review.comment ? ` Commentaire : ${review.comment}` : ''} À traiter par l'assistant d'achat, qui recontacte le client.`,
       at: new Date().toISOString(),
     }],
   });
@@ -117,7 +125,7 @@ async function openSupportCase(base44, review, tenant) {
   await base44.asServiceRole.entities.Notification.create({
     ...tenant,
     title: `Avis négatif à traiter (${rating}/5)`,
-    message: `${review.customer_name || 'Un client'} a noté « ${review.product_title || 'un article'} » ${rating}/5. Ticket ${ticket.ticket_number} ouvert pour l'équipe support.`,
+    message: `${review.customer_name || 'Un client'} a noté « ${review.product_title || 'un article'} » ${rating}/5. Ticket ${ticket.ticket_number} ouvert pour l'assistant d'achat, qui recontacte le client.`,
     type: 'system',
     audience: 'admin',
     order_number: review.order_number || '',

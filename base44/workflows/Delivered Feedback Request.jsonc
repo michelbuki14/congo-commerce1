@@ -1,0 +1,50 @@
+{
+  "name": "Delivered Feedback Request",
+  "description": "Three days after a fulfillment order is delivered, asks the customer for a review \u2014 unless they already reviewed the order.",
+  "trigger": {
+    "config": {
+      "trigger_type": "entity",
+      "entity_name": "FulfillmentOrder",
+      "events": [
+        "update"
+      ]
+    },
+    "condition": "${ .trigger.data.status == \"DELIVERED\" and (.trigger.old_data.status // \"\") != \"DELIVERED\" }"
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "delivered_feedback_request",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "wait_3d": {
+          "wait": "P3D",
+          "then": "request_feedback",
+          "x-base44": {
+            "title": "Attendre 3 jours",
+            "description": "D\u00e9lai apr\u00e8s la livraison"
+          }
+        }
+      },
+      {
+        "request_feedback": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "requestDeliveryFeedback",
+            "args": {
+              "fulfillment_id": "${ .trigger.entity_id }"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Demander un avis",
+            "description": "E-mail au client si aucun avis n'a \u00e9t\u00e9 d\u00e9pos\u00e9"
+          }
+        }
+      }
+    ]
+  }
+}
