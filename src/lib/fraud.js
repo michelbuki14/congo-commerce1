@@ -1,4 +1,5 @@
 import { base44 } from '@/api/base44Client';
+import { emitEvent } from './events';
 
 /**
  * FRAUD & RISK ENGINE
@@ -124,6 +125,23 @@ export async function assessCheckoutRisk({ order, amountUsd, sessionId, profile,
       recommended_action: assessment.action,
       signals: assessment.signals,
       status: 'open',
+    });
+
+    emitEvent('risk_flagged', {
+      category: 'risk',
+      source: 'FraudEvent',
+      sourceId: order?.id || '',
+      reference: order?.order_number || '',
+      severity: assessment.level === 'critical' ? 'critical' : 'warning',
+      tenantId: order?.tenant_id || '',
+      tenantOwnerEmail: order?.tenant_owner_email || '',
+      description: `Score de risque ${assessment.score} (${assessment.level}) sur ${order?.order_number || 'une commande'}`,
+      payload: {
+        score: assessment.score,
+        level: assessment.level,
+        action: assessment.action,
+        signals: assessment.signals.map((s) => s.code),
+      },
     });
   }
 

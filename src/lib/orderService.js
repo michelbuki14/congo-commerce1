@@ -8,6 +8,7 @@ import { getSessionId, rememberOrder, getReferralCode } from './session';
 import { readActiveTenantId } from './tenancy';
 import { notifyFulfillmentStatus, notifyOrderStatus } from './orderNotifications';
 import { assessCheckoutRisk } from './fraud';
+import { emitEvent } from './events';
 
 export function generateOrderNumber() {
   const d = new Date();
@@ -329,6 +330,16 @@ export async function placeOrder({ items, profile, delivery, couponCode, payment
       severity: 'warning',
       details: { provider: provider.id, message: error.message },
     });
+    emitEvent('payment_failed', {
+      category: 'order',
+      source: 'Order',
+      sourceId: order.id,
+      reference: orderNumber,
+      actorName: profile?.name || '',
+      actorEmail: profile?.email || '',
+      description: `Paiement refusé pour ${orderNumber} (${provider.name})`,
+      payload: { reason: error.message, provider: provider.id, total_usd: quote.total },
+    });
     throw error;
   }
 
@@ -527,6 +538,61 @@ export async function placeOrder({ items, profile, delivery, couponCode, payment
     },
   });
 
+  // ---- Event spine: the platform records the sale and reacts to it ---------
+  emitEvent('order_placed', {
+    category: 'order',
+    source: 'Order',
+    sourceId: finalOrder.id,
+    reference: orderNumber,
+    actorName: profile?.name || '',
+    actorEmail: profile?.email || '',
+    tenantId: orderTenantId,
+    tenantOwnerEmail: orderTenantOwner,
+    description: `Commande ${orderNumber} — ${quote.total} USD · ${provider.name}`,
+    payload: {
+      total_usd: quote.total,
+      payment_status: paymentResult.status,
+      fulfillments: plan.length,
+      city: profile?.city || '',
+    },
+  });
+
+  if (paid) {
+    emitEvent('order_paid', {
+      category: 'order',
+      source: 'Order',
+      sourceId: finalOrder.id,
+      reference: orderNumber,
+      actorName: profile?.name || '',
+      actorEmail: profile?.email || '',
+      tenantId: orderTenantId,
+      tenantOwnerEmail: orderTenantOwner,
+      description: `Paiement confirmé pour ${orderNumber}`,
+      payload: {
+        total_usd: quote.total,
+        fulfillments: plan.length,
+        seller_names: plan.map((p) => p.seller_name).filter(Boolean),
+      },
+    });
+  }
+
+  // A line that falls to (or below) five units asks for a restock.
+  const LOW_STOCK_THRESHOLD = 5;
+  quote.lines.forEach((line) => {
+    const remaining = Math.max(0, (Number(line.product.stock) || 0) - line.quantity);
+    if (remaining > LOW_STOCK_THRESHOLD) return;
+    emitEvent('product_low_stock', {
+      category: 'catalogue',
+      source: 'Product',
+      sourceId: line.product.id,
+      reference: line.product.title,
+      tenantId: line.product.tenant_id || '',
+      tenantOwnerEmail: line.product.tenant_owner_email || '',
+      description: `Stock faible : ${line.product.title} — ${remaining} exemplaire(s) restant(s)`,
+      payload: { stock: remaining, seller_name: line.product.seller_name || '' },
+    });
+  });
+
   // ---- 7. Customer update: the purchase confirmation -----------------------
   await notifyOrderStatus({ order: finalOrder, event: 'order_confirmed' });
 
@@ -578,6 +644,20 @@ export async function releaseFulfillmentPayout(fulfillment) {
     severity: 'info',
     details: { seller_payout_usd: fulfillment.seller_payout_usd, transactions: pending.length },
   });
+  emitEvent('payout_released', {
+    category: 'order',
+    source: 'FulfillmentOrder',
+    sourceId: fulfillment.id,
+    reference: fulfillment.fulfillment_number || '',
+    tenantId: fulfillment.tenant_id || '',
+    tenantOwnerEmail: fulfillment.tenant_owner_email || '',
+    description: `Versement libéré — ${fulfillment.fulfillment_number || ''}`,
+    payload: {
+      fulfillment_number: fulfillment.fulfillment_number || '',
+      seller_payout_usd: fulfillment.seller_payout_usd || 0,
+      transactions: pending.length,
+    },
+  });
   return { released: true, count: pending.length };
 }
 
@@ -592,6 +672,20 @@ export async function advanceFulfillment(fulfillment, status) {
     await releaseFulfillmentPayout(updated);
   }
   await notifyFulfillmentStatus(updated, status);
+  emitEvent(status === 'DELIVERED' ? 'order_delivered' : 'fulfillment_status_changed', {
+    category: 'order',
+    source: 'FulfillmentOrder',
+    sourceId: updated.id,
+    reference: updated.order_number || '',
+    tenantId: updated.tenant_id || '',
+    tenantOwnerEmail: updated.tenant_owner_email || '',
+    description: `${updated.fulfillment_number || ''} → ${status}`,
+    payload: {
+      status,
+      label: status,
+      fulfillment_number: updated.fulfillment_number || '',
+    },
+  });
   return updated;
 }
 

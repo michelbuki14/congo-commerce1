@@ -1,0 +1,48 @@
+{
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "account_signup_events",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "emit_signup_event": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "dispatchPlatformEvent",
+            "args": {
+              "name": "account_created",
+              "category": "account",
+              "source": "User",
+              "source_id": "${ .trigger.user_id }",
+              "reference": "${ .trigger.email }",
+              "actor_email": "${ .trigger.email }",
+              "actor_name": "${ .trigger.full_name }",
+              "description": "Nouveau compte (${ .trigger.auth_method })",
+              "payload": {
+                "auth_method": "${ .trigger.auth_method }"
+              }
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "\u00c9mettre l'\u00e9v\u00e9nement de cr\u00e9ation de compte"
+          }
+        }
+      }
+    ]
+  },
+  "name": "Account Signup Events",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "app_user_auth",
+      "events": [
+        "signup"
+      ]
+    }
+  },
+  "description": "Signale chaque nouvelle inscription \u00e0 la plateforme d'\u00e9v\u00e9nements : accueil du client et mesure d'usage."
+}

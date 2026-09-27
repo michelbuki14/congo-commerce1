@@ -7,6 +7,7 @@ import StatusBadge from '@/components/StatusBadge';
 import { Image } from '@/components/ui/image';
 import { formatUSD } from '@/lib/format';
 import { readActiveTenantId } from '@/lib/tenancy';
+import { emitEvent } from '@/lib/events';
 
 const LINKS = [
   { to: '/seller', label: 'Tableau de bord', end: true },
@@ -100,8 +101,18 @@ export default function SellerProducts() {
       if (editingId) {
         await base44.entities.Product.update(editingId, payload);
       } else {
-        await base44.entities.Product.create({ ...payload, slug: form.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') });
+        const created = await base44.entities.Product.create({ ...payload, slug: form.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') });
         base44.analytics.track({ eventName: 'seller_product_published' });
+        emitEvent('product_published', {
+          category: 'catalogue',
+          source: 'Product',
+          sourceId: created.id,
+          reference: created.title,
+          tenantId: payload.tenant_id,
+          tenantOwnerEmail: payload.tenant_owner_email,
+          description: `${seller.name} met en ligne « ${payload.title} » à ${payload.price_usd} USD`,
+          payload: { price_usd: payload.price_usd, stock: payload.stock, category: payload.category_name },
+        });
       }
       await load(seller.id);
       setShowForm(false);
@@ -117,6 +128,16 @@ export default function SellerProducts() {
     const next = p.status === 'published' ? 'archived' : 'published';
     const updated = await base44.entities.Product.update(p.id, { status: next });
     setProducts((prev) => prev.map((x) => (x.id === p.id ? updated : x)));
+    emitEvent(next === 'published' ? 'product_published' : 'product_archived', {
+      category: 'catalogue',
+      source: 'Product',
+      sourceId: p.id,
+      reference: p.title,
+      tenantId: p.tenant_id || '',
+      tenantOwnerEmail: p.tenant_owner_email || '',
+      description: `« ${p.title} » ${next === 'published' ? 'remis en ligne' : 'archivé'}`,
+      payload: { status: next, price_usd: p.price_usd },
+    });
   };
 
   const remove = async (p) => {

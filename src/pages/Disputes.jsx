@@ -5,6 +5,7 @@ import { base44 } from '@/api/base44Client';
 import StatusBadge from '@/components/StatusBadge';
 import { getProfile } from '@/lib/session';
 import { formatUSD, formatDate } from '@/lib/format';
+import { emitEvent } from '@/lib/events';
 
 const TYPES = [
   { id: 'not_received', label: 'Article non reçu' },
@@ -71,6 +72,17 @@ export default function Disputes() {
         audience: 'admin',
         order_number: number,
         is_demo: true,
+      });
+      emitEvent('dispute_opened', {
+        category: 'risk',
+        source: 'Dispute',
+        reference: number,
+        actorName: profile.name || '',
+        actorEmail: profile.email || '',
+        description: `${TYPES.find((t) => t.id === form.type)?.label || 'Litige'} sur ${number} — ${profile.name || 'client'}${
+          form.description ? ` : ${form.description}` : ''
+        }`,
+        payload: { type: form.type, amount_usd: order?.total_usd || 0, phone: form.phone || profile.phone || '' },
       });
       setSuccess('Votre litige a été ouvert. Un arbitre examine votre dossier sous 48 h.');
       setForm({ ...form, order_number: '', description: '' });

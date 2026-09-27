@@ -5,6 +5,7 @@ import { base44 } from '@/api/base44Client';
 import StatusBadge from '@/components/StatusBadge';
 import { getProfile, uid } from '@/lib/session';
 import { formatDate } from '@/lib/format';
+import { emitEvent } from '@/lib/events';
 
 const REASONS = [
   { id: 'not_received', label: 'Article non reçu' },
@@ -66,6 +67,17 @@ export default function Returns() {
         audience: 'admin',
         order_number: form.order_number.trim().toUpperCase(),
         is_demo: true,
+      });
+      emitEvent('return_requested', {
+        category: 'order',
+        source: 'Return',
+        reference: form.order_number.trim().toUpperCase(),
+        actorName: profile.name || '',
+        actorEmail: profile.email || '',
+        description: `Retour demandé sur ${form.order_number.trim().toUpperCase()} — ${
+          REASONS.find((r) => r.id === form.reason)?.label || 'motif non précisé'
+        }`,
+        payload: { reason: form.reason, product_title: form.product_title || order?.items?.[0]?.title || '' },
       });
       setSuccess('Votre demande a été transmise. Un agent vous contactera sous 48 h.');
       setForm({ ...form, order_number: '', product_title: '', description: '' });

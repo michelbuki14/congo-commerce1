@@ -4,6 +4,7 @@ import { Store, BadgeCheck, AlertCircle, Clock } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import InfoPage, { InfoSection } from '@/components/InfoPage';
 import { getProfile, getSellerApplication, saveSellerApplication } from '@/lib/session';
+import { emitEvent } from '@/lib/events';
 import { formatDateTime } from '@/lib/format';
 
 const CITIES = ['Kinshasa', 'Lubumbashi', 'Goma', 'Bukavu', 'Matadi', 'Kolwezi', 'Autre'];
@@ -53,6 +54,15 @@ export default function SellerApplication() {
         audience: 'admin',
       });
       saveSellerApplication(record);
+      emitEvent('seller_applied', {
+        category: 'seller',
+        source: 'SellerApplication',
+        reference: form.shop_name,
+        actorEmail: form.email || profile.email || '',
+        actorName: form.owner_name,
+        description: `Candidature vendeur : ${form.shop_name} (${form.city}) — ${form.owner_name} · ${form.phone}`,
+        payload: { city: form.city, commune: form.commune, activity: form.activity, phone: form.phone },
+      });
       setApplication(record);
       setEditing(false);
     } catch {
