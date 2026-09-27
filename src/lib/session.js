@@ -119,6 +119,15 @@ export function savePrivacyPreferences(preferences) {
   return next;
 }
 
+export function getSellerApplication() {
+  return read('seller_application', null);
+}
+
+export function saveSellerApplication(application) {
+  write('seller_application', application);
+  return application;
+}
+
 export function clearLocalSession() {
   ['wishlist', 'liked_content', 'follows', 'order_ids', 'profile', 'privacy'].forEach((k) => {
     try {

@@ -7,6 +7,8 @@ const LINKS = [
   { to: '/contact', label: 'Contact' },
   { to: '/mentions-legales', label: 'Mentions légales' },
   { to: '/cgv', label: 'Conditions générales de vente' },
+  { to: '/terms-of-service', label: 'Conditions d’utilisation' },
+  { to: '/platform-guidelines', label: 'Règles de la communauté' },
   { to: '/confidentialite', label: 'Confidentialité & données' },
 ];
 
@@ -22,6 +24,12 @@ const RESOURCE_LINKS = [
   { to: '/sell-with-us', label: 'Vendre avec nous' },
   { to: '/payout-requests', label: 'Demandes de retrait' },
   { to: '/privacy-settings', label: 'Paramètres de confidentialité' },
+  { to: '/order-tracking', label: 'Suivi de livraison' },
+  { to: '/dispute-center', label: 'Litiges & remboursements' },
+  { to: '/support-tickets', label: 'Tickets support' },
+  { to: '/pickup-points', label: 'Points de retrait' },
+  { to: '/shipping-calculator', label: 'Calculateur de livraison' },
+  { to: '/seller-application', label: 'Devenir vendeur' },
 ];
 
 export default function LegalFooter() {

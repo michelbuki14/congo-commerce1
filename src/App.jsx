@@ -55,6 +55,15 @@ import ReferralProgram from '@/pages/ReferralProgram';
 import CreatorShowcase from '@/pages/CreatorShowcase';
 import PayoutRequests from '@/pages/PayoutRequests';
 import MarketingAnalytics from '@/pages/MarketingAnalytics';
+import OrderTracking from '@/pages/OrderTracking';
+import DisputeCenter from '@/pages/DisputeCenter';
+import SellerApplication from '@/pages/SellerApplication';
+import ShippingCalculator from '@/pages/ShippingCalculator';
+import PickupPoints from '@/pages/PickupPoints';
+import TermsOfService from '@/pages/TermsOfService';
+import SupportTickets from '@/pages/SupportTickets';
+import PlatformGuidelines from '@/pages/PlatformGuidelines';
+import CheckoutSuccess from '@/pages/CheckoutSuccess';
 
 // Seller
 import SellerDashboard from '@/pages/seller/SellerDashboard';
@@ -63,6 +72,8 @@ import SellerOrders from '@/pages/seller/SellerOrders';
 import SellerImport from '@/pages/seller/SellerImport';
 import SellerWallet from '@/pages/seller/SellerWallet';
 import SellerSettings from '@/pages/seller/SellerSettings';
+import InventoryManagement from '@/pages/seller/InventoryManagement';
+import SellerPortal from '@/pages/seller/SellerPortal';
 
 // Admin
 import AdminDashboard from '@/pages/admin/AdminDashboard';
@@ -143,6 +154,15 @@ const AuthenticatedApp = () => {
         <Route path="/my-wallet" element={<MyWallet />} />
         <Route path="/referral-program" element={<ReferralProgram />} />
         <Route path="/creator-showcase" element={<CreatorShowcase />} />
+        <Route path="/order-tracking" element={<OrderTracking />} />
+        <Route path="/dispute-center" element={<DisputeCenter />} />
+        <Route path="/seller-application" element={<SellerApplication />} />
+        <Route path="/shipping-calculator" element={<ShippingCalculator />} />
+        <Route path="/pickup-points" element={<PickupPoints />} />
+        <Route path="/terms-of-service" element={<TermsOfService />} />
+        <Route path="/support-tickets" element={<SupportTickets />} />
+        <Route path="/platform-guidelines" element={<PlatformGuidelines />} />
+        <Route path="/checkout-success" element={<CheckoutSuccess />} />
         <Route path="/mentions-legales" element={<MentionsLegales />} />
         <Route path="/cgv" element={<CGV />} />
         <Route path="/confidentialite" element={<Confidentialite />} />
@@ -157,6 +177,8 @@ const AuthenticatedApp = () => {
           <Route path="/seller/import" element={<SellerImport />} />
           <Route path="/seller/wallet" element={<SellerWallet />} />
           <Route path="/seller/settings" element={<SellerSettings />} />
+          <Route path="/seller-portal" element={<SellerPortal />} />
+          <Route path="/inventory-management" element={<InventoryManagement />} />
 
           <Route element={<AdminOnly />}>
             <Route path="/marketing-analytics" element={<MarketingAnalytics />} />
