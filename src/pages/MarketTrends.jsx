@@ -103,7 +103,7 @@ export default function MarketTrends() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <section className="rounded-2xl border border-border bg-card p-4">
+        <section className="min-w-0 rounded-2xl border border-border bg-card p-4">
           <h2 className="flex items-center gap-2 text-sm font-bold"><TrendingUp className="h-4 w-4" /> Commandes des 14 derniers jours</h2>
           <div className="mt-3 h-56">
             <ResponsiveContainer width="100%" height="100%">
@@ -118,7 +118,7 @@ export default function MarketTrends() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-border bg-card p-4">
+        <section className="min-w-0 rounded-2xl border border-border bg-card p-4">
           <h2 className="flex items-center gap-2 text-sm font-bold"><Flame className="h-4 w-4" /> Unités vendues par catégorie</h2>
           <div className="mt-3 h-56">
             <ResponsiveContainer width="100%" height="100%">
@@ -135,7 +135,7 @@ export default function MarketTrends() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <section className="rounded-2xl border border-border bg-card lg:col-span-2">
+        <section className="min-w-0 rounded-2xl border border-border bg-card lg:col-span-2">
           <header className="border-b border-border px-4 py-3">
             <h2 className="text-sm font-bold">Articles les plus demandés</h2>
           </header>
@@ -158,7 +158,7 @@ export default function MarketTrends() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-border bg-card">
+        <section className="min-w-0 rounded-2xl border border-border bg-card">
           <header className="border-b border-border px-4 py-3">
             <h2 className="flex items-center gap-2 text-sm font-bold"><Search className="h-4 w-4" /> Recherches les plus fréquentes</h2>
           </header>
