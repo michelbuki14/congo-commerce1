@@ -82,19 +82,24 @@ Deno.serve(async (req: Request) => {
     if (!Number.isInteger(quantity) || quantity < 1) {
       return new Response(JSON.stringify({ error: "Invalid quantity" }), { status: 400 });
     }
-    // Example — replace with your real trusted product source:
-    //   const product = (await base44.asServiceRole.entities.Product.filter({ id: productId }))[0];
-    //   if (!product) return new Response(JSON.stringify({ error: "Unknown product" }), { status: 400 });
-    //   const productName = product.name; const price = String(product.price); const currency = product.currency ?? "USD";
-    const productName = "Purchase"; // TODO: from your trusted product source
-    const price = "0.00";           // TODO: authoritative per-unit price (major units), resolved server-side
+    // productId is the marketplace order number. The amount is the order total stored server-side;
+    // only unpaid card orders can be charged, and each order is always charged once (quantity 1).
+    if (quantity !== 1) {
+      return new Response(JSON.stringify({ error: "Invalid quantity" }), { status: 400 });
+    }
+    const order = (await base44.asServiceRole.entities.Order.filter({ order_number: productId }))[0];
+    if (!order) {
+      return new Response(JSON.stringify({ error: "Unknown order" }), { status: 400 });
+    }
+    if (order.payment_provider !== "card" || order.payment_status !== "PENDING" || order.status === "CANCELLED") {
+      return new Response(JSON.stringify({ error: "Order is not awaiting card payment" }), { status: 409 });
+    }
+    const productName = `Commande ${order.order_number}`;
+    const price = Number(order.total_usd || 0).toFixed(2);
     const currency = "USD";
-    // For a SUBSCRIPTION set this to Wix's subscriptionInfo; leave null for a one-time payment.
     const subscriptionInfo = null;
-    // Where Wix returns the buyer. Both MUST be real, PUBLICLY reachable routes in this app: the
-    // returning buyer is often anonymous, so a missing or login-gated route strands a paid customer.
-    // Match your router exactly — `/ThankYou`, not `/thank-you`.
-    const thankYouPath = "/ThankYou";
+    // Public order confirmation route (/order/:number) — reachable without login.
+    const thankYouPath = `/order/${encodeURIComponent(order.order_number)}`;
     const postFlowPath = "/";
     // ===== END APP-SPECIFIC =====
 

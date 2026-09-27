@@ -166,6 +166,29 @@ async function handleOrderApproved(db: any, eventData: any): Promise<Response> {
   //   - Gate paid access on a WRITABLE field you set here (e.g. plan / has_paid on the user or an
   //     Entitlement row) — NEVER on is_verified: it is platform-protected and cannot be set here,
   //     even as service role, so gating access on it locks the paying buyer out.
+  // Marketplace order: productId is the order number. Updates are idempotent (same values on retry).
+  const mkOrder = (await db.entities.Order.filter({ order_number: purchase.productId }))[0];
+  if (!mkOrder) {
+    console.error("payments-webhook: paid purchase has no matching Order", { productId: purchase.productId });
+  } else if (mkOrder.payment_status !== "PAID") {
+    await db.entities.Order.update(mkOrder.id, {
+      payment_status: "PAID",
+      status: mkOrder.status === "PENDING" ? "CONFIRMED" : mkOrder.status,
+      payment_reference: orderId ?? checkoutId,
+    });
+    const logged = await db.entities.AuditLog.filter({ action: "payment.succeeded", entity_id: mkOrder.id });
+    if (!logged.length) {
+      await db.entities.AuditLog.create({
+        action: "payment.succeeded",
+        actor: "payments-webhook",
+        entity: "Order",
+        entity_id: mkOrder.id,
+        reference: mkOrder.order_number,
+        severity: "info",
+        details: { provider: "base44_payments", wix_order_id: orderId, checkout_id: checkoutId, amount: purchase.amount },
+      });
+    }
+  }
   // ===== END APP-SPECIFIC =====
 
   // Mark paid LAST, so "paid" always implies the grant above completed. The idempotency

@@ -195,6 +195,12 @@ export default function Checkout() {
         paymentPhone: chargePhone,
         consent,
       });
+      if (activeProvider?.hostedCheckout) {
+        const res = await base44.functions.invoke('create-checkout', { productId: result.order.order_number });
+        clear();
+        window.location.href = res.data.redirectUrl;
+        return;
+      }
       clear();
       navigate(`/order/${result.order.order_number}`);
     } catch (err) {

@@ -83,9 +83,11 @@ export const PAYMENT_PROVIDERS = {
     feePercent: 3.2,
     requiresPhone: false,
     instructions: 'Vous serez redirigé vers la page sécurisée de notre prestataire. Aucune donnée de carte ne transite par Congo Commerce.',
-    isMock: true,
+    isMock: false,
+    hostedCheckout: true,
+    // Real card payment: the order stays PENDING until the provider's signed webhook confirms it.
     async charge({ amount, orderNumber }) {
-      return { status: 'AUTHORIZED', provider_txn_id: mockTxn('CARD'), amount: round2(amount), message: `Paiement carte autorisé pour la commande ${orderNumber}.` };
+      return { status: 'PENDING', provider_txn_id: '', amount: round2(amount), message: `Redirection vers le paiement sécurisé pour ${orderNumber}.` };
     },
     async refund({ provider_txn_id, amount }) {
       return { status: 'REFUNDED', provider_txn_id: `RF-${provider_txn_id}`, amount: round2(amount) };
