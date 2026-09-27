@@ -79,6 +79,11 @@ import ShippingConfig from '@/pages/ShippingConfig';
 import CustomerLoyalty from '@/pages/CustomerLoyalty';
 import VendorRatings from '@/pages/VendorRatings';
 import BulkImport from '@/pages/BulkImport';
+import NotificationSettings from '@/pages/NotificationSettings';
+import NewsletterSignup from '@/pages/NewsletterSignup';
+import SavedAddresses from '@/pages/SavedAddresses';
+import ProductComparison from '@/pages/ProductComparison';
+import PartnerDirectory from '@/pages/PartnerDirectory';
 
 // Seller
 import SellerDashboard from '@/pages/seller/SellerDashboard';
@@ -181,6 +186,8 @@ const AuthenticatedApp = () => {
         <Route path="/seller-onboarding" element={<SellerApplication />} />
         <Route path="/customer-loyalty" element={<CustomerLoyalty />} />
         <Route path="/vendor-ratings" element={<VendorRatings />} />
+        <Route path="/product-comparison" element={<ProductComparison />} />
+        <Route path="/partner-directory" element={<PartnerDirectory />} />
         <Route path="/disputes" element={<Disputes />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/support" element={<Support />} />
@@ -221,6 +228,11 @@ const AuthenticatedApp = () => {
           <Route path="/creator-revenue" element={<CreatorDashboard />} />
           <Route path="/tax-compliance" element={<TaxReports />} />
           <Route path="/bulk-import" element={<BulkImport />} />
+          <Route path="/notification-settings" element={<NotificationSettings />} />
+          <Route path="/newsletter-signup" element={<NewsletterSignup />} />
+          <Route path="/saved-addresses" element={<SavedAddresses />} />
+          <Route path="/account-activity" element={<SecurityActivity />} />
+          <Route path="/tax-documents" element={<TaxReports />} />
           <Route path="/creator" element={<CreatorDashboard />} />
           <Route path="/courier" element={<CourierConsole />} />
 
