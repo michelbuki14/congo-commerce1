@@ -97,6 +97,8 @@ export default function SellerImport() {
       const category = categories.find((c) => c.id === draft.category_id);
       const tags = await suggestProductTags({ title: draft.title, description: draft.description });
       const product = await base44.entities.Product.create({
+        tenant_id: seller.tenant_id || '',
+        tenant_owner_email: seller.email || '',
         title: draft.title,
         slug: draft.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
         description: draft.description,

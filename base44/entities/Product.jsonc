@@ -5,6 +5,9 @@
     "tenant_id": {
       "type": "string"
     },
+    "tenant_owner_email": {
+      "type": "string"
+    },
     "title": {
       "type": "string"
     },
@@ -144,5 +147,36 @@
   "required": [
     "title",
     "price_usd"
-  ]
+  ],
+  "rls": {
+    "read": null,
+    "create": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": null,
+    "delete": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "data.tenant_owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
 }

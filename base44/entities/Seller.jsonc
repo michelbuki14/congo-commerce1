@@ -5,6 +5,9 @@
     "tenant_id": {
       "type": "string"
     },
+    "tenant_owner_email": {
+      "type": "string"
+    },
     "name": {
       "type": "string"
     },
@@ -89,6 +92,9 @@
           "data.email": "{{user.email}}"
         },
         {
+          "data.tenant_owner_email": "{{user.email}}"
+        },
+        {
           "user_condition": {
             "role": "admin"
           }
@@ -106,6 +112,9 @@
           "data.email": "{{user.email}}"
         },
         {
+          "data.tenant_owner_email": "{{user.email}}"
+        },
+        {
           "user_condition": {
             "role": "admin"
           }
@@ -116,6 +125,9 @@
       "$or": [
         {
           "data.email": "{{user.email}}"
+        },
+        {
+          "data.tenant_owner_email": "{{user.email}}"
         },
         {
           "user_condition": {

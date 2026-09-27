@@ -88,6 +88,8 @@ export async function notifyOrderStatus({ order, fulfillment = null, status = ''
   try {
     // The customer's in-app feed stays in step with every channel.
     await base44.entities.Notification.create({
+      tenant_id: String(order.tenant_id || ''),
+      tenant_owner_email: String(order.tenant_owner_email || ''),
       title: update.subject,
       message: update.message,
       type: 'order',
@@ -97,6 +99,7 @@ export async function notifyOrderStatus({ order, fulfillment = null, status = ''
 
     const base = {
       tenant_id: String(order.tenant_id || ''),
+      tenant_owner_email: String(order.tenant_owner_email || ''),
       order_id: order.id,
       order_number: order.order_number,
       fulfillment_number: fulfillment?.fulfillment_number || '',

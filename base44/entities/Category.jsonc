@@ -2,6 +2,12 @@
   "name": "Category",
   "type": "object",
   "properties": {
+    "tenant_id": {
+      "type": "string"
+    },
+    "tenant_owner_email": {
+      "type": "string"
+    },
     "description": {
       "type": "string",
       "maxLength": 1000

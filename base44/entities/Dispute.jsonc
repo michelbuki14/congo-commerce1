@@ -2,6 +2,12 @@
   "name": "Dispute",
   "type": "object",
   "properties": {
+    "tenant_id": {
+      "type": "string"
+    },
+    "tenant_owner_email": {
+      "type": "string"
+    },
     "order_number": {
       "type": "string"
     },

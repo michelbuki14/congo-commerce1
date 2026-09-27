@@ -2,6 +2,12 @@
   "name": "WalletTransaction",
   "type": "object",
   "properties": {
+    "tenant_id": {
+      "type": "string"
+    },
+    "tenant_owner_email": {
+      "type": "string"
+    },
     "wallet_id": {
       "type": "string"
     },

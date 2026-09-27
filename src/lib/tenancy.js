@@ -174,6 +174,18 @@ export function scopeRecords(records, scope) {
   return (records || []).filter((r) => inTenantScope(r, scope));
 }
 
+/**
+ * The two keys that bind a record to a store's data space:
+ * `tenant_id` for the store itself, `tenant_owner_email` for its owner — the
+ * same email the partner consoles sign in with, so row rules can match it.
+ */
+export function tenantKeys(tenantId = '', tenantOwnerEmail = '') {
+  return {
+    tenant_id: tenantId || '',
+    tenant_owner_email: tenantOwnerEmail || '',
+  };
+}
+
 /** Resolves the storefront's store once per page load: host domain first, then the account's selection. */
 export async function resolveStorefrontScope() {
   const hostTenant = await resolveTenantByHost();

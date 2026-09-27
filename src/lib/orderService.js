@@ -119,10 +119,12 @@ export async function buildCheckoutQuote({ items, deliveryFee = 0, coupon = null
   };
 }
 
-async function getOrCreateWallet(ownerType, ownerName, ownerEmail, ownerId) {
+async function getOrCreateWallet(ownerType, ownerName, ownerEmail, ownerId, tenant = {}) {
   const rows = await base44.entities.Wallet.filter({ owner_type: ownerType, owner_name: ownerName });
   if (rows[0]) return rows[0];
   return base44.entities.Wallet.create({
+    tenant_id: tenant.tenant_id || '',
+    tenant_owner_email: tenant.tenant_owner_email || '',
     owner_type: ownerType,
     owner_name: ownerName,
     owner_email: ownerEmail || '',
@@ -147,6 +149,8 @@ async function postTransaction(wallet, payload) {
 
   const transaction = await base44.entities.WalletTransaction.create({
     wallet_id: wallet.id,
+    tenant_id: wallet.tenant_id || '',
+    tenant_owner_email: wallet.tenant_owner_email || '',
     owner_type: wallet.owner_type,
     owner_name: wallet.owner_name,
     type: payload.type,
@@ -205,6 +209,7 @@ export async function placeOrder({ items, profile, delivery, couponCode, payment
 
   // The sale belongs to the store the article came from; platform stock stays unassigned.
   const orderTenantId = quote.lines.map((l) => l.product.tenant_id).find(Boolean) || readActiveTenantId() || '';
+  const orderTenantOwner = quote.lines.map((l) => l.product.tenant_owner_email).find(Boolean) || '';
 
   // ---- 1. Split one customer order into fulfillment orders -----------------
   const groups = new Map();
@@ -246,12 +251,15 @@ export async function placeOrder({ items, profile, delivery, couponCode, payment
       platformRevenue = round2(sub - cost - creatorCommission);
     }
     const weight = round2(g.lines.reduce((s, l) => s + (l.product.weight_kg || 0.5) * l.quantity, 0));
-    return { ...g, index, sub, cost, creatorCommission, sellerPayout, platformRevenue, weight };
+    const tenantId = g.lines.map((l) => l.product.tenant_id).find(Boolean) || orderTenantId;
+    const tenantOwner = g.lines.map((l) => l.product.tenant_owner_email).find(Boolean) || orderTenantOwner;
+    return { ...g, index, sub, cost, creatorCommission, sellerPayout, platformRevenue, weight, tenantId, tenantOwner };
   });
 
   // ---- 2. Create the single customer-facing order --------------------------
   const order = await base44.entities.Order.create({
     tenant_id: orderTenantId,
+    tenant_owner_email: orderTenantOwner,
     order_number: orderNumber,
     session_id: sessionId,
     customer_name: profile.name,
@@ -334,6 +342,8 @@ export async function placeOrder({ items, profile, delivery, couponCode, payment
     return {
       order_id: order.id,
       order_number: orderNumber,
+      tenant_id: p.tenantId,
+      tenant_owner_email: p.tenantOwner,
       fulfillment_number: generateFulfillmentNumber(orderNumber, p.index),
       source_type: p.source_type,
       seller_id: p.seller_id || '',
@@ -374,6 +384,8 @@ export async function placeOrder({ items, profile, delivery, couponCode, payment
         base44.entities.Shipment.create({
           fulfillment_order_id: f.id,
           order_number: orderNumber,
+          tenant_id: f.tenant_id || '',
+          tenant_owner_email: f.tenant_owner_email || '',
           courier_id: f.courier_id,
           courier_name: f.courier_name,
           tracking_number: f.tracking_number,
@@ -401,7 +413,10 @@ export async function placeOrder({ items, profile, delivery, couponCode, payment
 
   for (const f of fulfillments) {
     if (f.seller_id && f.seller_payout_usd > 0) {
-      const sellerWallet = await getOrCreateWallet('seller', f.seller_name, '', f.seller_id);
+      const sellerWallet = await getOrCreateWallet('seller', f.seller_name, '', f.seller_id, {
+        tenant_id: f.tenant_id,
+        tenant_owner_email: f.tenant_owner_email,
+      });
       await postTransaction(sellerWallet, {
         type: 'PAYOUT',
         direction: 'credit',
@@ -482,6 +497,8 @@ export async function placeOrder({ items, profile, delivery, couponCode, payment
   });
 
   await base44.entities.Notification.create({
+    tenant_id: orderTenantId,
+    tenant_owner_email: orderTenantOwner,
     title: `Commande ${orderNumber} confirmée`,
     message: paid
       ? `Votre paiement de ${quote.total} USD a été confirmé. ${plan.length} expédition(s) en préparation.`

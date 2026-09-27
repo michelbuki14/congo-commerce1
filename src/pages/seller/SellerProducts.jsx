@@ -78,6 +78,7 @@ export default function SellerProducts() {
     const category = categories.find((c) => c.id === form.category_id);
     const payload = {
       tenant_id: seller.tenant_id || readActiveTenantId() || '',
+      tenant_owner_email: seller.email || '',
       title: form.title,
       description: form.description,
       price_usd: Number(form.price_usd) || 0,
