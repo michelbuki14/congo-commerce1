@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { printShippingLabels } from '@/lib/shippingLabels';
 import { formatDateTime } from '@/lib/format';
+import { toast } from '@/components/ui/use-toast';
 
 export default function PickPackQueue() {
   const [orders, setOrders] = useState(null);
@@ -17,9 +18,11 @@ export default function PickPackQueue() {
     setBusy(o.id);
     const next = o.status === 'CONFIRMED' ? 'PROCESSING' : 'SHIPPED';
     await base44.entities.Order.update(o.id, { status: next });
-    if (next === 'SHIPPED') printShippingLabels([o]);
     setOrders((prev) => (next === 'SHIPPED' ? prev.filter((x) => x.id !== o.id) : prev.map((x) => (x.id === o.id ? { ...x, status: next } : x))));
     setBusy('');
+    if (next === 'SHIPPED') {
+      try { await printShippingLabels([o]); } catch (err) { toast({ title: 'Étiquette non imprimée', description: err.message }); }
+    }
   };
 
   if (!orders) return <p className="text-sm text-muted-foreground">Chargement…</p>;
