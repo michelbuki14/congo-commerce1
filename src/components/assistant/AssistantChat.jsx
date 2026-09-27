@@ -23,6 +23,19 @@ const saveConversationId = (id) => {
   }
 };
 
+// The customer keeps one thread: prefer the latest conversation that actually
+// holds messages, then the one saved on this device. Nothing is created until
+// the customer writes something.
+async function findExistingConversation() {
+  const list = (await base44.agents.listConversations({ agent_name: AGENT_NAME }).catch(() => [])) || [];
+  const withMessages = list.filter((conversation) => (conversation.messages || []).length > 0);
+  if (withMessages.length) return withMessages[0];
+
+  const storedId = readConversationId();
+  if (!storedId) return null;
+  return base44.agents.getConversation(storedId).catch(() => null);
+}
+
 export default function AssistantChat() {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,44 +43,44 @@ export default function AssistantChat() {
   const [started, setStarted] = useState(false);
   const [error, setError] = useState('');
   const conversationRef = useRef(null);
+  const subscriptionRef = useRef(null);
   const endRef = useRef(null);
+
+  const subscribeTo = (id) => {
+    if (subscriptionRef.current && subscriptionRef.current.id === id) return;
+    if (subscriptionRef.current) subscriptionRef.current.unsubscribe();
+    subscriptionRef.current = {
+      id,
+      unsubscribe: base44.agents.subscribeToConversation(id, (data) => {
+        setMessages(data.messages || []);
+      }),
+    };
+  };
 
   useEffect(() => {
     let cancelled = false;
-    let unsubscribe = null;
 
-    const open = async () => {
-      const storedId = readConversationId();
-      let conversation = storedId ? await base44.agents.getConversation(storedId).catch(() => null) : null;
-
-      if (!conversation) {
-        conversation = await base44.agents.createConversation({
-          agent_name: AGENT_NAME,
-          metadata: { name: "Assistant d'achat", description: 'Recherche et recommandations produits' },
-        });
+    findExistingConversation()
+      .then((conversation) => {
+        if (cancelled || !conversation) return;
+        conversationRef.current = conversation;
         saveConversationId(conversation.id);
-      }
-
-      if (cancelled) return;
-      conversationRef.current = conversation;
-      const history = conversation.messages || [];
-      setMessages(history);
-      setStarted(history.length > 0);
-      setLoading(false);
-      unsubscribe = base44.agents.subscribeToConversation(conversation.id, (data) => {
-        setMessages(data.messages || []);
+        const history = conversation.messages || [];
+        setMessages(history);
+        setStarted(history.length > 0);
+        subscribeTo(conversation.id);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoading(false);
       });
-    };
-
-    open().catch(() => {
-      if (cancelled) return;
-      setError("L'assistant est momentanément indisponible. Réessayez dans un instant.");
-      setLoading(false);
-    });
 
     return () => {
       cancelled = true;
-      if (unsubscribe) unsubscribe();
+      if (subscriptionRef.current) {
+        subscriptionRef.current.unsubscribe();
+        subscriptionRef.current = null;
+      }
     };
   }, []);
 
@@ -76,19 +89,30 @@ export default function AssistantChat() {
   }, [messages]);
 
   const send = async (text) => {
-    const conversation = conversationRef.current;
     const body = text.trim();
-    if (!conversation || !body || sending) return;
+    if (!body || sending) return;
 
     setSending(true);
     setError('');
     try {
+      let conversation = conversationRef.current;
+      if (!conversation) {
+        conversation = await base44.agents.createConversation({
+          agent_name: AGENT_NAME,
+          metadata: { name: "Assistant d'achat", description: 'Recherche et recommandations produits' },
+        });
+        conversationRef.current = conversation;
+        saveConversationId(conversation.id);
+        subscribeTo(conversation.id);
+      }
+
       let content = body;
       if (!started) {
         const brief = await buildCustomerBrief();
         if (brief) content = `${brief}\n\nDemande du client : ${body}`;
         setStarted(true);
       }
+
       await base44.agents.addMessage(conversation, { role: 'user', content });
     } catch {
       setError("Le message n'a pas pu être envoyé. Vérifiez votre connexion et réessayez.");
@@ -122,9 +146,7 @@ export default function AssistantChat() {
         <div ref={endRef} />
       </div>
 
-      {error && (
-        <p className="border-t border-border px-4 py-2 text-xs font-medium text-destructive">{error}</p>
-      )}
+      {error && <p className="border-t border-border px-4 py-2 text-xs font-medium text-destructive">{error}</p>}
 
       <AssistantComposer onSend={send} disabled={loading || sending} />
     </div>

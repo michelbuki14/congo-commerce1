@@ -4,6 +4,8 @@
 import { base44 } from '@/api/base44Client';
 import { getProfile, getWishlist, getOrderIds, getFollowedIds, getSessionId } from '@/lib/session';
 
+const BRIEF_PREFIX = 'Profil client (fourni automatiquement';
+
 export async function buildCustomerBrief() {
   const profile = getProfile();
 
@@ -29,5 +31,14 @@ export async function buildCustomerBrief() {
   if (ordersCount) parts.push(`commandes déjà passées : ${ordersCount}`);
 
   if (!parts.length) return '';
-  return `Profil client (fourni automatiquement, à utiliser pour personnaliser sans le réciter) — ${parts.join(' ; ')}.`;
+  return `${BRIEF_PREFIX}, à utiliser pour personnaliser sans le réciter) — ${parts.join(' ; ')}.`;
+}
+
+// The customer's own bubble must show what they typed, never the internal
+// profile brief that travels with their first message.
+export function visibleUserText(content) {
+  const text = String(content || '');
+  if (!text.startsWith(BRIEF_PREFIX)) return text;
+  const body = text.split('\n\n').slice(1).join('\n\n');
+  return body.replace(/^Demande du client :\s*/, '') || text;
 }

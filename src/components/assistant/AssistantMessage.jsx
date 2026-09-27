@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import AssistantToolCall from '@/components/assistant/AssistantToolCall';
+import { visibleUserText } from '@/lib/assistantContext';
 
 const MARKDOWN = {
   p: (props) => <p className="my-1.5 leading-relaxed" {...props} />,
@@ -16,7 +17,7 @@ export default function AssistantMessage({ message }) {
     return (
       <div className="flex justify-end">
         <p className="max-w-[85%] whitespace-pre-line rounded-2xl bg-primary px-3.5 py-2 text-sm text-primary-foreground">
-          {message.content}
+          {visibleUserText(message.content)}
         </p>
       </div>
     );
