@@ -102,6 +102,19 @@ import PayoutHistory from '@/pages/PayoutHistory';
 import PayoutSettings from '@/pages/PayoutSettings';
 import DataExport from '@/pages/DataExport';
 
+// Operations & partner consoles
+import LogisticsHub from '@/pages/LogisticsHub';
+import WorkflowMonitor from '@/pages/WorkflowMonitor';
+import SecurityActivity from '@/pages/SecurityActivity';
+import CoverageMap from '@/pages/CoverageMap';
+import MerchantDisputes from '@/pages/MerchantDisputes';
+import PayoutLedger from '@/pages/PayoutLedger';
+import BulkOrders from '@/pages/BulkOrders';
+import MarketTrends from '@/pages/MarketTrends';
+import TaxReports from '@/pages/TaxReports';
+import InventoryAlerts from '@/pages/InventoryAlerts';
+import PartnerAiSettings from '@/pages/PartnerAiSettings';
+
 // Creator
 import CreatorDashboard from '@/pages/CreatorDashboard';
 
@@ -198,6 +211,15 @@ const AuthenticatedApp = () => {
           <Route path="/payout-settings" element={<PayoutSettings />} />
           <Route path="/data-export" element={<DataExport />} />
           <Route path="/inventory-management" element={<InventoryManagement />} />
+          <Route path="/partner-ai-settings" element={<PartnerAiSettings />} />
+          <Route path="/security-activity" element={<SecurityActivity />} />
+          <Route path="/merchant-disputes" element={<MerchantDisputes />} />
+          <Route path="/payout-ledger" element={<PayoutLedger />} />
+          <Route path="/coverage-map" element={<CoverageMap />} />
+          <Route path="/bulk-orders" element={<BulkOrders />} />
+          <Route path="/market-trends" element={<MarketTrends />} />
+          <Route path="/tax-reports" element={<TaxReports />} />
+          <Route path="/inventory-alerts" element={<InventoryAlerts />} />
           <Route path="/tenant" element={<TenantConsole />} />
           <Route path="/tenant-onboarding" element={<TenantOnboarding />} />
 
@@ -220,6 +242,8 @@ const AuthenticatedApp = () => {
             <Route path="/admin/workflows" element={<AdminWorkflows />} />
             <Route path="/admin/fraud" element={<AdminFraud />} />
             <Route path="/admin/disputes" element={<AdminDisputes />} />
+            <Route path="/logistics-hub" element={<LogisticsHub />} />
+            <Route path="/workflow-monitor" element={<WorkflowMonitor />} />
           </Route>
         </Route>
       </Route>
