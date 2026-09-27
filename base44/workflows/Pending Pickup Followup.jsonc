@@ -1,0 +1,50 @@
+{
+  "description": "24 hours after a fulfillment order is created, alerts operations on the pickup point and opens a support ticket when it is still PENDING.",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "create"
+      ],
+      "entity_name": "FulfillmentOrder"
+    }
+  },
+  "name": "Pending Pickup Followup",
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "pending_pickup_followup",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "wait_24h": {
+          "wait": "PT24H",
+          "then": "check_pending",
+          "x-base44": {
+            "title": "Attendre 24 heures",
+            "description": "D\u00e9lai avant v\u00e9rification du colis"
+          }
+        }
+      },
+      {
+        "check_pending": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "pendingPickupAlert",
+            "args": {
+              "fulfillment_id": "${ .trigger.entity_id }"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "V\u00e9rifier le statut et alerter",
+            "description": "Contr\u00f4le le point de retrait si toujours en attente"
+          }
+        }
+      }
+    ]
+  }
+}
