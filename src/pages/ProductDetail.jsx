@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ShoppingBag, Heart, Truck, ShieldCheck, Store as StoreIcon, ChevronRight, PackageCheck, Zap } from 'lucide-react';
+import { ShoppingBag, Heart, Truck, ShieldCheck, Store as StoreIcon, ChevronRight, PackageCheck, Zap, Share2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Image } from '@/components/ui/image';
 import { useCart } from '@/lib/cart';
 import { useCurrency } from '@/lib/currency';
 import { computePriceBreakdown } from '@/lib/pricing';
-import { getProfile, isWishlisted, toggleWishlist } from '@/lib/session';
+import { getProfile, getReferralCode, isWishlisted, toggleWishlist } from '@/lib/session';
 import { trackEvent } from '@/lib/tracking';
 import RatingStars from '@/components/RatingStars';
 import QuantityStepper from '@/components/QuantityStepper';
@@ -88,6 +88,15 @@ export default function ProductDetail() {
     const parts = Object.entries(selection).map(([k, v]) => `${k}: ${v}`);
     return parts.length ? parts.join(', ') : null;
   }, [selection]);
+
+  // WhatsApp share: the product link carries the visitor's active referral code.
+  const whatsAppHref = useMemo(() => {
+    if (!product) return '#';
+    const page = `${window.location.origin}/product/${product.slug || product.id}`;
+    const code = getReferralCode();
+    const url = code ? `${page}?ref=${encodeURIComponent(code)}` : page;
+    return `https://wa.me/?text=${encodeURIComponent(`${product.title} — ${url}`)}`;
+  }, [product]);
 
   const flash = (msg) => {
     setToast(msg);
@@ -191,9 +200,17 @@ export default function ProductDetail() {
               )}
             </div>
             <h1 className="text-lg font-bold leading-snug md:text-2xl">{product.title}</h1>
-            <div className="mt-1.5 flex items-center gap-3">
+            <div className="mt-1.5 flex flex-wrap items-center gap-3">
               <RatingStars rating={product.rating || 0} count={product.reviews_count || 0} size="md" />
               <span className="text-xs text-muted-foreground">{compactNumber(product.sold_count || 0)} vendus</span>
+              <a
+                href={whatsAppHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-[11px] font-semibold text-foreground"
+              >
+                <Share2 className="h-3.5 w-3.5 text-emerald-600" /> WhatsApp
+              </a>
             </div>
           </div>
 
