@@ -74,6 +74,11 @@ import PlatformAnalytics from '@/pages/PlatformAnalytics';
 import SubscriptionPlans from '@/pages/SubscriptionPlans';
 import PlatformHealth from '@/pages/PlatformHealth';
 import ServiceLevelMonitor from '@/pages/ServiceLevelMonitor';
+import LogisticsRates from '@/pages/admin/LogisticsRates';
+import ShippingConfig from '@/pages/ShippingConfig';
+import CustomerLoyalty from '@/pages/CustomerLoyalty';
+import VendorRatings from '@/pages/VendorRatings';
+import BulkImport from '@/pages/BulkImport';
 
 // Seller
 import SellerDashboard from '@/pages/seller/SellerDashboard';
@@ -173,6 +178,9 @@ const AuthenticatedApp = () => {
         <Route path="/returns-portal" element={<ReturnsPortal />} />
         <Route path="/order-returns" element={<OrderReturns />} />
         <Route path="/vendor-onboarding" element={<SellerApplication />} />
+        <Route path="/seller-onboarding" element={<SellerApplication />} />
+        <Route path="/customer-loyalty" element={<CustomerLoyalty />} />
+        <Route path="/vendor-ratings" element={<VendorRatings />} />
         <Route path="/disputes" element={<Disputes />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/support" element={<Support />} />
@@ -212,6 +220,7 @@ const AuthenticatedApp = () => {
           <Route path="/inventory-manager" element={<InventoryManagement />} />
           <Route path="/creator-revenue" element={<CreatorDashboard />} />
           <Route path="/tax-compliance" element={<TaxReports />} />
+          <Route path="/bulk-import" element={<BulkImport />} />
           <Route path="/creator" element={<CreatorDashboard />} />
           <Route path="/courier" element={<CourierConsole />} />
 
@@ -247,6 +256,8 @@ const AuthenticatedApp = () => {
             <Route path="/compliance-center" element={<AdminCompliance />} />
             <Route path="/platform-health" element={<PlatformHealth />} />
             <Route path="/service-level-monitor" element={<ServiceLevelMonitor />} />
+            <Route path="/logistics-rates" element={<LogisticsRates />} />
+            <Route path="/shipping-config" element={<ShippingConfig />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/products" element={<AdminProducts />} />
             <Route path="/admin/suppliers" element={<AdminSuppliers />} />

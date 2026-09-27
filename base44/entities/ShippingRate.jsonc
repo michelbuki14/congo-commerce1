@@ -1,0 +1,85 @@
+{
+  "name": "ShippingRate",
+  "type": "object",
+  "properties": {
+    "destination_type": {
+      "type": "string",
+      "enum": [
+        "city",
+        "country",
+        "zone"
+      ],
+      "default": "city"
+    },
+    "destination": {
+      "type": "string"
+    },
+    "courier_id": {
+      "type": "string"
+    },
+    "courier_name": {
+      "type": "string"
+    },
+    "min_weight_kg": {
+      "type": "number",
+      "default": 0
+    },
+    "max_weight_kg": {
+      "type": "number",
+      "default": 1
+    },
+    "max_dimension_cm": {
+      "type": "number",
+      "default": 0
+    },
+    "base_usd": {
+      "type": "number",
+      "default": 0
+    },
+    "per_kg_usd": {
+      "type": "number",
+      "default": 0
+    },
+    "surcharge_usd": {
+      "type": "number",
+      "default": 0
+    },
+    "eta_days": {
+      "type": "string",
+      "default": "2-4"
+    },
+    "priority": {
+      "type": "number",
+      "default": 0
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "destination",
+    "courier_name"
+  ],
+  "rls": {
+    "read": null,
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

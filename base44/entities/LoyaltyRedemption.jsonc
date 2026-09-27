@@ -1,0 +1,63 @@
+{
+  "name": "LoyaltyRedemption",
+  "type": "object",
+  "properties": {
+    "session_id": {
+      "type": "string"
+    },
+    "customer_name": {
+      "type": "string"
+    },
+    "customer_phone": {
+      "type": "string"
+    },
+    "reward_code": {
+      "type": "string"
+    },
+    "reward_label": {
+      "type": "string"
+    },
+    "points_spent": {
+      "type": "number",
+      "default": 0
+    },
+    "value_usd": {
+      "type": "number",
+      "default": 0
+    },
+    "coupon_code": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "used",
+        "expired"
+      ],
+      "default": "active"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000
+    }
+  },
+  "required": [
+    "reward_label",
+    "points_spent"
+  ],
+  "rls": {
+    "create": null,
+    "read": null,
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
