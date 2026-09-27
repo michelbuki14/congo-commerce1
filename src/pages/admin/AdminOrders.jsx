@@ -7,6 +7,8 @@ import { ADMIN_LINKS } from '@/lib/navLinks';
 import { advanceFulfillment } from '@/lib/orderService';
 import { SHIPMENT_STATUS_LABELS } from '@/lib/logistics';
 import { formatUSD, formatDateTime } from '@/lib/format';
+import { printShippingLabels } from '@/lib/shippingLabels';
+import BulkActionBar from '@/components/orders/BulkActionBar';
 
 const FLOW = ['PENDING', 'CONFIRMED', 'PROCESSING', 'READY_FOR_PICKUP', 'PICKED_UP', 'IN_TRANSIT', 'OUT_FOR_DELIVERY', 'DELIVERED'];
 
@@ -55,7 +57,30 @@ export default function AdminOrders() {
     }
   };
 
-  const visible = statusFilter === 'all' ? orders : orders.filter((o) => o.status === statusFilter);
+  const [selected, setSelected] = useState([]);
+  const [bulkMsg, setBulkMsg] = useState('');
+  const archivedView = statusFilter === 'archived';
+  const visible = archivedView
+    ? orders.filter((o) => o.archived)
+    : orders.filter((o) => !o.archived && (statusFilter === 'all' || o.status === statusFilter));
+  const selectedOrders = visible.filter((o) => selected.includes(o.id));
+  const toggle = (id) => setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
+  const toggleAll = () => setSelected(selectedOrders.length === visible.length ? [] : visible.map((o) => o.id));
+
+  const bulkUpdate = async (patch, label) => {
+    setBusy('bulk');
+    await base44.entities.Order.bulkUpdate(selectedOrders.map((o) => ({ id: o.id, ...patch })));
+    await base44.entities.AuditLog.create({ action: 'order.bulk_update', actor: 'admin', entity: 'Order', reference: selectedOrders.map((o) => o.order_number).join(', ').slice(0, 500), severity: 'info', details: patch });
+    setOrders((prev) => prev.map((o) => (selected.includes(o.id) ? { ...o, ...patch } : o)));
+    setBulkMsg(`${selectedOrders.length} commande(s) ${label}.`);
+    setSelected([]);
+    setBusy('');
+  };
+
+  const bulkPrint = () => {
+    setBulkMsg('');
+    try { printShippingLabels(selectedOrders, fulfillments); } catch (e) { setBulkMsg(e.message); }
+  };
 
   if (loading) return <div className="h-64 animate-pulse rounded-2xl bg-secondary" />;
 
@@ -64,26 +89,46 @@ export default function AdminOrders() {
       <DashboardNav title="Commandes" links={ADMIN_LINKS} />
 
       <div className="flex flex-wrap gap-2">
-        {['all', 'PENDING', 'CONFIRMED', 'PROCESSING', 'DELIVERED', 'CANCELLED'].map((s) => (
+        {['all', 'PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'archived'].map((s) => (
           <button
             key={s}
             type="button"
-            onClick={() => setStatusFilter(s)}
+            onClick={() => { setStatusFilter(s); setSelected([]); }}
             className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
               statusFilter === s ? 'bg-primary text-primary-foreground' : 'bg-secondary'
             }`}
           >
-            {s === 'all' ? 'Toutes' : SHIPMENT_STATUS_LABELS[s] || s}
+            {s === 'all' ? 'Toutes' : s === 'archived' ? 'Archivées' : s === 'SHIPPED' ? 'Expédiée' : SHIPMENT_STATUS_LABELS[s] || s}
           </button>
         ))}
       </div>
+
+      <BulkActionBar
+        count={selectedOrders.length}
+        allSelected={!!visible.length && selectedOrders.length === visible.length}
+        onToggleAll={toggleAll}
+        onStatus={(status) => bulkUpdate({ status }, `passée(s) en « ${SHIPMENT_STATUS_LABELS[status] || status} »`)}
+        onPrint={bulkPrint}
+        onArchive={() => bulkUpdate(archivedView ? { archived: false, archived_at: '' } : { archived: true, archived_at: new Date().toISOString() }, archivedView ? 'désarchivée(s)' : 'archivée(s)')}
+        archivedView={archivedView}
+        busy={busy === 'bulk'}
+      />
+      {bulkMsg && <p className="text-xs font-semibold text-emerald-700">{bulkMsg}</p>}
 
       <div className="space-y-2.5">
         {visible.map((o) => {
           const lines = fulfillments.filter((f) => f.order_id === o.id);
           const open = openId === o.id;
           return (
-            <div key={o.id} className="rounded-2xl border border-border bg-card">
+            <div key={o.id} className="flex items-start rounded-2xl border border-border bg-card">
+              <input
+                type="checkbox"
+                aria-label={`Sélectionner ${o.order_number}`}
+                checked={selected.includes(o.id)}
+                onChange={() => toggle(o.id)}
+                className="ml-4 mt-5 h-4 w-4 shrink-0"
+              />
+              <div className="min-w-0 flex-1">
               <button
                 type="button"
                 onClick={() => setOpenId(open ? '' : o.id)}
@@ -154,6 +199,7 @@ export default function AdminOrders() {
                   ))}
                 </div>
               )}
+              </div>
             </div>
           );
         })}

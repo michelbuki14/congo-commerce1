@@ -158,6 +158,13 @@
     "is_demo": {
       "type": "boolean",
       "default": false
+    },
+    "archived": {
+      "type": "boolean",
+      "default": false
+    },
+    "archived_at": {
+      "type": "string"
     }
   },
   "required": [
