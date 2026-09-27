@@ -181,8 +181,12 @@ const returnRefund = {
       name: 'decide_return',
       label: 'Décider du retour',
       run: async (ctx) => {
+        if (!ctx.data.row) return { skipped: true, reason: 'Demande déjà traitée' };
+        const decision = String(ctx.input.decision || '');
+        if (!decision) {
+          return { waiting: true, reason: 'Décision d’un agent requise sur ce retour (approve / reject)' };
+        }
         const row = ctx.data.row;
-        const decision = String(ctx.input.decision || 'approve');
         const status = decision === 'reject' ? 'rejected' : 'approved';
         const updated = await ctx.base44.asServiceRole.entities.Return.update(row.id, {
           status,
@@ -197,7 +201,7 @@ const returnRefund = {
       name: 'refund_customer',
       label: 'Rembourser le client',
       run: async (ctx) => {
-        if (ctx.data.rejected) return { skipped: true, reason: 'Retour refusé' };
+        if (!ctx.data.row || ctx.data.rejected) return { skipped: true, reason: 'Retour non traité' };
         const row = ctx.data.row;
         const order = ctx.data.order;
         const amount = ctx.data.refundAmount;
@@ -231,7 +235,7 @@ const returnRefund = {
       label: 'Reprendre les gains vendeur',
       critical: false,
       run: async (ctx) => {
-        if (ctx.data.rejected) return { skipped: true, reason: 'Retour refusé' };
+        if (!ctx.data.row || ctx.data.rejected) return { skipped: true, reason: 'Retour non traité' };
         const row = ctx.data.row;
         const fulfillments = await ctx.base44.asServiceRole.entities.FulfillmentOrder
           .filter({ order_number: row.order_number })
@@ -266,7 +270,7 @@ const returnRefund = {
       label: 'Remettre en stock',
       critical: false,
       run: async (ctx) => {
-        if (ctx.data.rejected) return { skipped: true, reason: 'Retour refusé' };
+        if (!ctx.data.row || ctx.data.rejected) return { skipped: true, reason: 'Retour non traité' };
         const row = ctx.data.row;
         const order = ctx.data.order;
         const productId = row.product_id || order?.items?.[0]?.product_id || '';
@@ -283,7 +287,7 @@ const returnRefund = {
       name: 'update_order_refund',
       label: 'Mettre à jour la commande',
       run: async (ctx) => {
-        if (ctx.data.rejected) return { skipped: true, reason: 'Retour refusé' };
+        if (!ctx.data.row || ctx.data.rejected) return { skipped: true, reason: 'Retour non traité' };
         const row = ctx.data.row;
         const order = ctx.data.order;
         const amount = ctx.data.refundAmount;
@@ -302,6 +306,7 @@ const returnRefund = {
       label: 'Notifier le client',
       critical: false,
       run: async (ctx) => {
+        if (!ctx.data.row) return { skipped: true, reason: 'Retour non traité' };
         const row = ctx.data.row;
         const rejected = ctx.data.rejected;
         const result = await notify(ctx.base44, {
@@ -353,7 +358,9 @@ const creatorCommission = {
         if (!creator && code) {
           creator = (await ctx.base44.asServiceRole.entities.Creator.filter({ referral_code: code }).catch(() => []))[0] || null;
         }
-        if (!creator) throw new Error('Aucun créateur attribué à cette commande');
+        if (!creator) {
+          return { skipped: true, reason: 'Aucune attribution créateur sur cette commande' };
+        }
 
         ctx.data.order = order;
         ctx.data.creator = creator;
@@ -364,6 +371,7 @@ const creatorCommission = {
       name: 'compute_commission',
       label: 'Calculer la commission',
       run: async (ctx) => {
+        if (!ctx.data.order || !ctx.data.creator) return { skipped: true, reason: 'Aucune attribution créateur' };
         const order = ctx.data.order;
         const creator = ctx.data.creator;
         const fulfillments = await ctx.base44.asServiceRole.entities.FulfillmentOrder
@@ -382,6 +390,7 @@ const creatorCommission = {
       name: 'hold_or_approve',
       label: 'Geler ou approuver',
       run: async (ctx) => {
+        if (!ctx.data.order || !ctx.data.creator) return { skipped: true, reason: 'Aucune attribution créateur' };
         const order = ctx.data.order;
         const creator = ctx.data.creator;
         const { open } = await hasOpenCase(ctx.base44, order.order_number);
@@ -408,6 +417,7 @@ const creatorCommission = {
       name: 'credit_creator_wallet',
       label: 'Créditer le créateur',
       run: async (ctx) => {
+        if (!ctx.data.creator) return { skipped: true, reason: 'Aucune attribution créateur' };
         if (!ctx.data.approved) return { skipped: true, reason: 'Commission gelée — dossier ouvert sur cette commande' };
         const creator = ctx.data.creator;
         const order = ctx.data.order;
@@ -444,6 +454,7 @@ const creatorCommission = {
       label: 'Notifier le créateur',
       critical: false,
       run: async (ctx) => {
+        if (!ctx.data.creator) return { skipped: true, reason: 'Aucune attribution créateur' };
         const result = await notify(ctx.base44, {
           audience: 'seller',
           type: 'social',

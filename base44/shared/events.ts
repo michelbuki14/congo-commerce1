@@ -184,14 +184,9 @@ export const EVENT_RULES = {
     category: 'risk',
     severity: 'critical',
     audit: true,
-    notify: [
-      {
-        audience: 'admin',
-        title: (c) => `Litige ouvert — ${c.reference || 'commande'}`,
-        message: (c) => c.description || 'Un client ouvre un litige. Un arbitre doit examiner le dossier.',
-      },
-    ],
-    automate: ['open_support_ticket'],
+    // Les réactions sont portées par le workflow « Contrôle des risques ».
+    notify: [],
+    automate: [],
   },
   return_requested: {
     category: 'order',

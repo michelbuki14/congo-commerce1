@@ -648,11 +648,12 @@ export async function releaseFulfillmentPayout(fulfillment) {
     category: 'order',
     source: 'FulfillmentOrder',
     sourceId: fulfillment.id,
-    reference: fulfillment.fulfillment_number || '',
+    reference: fulfillment.order_number || fulfillment.fulfillment_number || '',
     tenantId: fulfillment.tenant_id || '',
     tenantOwnerEmail: fulfillment.tenant_owner_email || '',
     description: `Versement libéré — ${fulfillment.fulfillment_number || ''}`,
     payload: {
+      order_number: fulfillment.order_number || '',
       fulfillment_number: fulfillment.fulfillment_number || '',
       seller_payout_usd: fulfillment.seller_payout_usd || 0,
       transactions: pending.length,

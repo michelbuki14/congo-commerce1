@@ -1,0 +1,44 @@
+{
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "0 * * * *",
+      "one_time_date": null,
+      "timezone": "America/New_York",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "workflow_queue_runner",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "run_workflow_queue": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "processWorkflowQueue"
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Traiter la file des workflows",
+            "description": "Relances, d\u00e9lais d\u00e9pass\u00e9s, impay\u00e9s"
+          }
+        }
+      }
+    ]
+  },
+  "name": "Workflow Queue Runner",
+  "description": "Traite la file des workflows : relance les ex\u00e9cutions en \u00e9chec, cl\u00f4t celles qui sont bloqu\u00e9es et d\u00e9clenche les relances d'impay\u00e9s."
+}

@@ -1,5 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
 import { buildNotifications, planForEvent } from '../../shared/events.ts';
+import { startWorkflow } from '../../shared/workflow.ts';
+import { workflowForEvent } from '../../shared/workflowDefinitions.ts';
 
 /**
  * EVENT DISPATCHER — the single entry point of the event spine.
@@ -128,7 +130,38 @@ export default async function (req) {
 
     const actions = [...(record.actions || [])];
 
-    // ---- 2. Notify the right person -----------------------------------------
+    // ---- 2. Hand over to the workflow engine when one owns this event -------
+    // The workflow then performs the whole business process (and its own
+    // automated steps); the dispatcher keeps recording, notifying and auditing.
+    const owned = workflowForEvent(name);
+    let workflowRun = null;
+    if (owned && !body.workflow_code) {
+      workflowRun = await startWorkflow(base44, {
+        code: owned.code,
+        input: {
+          ...payload,
+          reference: ctx.reference,
+          order_number: payload.order_number || ctx.reference,
+          tenant_id: ctx.tenantId,
+          tenant_owner_email: ctx.tenantOwnerEmail,
+          actor_email: ctx.actorEmail,
+          actor_name: ctx.actorName,
+        },
+        tenantId: ctx.tenantId,
+        tenantOwnerEmail: ctx.tenantOwnerEmail,
+        trigger: 'event',
+        actorEmail: ctx.actorEmail,
+      });
+      actions.push({
+        type: 'workflow',
+        label: `${owned.name} — ${workflowRun.status || (workflowRun.duplicate ? 'déjà traité' : 'lancé')}`,
+        status: workflowRun.status === 'FAILED' ? 'failed' : 'done',
+        at: new Date().toISOString(),
+        detail: owned.code,
+      });
+    }
+
+    // ---- 3. Notify the right person -----------------------------------------
     for (const notification of buildNotifications(ctx, rule)) {
       try {
         await base44.asServiceRole.entities.Notification.create({
@@ -152,8 +185,8 @@ export default async function (req) {
       }
     }
 
-    // ---- 3. Automated steps -------------------------------------------------
-    for (const key of rule.automate || []) {
+    // ---- 4. Automated steps (the workflow engine owns them when it runs) ----
+    for (const key of workflowRun ? [] : rule.automate || []) {
       actions.push(await runAutomation(base44, key, ctx));
     }
 
