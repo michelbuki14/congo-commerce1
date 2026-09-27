@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
+import { requireAdmin } from '../../shared/security.ts';
 
 /**
  * Sends (or retries) ONE order message that the app has already recorded in its
@@ -19,6 +20,13 @@ export default async function (req) {
     const body = await req.json().catch(() => ({}));
     const id = String(body.notification_id || '').trim();
     if (!id) return Response.json({ error: 'notification_id is required' }, { status: 400 });
+
+    // An outgoing e-mail leaves from the app's own identity, and the ledger row
+    // it reads carries a recipient and body that an anonymous visitor could
+    // have written (the entity is client-creatable). Only an administrator (or
+    // the platform's own notification workflow) may trigger the send.
+    const auth = await requireAdmin(base44);
+    if (!auth.ok) return auth.response;
 
     const service = base44.asServiceRole;
     const record = await service.entities.OrderNotification.get(id).catch(() => null);

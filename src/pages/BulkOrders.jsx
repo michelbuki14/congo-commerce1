@@ -8,6 +8,7 @@ import OpsHeader from '@/components/ops/OpsHeader';
 import StatCard from '@/components/ops/StatCard';
 import StatusBadge from '@/components/StatusBadge';
 import { formatUSD } from '@/lib/format';
+import { esc } from '@/lib/shippingLabels';
 
 const CLOSED = ['DELIVERED', 'CANCELLED', 'RETURNED'];
 
@@ -19,12 +20,12 @@ function printLabels(rows, orders) {
     const order = orders[f.order_number] || {};
     const pickup = order.delivery_method === 'pickup_point';
     return `<section class="label">
-      <header><strong>Congo Commerce</strong><span>${f.fulfillment_number || ''}</span></header>
-      <p class="ref">${f.order_number || ''}</p>
-      <p class="to">${order.customer_name || 'Client'}<br/>${order.customer_phone || ''}</p>
-      <p class="addr">${pickup ? `Retrait : ${order.pickup_point_name || 'point de retrait'}` : `${order.address || ''}<br/>${order.city || ''}`}</p>
-      <p class="meta">${(f.items || []).length} article(s) · ${f.courier_name || 'transporteur à assigner'}${f.tracking_number ? ` · ${f.tracking_number}` : ''}</p>
-      ${pickup && order.pickup_code ? `<p class="code">Code de retrait : ${order.pickup_code}</p>` : ''}
+      <header><strong>Congo Commerce</strong><span>${esc(f.fulfillment_number)}</span></header>
+      <p class="ref">${esc(f.order_number)}</p>
+      <p class="to">${esc(order.customer_name || 'Client')}<br/>${esc(order.customer_phone)}</p>
+      <p class="addr">${pickup ? `Retrait : ${esc(order.pickup_point_name || 'point de retrait')}` : `${esc(order.address)}<br/>${esc(order.city)}`}</p>
+      <p class="meta">${(f.items || []).length} article(s) · ${esc(f.courier_name || 'transporteur à assigner')}${f.tracking_number ? ` · ${esc(f.tracking_number)}` : ''}</p>
+      ${pickup && order.pickup_code ? `<p class="code">Code de retrait : ${esc(order.pickup_code)}</p>` : ''}
     </section>`;
   }).join('');
   win.document.write(`<!doctype html><html lang="fr"><head><meta charset="utf-8" /><title>Étiquettes d'expédition</title>
