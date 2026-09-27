@@ -1,0 +1,95 @@
+{
+  "name": "Data Request Lifecycle",
+  "description": "Personal-data requests: send the verification email on submission, tell the compliance team once the requester is verified, and e-mail the data report when compliance marks the request as ready.",
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "data_request_lifecycle",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "route_request": {
+          "switch": [
+            {
+              "when": "${ .trigger.event_type == \"create\" }",
+              "then": "send_verification"
+            },
+            {
+              "when": "${ .trigger.data.status == \"verified\" and (.trigger.old_data.status // \"\") != \"verified\" }",
+              "then": "notify_compliance"
+            },
+            {
+              "when": "${ .trigger.data.status == \"ready\" and (.trigger.old_data.status // \"\") != \"ready\" }",
+              "then": "send_report"
+            },
+            {
+              "when": "${ true }",
+              "then": "end"
+            }
+          ]
+        }
+      },
+      {
+        "send_verification": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "sendDataRequestVerification",
+            "args": {
+              "request_id": "${ .trigger.entity_id }"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Envoyer l'e-mail de v\u00e9rification",
+            "description": "Nouvelle demande re\u00e7ue"
+          }
+        }
+      },
+      {
+        "notify_compliance": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "notifyComplianceTeam",
+            "args": {
+              "request_id": "${ .trigger.entity_id }"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Alerter l'\u00e9quipe conformit\u00e9",
+            "description": "Adresse v\u00e9rifi\u00e9e par le demandeur"
+          }
+        }
+      },
+      {
+        "send_report": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "emailDataReport",
+            "args": {
+              "request_id": "${ .trigger.entity_id }"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Envoyer le rapport de donn\u00e9es",
+            "description": "Statut pass\u00e9 \u00e0 \u00ab pr\u00eate \u00e0 envoyer \u00bb"
+          }
+        }
+      }
+    ]
+  },
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "create",
+        "update"
+      ],
+      "entity_name": "DataRequest"
+    }
+  }
+}

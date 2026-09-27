@@ -31,13 +31,42 @@
       "type": "string",
       "enum": [
         "received",
+        "verification_sent",
+        "verified",
         "in_progress",
+        "ready",
         "completed",
         "rejected"
       ],
       "default": "received"
     },
     "resolution_notes": {
+      "type": "string"
+    },
+    "verification_token": {
+      "type": "string"
+    },
+    "verification_sent_at": {
+      "type": "string"
+    },
+    "verified_at": {
+      "type": "string"
+    },
+    "notified_compliance_at": {
+      "type": "string"
+    },
+    "report_sent_at": {
+      "type": "string"
+    },
+    "email_status": {
+      "type": "string",
+      "enum": [
+        "sent",
+        "failed",
+        "skipped"
+      ]
+    },
+    "email_error": {
       "type": "string"
     }
   },

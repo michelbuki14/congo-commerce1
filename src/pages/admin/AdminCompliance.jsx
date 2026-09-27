@@ -37,7 +37,10 @@ const REQUEST_TYPES = {
 
 const REQUEST_STATUSES = {
   received: 'Reçue',
+  verification_sent: 'Vérification envoyée',
+  verified: 'Vérifiée',
   in_progress: 'En cours',
+  ready: 'Prête à envoyer',
   completed: 'Traitée',
   rejected: 'Refusée',
 };
