@@ -116,7 +116,10 @@ export default function Cart() {
 
       <button
         type="button"
-        onClick={() => navigate('/checkout')}
+        onClick={() => {
+          base44.analytics.track({ eventName: 'order_checkout_started' });
+          navigate('/checkout');
+        }}
         className="w-full rounded-full bg-primary py-3.5 text-sm font-bold text-primary-foreground"
       >
         Passer au paiement

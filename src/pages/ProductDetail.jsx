@@ -91,6 +91,7 @@ export default function ProductDetail() {
     if (!product) return;
     addItem(product, qty, variantLabel);
     if (goToCheckout) {
+      base44.analytics.track({ eventName: 'order_checkout_started' });
       navigate('/checkout');
     } else {
       flash('Ajouté au panier');
