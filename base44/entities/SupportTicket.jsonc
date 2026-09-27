@@ -1,0 +1,84 @@
+{
+  "name": "SupportTicket",
+  "type": "object",
+  "properties": {
+    "ticket_number": {
+      "type": "string"
+    },
+    "subject": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "order",
+        "payment",
+        "delivery",
+        "return",
+        "account",
+        "other"
+      ],
+      "default": "order"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "in_progress",
+        "waiting_customer",
+        "resolved",
+        "closed"
+      ],
+      "default": "open"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "normal",
+        "high"
+      ],
+      "default": "normal"
+    },
+    "customer_name": {
+      "type": "string"
+    },
+    "customer_email": {
+      "type": "string"
+    },
+    "customer_phone": {
+      "type": "string"
+    },
+    "order_number": {
+      "type": "string"
+    },
+    "session_id": {
+      "type": "string"
+    },
+    "messages": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "assigned_to": {
+      "type": "string"
+    },
+    "resolution_notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "subject"
+  ],
+  "rls": {
+    "create": null,
+    "read": null,
+    "update": null,
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
