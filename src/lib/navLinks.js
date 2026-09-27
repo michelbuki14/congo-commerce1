@@ -13,6 +13,8 @@ export const ADMIN_LINKS = [
   { to: '/admin/returns', label: 'Retours & litiges' },
   { to: '/admin/disputes', label: 'Litiges ouverts' },
   { to: '/dispute-resolution', label: 'Résolution des litiges' },
+  { to: '/finance', label: 'Finance' },
+  { to: '/pickup-manager', label: 'Points de retrait' },
   { to: '/admin/payouts', label: 'Retraits' },
   { to: '/admin/logistics', label: 'Logistique' },
   { to: '/logistics-rates', label: 'Tarifs logistiques' },

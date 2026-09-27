@@ -95,6 +95,8 @@ import SupplierPortal from '@/pages/SupplierPortal';
 import FraudAlerts from '@/pages/FraudAlerts';
 import PaymentMethods from '@/pages/PaymentMethods';
 import SellerReports from '@/pages/SellerReports';
+import FinancePortal from '@/pages/FinancePortal';
+import PickupManager from '@/pages/PickupManager';
 
 // Seller
 import SellerDashboard from '@/pages/seller/SellerDashboard';
@@ -291,6 +293,8 @@ const AuthenticatedApp = () => {
             <Route path="/admin/command-center" element={<CommandCenter />} />
             <Route path="/supplier-portal" element={<SupplierPortal />} />
             <Route path="/fraud-alerts" element={<FraudAlerts />} />
+            <Route path="/finance" element={<FinancePortal />} />
+            <Route path="/pickup-manager" element={<PickupManager />} />
             <Route path="/shipping-config" element={<ShippingConfig />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/products" element={<AdminProducts />} />

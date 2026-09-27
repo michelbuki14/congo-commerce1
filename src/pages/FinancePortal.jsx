@@ -1,0 +1,92 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { base44 } from '@/api/base44Client';
+import DashboardNav from '@/components/DashboardNav';
+import { ADMIN_LINKS } from '@/lib/navLinks';
+import OpsHeader from '@/components/ops/OpsHeader';
+import StatCard from '@/components/ops/StatCard';
+import ReconciliationTable from '@/components/finance/ReconciliationTable';
+import { providerLabel } from '@/lib/payments';
+import { formatUSD, formatDateTime, round2 } from '@/lib/format';
+
+const PAID = ['PAID', 'AUTHORIZED'];
+const FAILED = ['FAILED', 'CANCELLED', 'REFUNDED'];
+
+export default function FinancePortal() {
+  const [orders, setOrders] = useState([]);
+  const [purchases, setPurchases] = useState([]);
+  const [payouts, setPayouts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([
+      base44.entities.Order.list('-created_date', 500),
+      base44.entities.Base44Purchase.list('-created_date', 200).catch(() => []),
+      base44.entities.WalletTransaction.filter({ type: 'PAYOUT' }, '-created_date', 200),
+    ]).then(([o, p, w]) => {
+      setOrders(o.filter((x) => !x.is_demo));
+      setPurchases(p);
+      setPayouts(w);
+      setLoading(false);
+    });
+  }, []);
+
+  const rows = useMemo(() => {
+    const map = {};
+    orders.forEach((o) => {
+      const k = o.payment_provider || 'autre';
+      map[k] ||= { provider: k, label: providerLabel(k), count: 0, paid: 0, pending: 0, failed: 0 };
+      const t = Number(o.total_usd) || 0;
+      map[k].count += 1;
+      if (PAID.includes(o.payment_status)) map[k].paid += t;
+      else if (FAILED.includes(o.payment_status)) map[k].failed += t;
+      else map[k].pending += t;
+    });
+    return Object.values(map).sort((a, b) => b.paid - a.paid);
+  }, [orders]);
+
+  const sum = (key) => round2(rows.reduce((s, r) => s + r[key], 0));
+  const vat = round2(orders.filter((o) => PAID.includes(o.payment_status)).reduce((s, o) => s + (Number(o.vat_usd) || 0), 0));
+  const pendingPayouts = payouts.filter((p) => p.status === 'pending');
+  const byNumber = Object.fromEntries(orders.map((o) => [o.order_number, o]));
+  const mismatches = purchases.filter((p) => p.status === 'paid' && byNumber[p.productId]?.payment_status !== 'PAID');
+
+  if (loading) return <p className="p-6 text-sm text-muted-foreground">Chargement des finances…</p>;
+
+  return (
+    <div className="space-y-5">
+      <DashboardNav title="Administration" links={ADMIN_LINKS} />
+      <OpsHeader title="Portail finance" subtitle="Rapprochement des encaissements, TVA collectée et retraits à verser.">
+        <Link to="/admin/payouts" className="rounded-full bg-primary px-4 py-2 text-xs font-bold text-primary-foreground">Traiter les retraits</Link>
+      </OpsHeader>
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+        <StatCard label="Encaissé" value={formatUSD(sum('paid'))} tone="good" />
+        <StatCard label="En attente" value={formatUSD(sum('pending'))} tone="warn" />
+        <StatCard label="TVA collectée (16 %)" value={formatUSD(vat)} />
+        <StatCard label="Retraits à verser" value={formatUSD(round2(pendingPayouts.reduce((s, p) => s + (Number(p.amount_usd) || 0), 0)))} hint={`${pendingPayouts.length} demande(s)`} tone={pendingPayouts.length ? 'warn' : 'default'} />
+        <StatCard label="Écarts carte" value={mismatches.length} tone={mismatches.length ? 'bad' : 'good'} hint="Paiement reçu, commande non soldée" />
+      </div>
+      <ReconciliationTable rows={rows} />
+      <section className="space-y-2">
+        <h2 className="text-sm font-bold">Paiements carte (Base44 Payments)</h2>
+        <div className="divide-y divide-border rounded-2xl border border-border bg-card">
+          {purchases.slice(0, 30).map((p) => (
+            <div key={p.id} className="flex flex-wrap items-center justify-between gap-2 p-3 text-sm">
+              <div>
+                <p className="font-semibold">{p.productName || p.productId}</p>
+                <p className="text-xs text-muted-foreground">{p.buyerEmail || 'Acheteur anonyme'} · {formatDateTime(p.created_date)}</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="font-semibold">{formatUSD(Number(p.amount) || 0)}</span>
+                <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${p.status === 'paid' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
+                  {p.status === 'paid' ? 'Payé' : p.status === 'canceled' ? 'Annulé' : 'En attente'}
+                </span>
+              </div>
+            </div>
+          ))}
+          {!purchases.length && <p className="p-6 text-center text-sm text-muted-foreground">Aucun paiement carte pour l'instant.</p>}
+        </div>
+      </section>
+    </div>
+  );
+}
