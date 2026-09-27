@@ -5,6 +5,12 @@
     "thread_id": {
       "type": "string"
     },
+    "participants": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "sender_role": {
       "type": "string",
       "enum": [
@@ -25,5 +31,45 @@
     "thread_id",
     "sender_role",
     "body"
-  ]
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.participants": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "data.participants": {
+            "$in": [
+              "{{user.email}}"
+            ]
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
 }

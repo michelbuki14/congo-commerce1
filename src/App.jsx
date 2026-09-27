@@ -234,12 +234,12 @@ const AuthenticatedApp = () => {
         <Route path="/platform-guidelines" element={<PlatformGuidelines />} />
         <Route path="/checkout-success" element={<CheckoutSuccess />} />
         <Route path="/pricing" element={<Pricing />} />
-        <Route path="/messages" element={<Messages />} />
         <Route path="/developers" element={<DeveloperPortal />} />
         <Route path="/mentions-legales" element={<MentionsLegales />} />
         <Route path="/cgv" element={<CGV />} />
         <Route path="/confidentialite" element={<Confidentialite />} />
         <Route element={<RequireLogin />}>
+          <Route path="/messages" element={<Messages />} />
           <Route path="/payout-requests" element={<PayoutRequests />} />
           <Route path="/dispute-resolution" element={<DisputeResolution />} />
           <Route path="/subscription-plans" element={<SubscriptionPlans />} />

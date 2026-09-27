@@ -24,7 +24,7 @@ export default function ChatWindow({ thread, role, senderName }) {
     const body = text.trim();
     if (!body) return;
     setSending(true);
-    const msg = await base44.entities.ChatMessage.create({ thread_id: thread.id, sender_role: role, sender_name: senderName, body });
+    const msg = await base44.entities.ChatMessage.create({ thread_id: thread.id, participants: thread.participants || [], sender_role: role, sender_name: senderName, body });
     await base44.entities.ChatThread.update(thread.id, { last_message: body.slice(0, 120), last_at: new Date().toISOString() });
     setMessages((m) => (m.some((x) => x.id === msg.id) ? m : [...m, msg]));
     setText('');

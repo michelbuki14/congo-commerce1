@@ -11,9 +11,12 @@ export default function Messages() {
   const [activeId, setActiveId] = useState(null);
   const [target, setTarget] = useState('support');
 
-  const load = () => base44.entities.ChatThread.filter({ customer_session: session }, '-updated_date', 50).then(setThreads);
+  const [email, setEmail] = useState('');
   useEffect(() => {
-    load();
+    base44.auth.me().then((u) => {
+      setEmail(u.email);
+      base44.entities.ChatThread.filter({ customer_email: u.email }, '-updated_date', 50).then(setThreads);
+    });
     base44.entities.Seller.filter({ status: 'active' }, 'name', 200).then(setSellers);
   }, []);
 
@@ -21,10 +24,11 @@ export default function Messages() {
     const existing = threads.find((t) => (target === 'support' ? t.type === 'support' : t.seller_id === target));
     if (existing) return setActiveId(existing.id);
     const seller = sellers.find((s) => s.id === target);
+    const base = { customer_session: session, customer_name: name, customer_email: email };
     const t = await base44.entities.ChatThread.create(
       seller
-        ? { type: 'seller', seller_id: seller.id, seller_name: seller.name, customer_session: session, customer_name: name }
-        : { type: 'support', subject: 'Assistance', customer_session: session, customer_name: name }
+        ? { ...base, type: 'seller', seller_id: seller.id, seller_name: seller.name, participants: [...new Set([email, seller.email, seller.tenant_owner_email].filter(Boolean))] }
+        : { ...base, type: 'support', subject: 'Assistance', participants: [email] }
     );
     setThreads((prev) => [t, ...prev]);
     setActiveId(t.id);
