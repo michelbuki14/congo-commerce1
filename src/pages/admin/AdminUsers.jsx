@@ -20,6 +20,7 @@ export default function AdminUsers() {
   const [sellers, setSellers] = useState([]);
   const [creators, setCreators] = useState([]);
   const [couriers, setCouriers] = useState([]);
+  const [clicks, setClicks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [invite, setInvite] = useState({ email: '', role: 'user' });
   const [message, setMessage] = useState('');
@@ -27,15 +28,27 @@ export default function AdminUsers() {
   const [showSellerForm, setShowSellerForm] = useState(false);
 
   const load = async () => {
-    const [s, c, k] = await Promise.all([
+    const [s, c, k, cl] = await Promise.all([
       base44.entities.Seller.list('name', 100).catch(() => []),
       base44.entities.Creator.list('name', 100).catch(() => []),
       base44.entities.Courier.list('name', 50).catch(() => []),
+      base44.entities.AffiliateClick.list('-created_date', 500).catch(() => []),
     ]);
     setSellers(s);
     setCreators(c);
     setCouriers(k);
+    setClicks(cl);
     setLoading(false);
+  };
+
+  // Creator earnings are read from the tracked affiliate conversions rather than
+  // stored on the creator record, which no longer receives anonymous writes.
+  const creatorStats = (creatorId) => {
+    const mine = clicks.filter((x) => x.creator_id === creatorId && x.converted);
+    return {
+      conversions: mine.length,
+      earnings: mine.reduce((sum, x) => sum + (Number(x.commission_usd) || 0), 0),
+    };
   };
 
   useEffect(() => {
@@ -176,12 +189,14 @@ export default function AdminUsers() {
 
       {tab === 'creators' && (
         <div className="space-y-2">
-          {creators.map((c) => (
+          {creators.map((c) => {
+            const stats = creatorStats(c.id);
+            return (
             <div key={c.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card p-3.5">
               <div>
                 <p className="text-sm font-semibold">{c.name} <span className="text-muted-foreground">@{c.handle}</span></p>
                 <p className="text-[11px] text-muted-foreground">
-                  Code {c.referral_code} · commission {c.commission_rate}% · {c.total_conversions || 0} conversion(s) · {formatUSD(c.total_earnings_usd || 0)} générés
+                  Code {c.referral_code} · commission {c.commission_rate}% · {stats.conversions} conversion(s) · {formatUSD(stats.earnings)} générés
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -198,7 +213,8 @@ export default function AdminUsers() {
                 </button>
               </div>
             </div>
-          ))}
+            );
+          })}
           {!creators.length && <p className="rounded-xl border border-dashed border-border bg-card p-6 text-center text-xs text-muted-foreground">Aucun créateur inscrit.</p>}
         </div>
       )}

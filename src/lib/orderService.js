@@ -467,10 +467,6 @@ export async function placeOrder({ items, profile, delivery, couponCode, payment
         commission_usd: commission,
       });
     }
-    await base44.entities.Creator.update(creator.id, {
-      total_conversions: (Number(creator.total_conversions) || 0) + 1,
-      total_earnings_usd: round2((Number(creator.total_earnings_usd) || 0) + commission),
-    });
   }
 
   const finalOrder = await base44.entities.Order.update(order.id, {
