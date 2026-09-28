@@ -66,28 +66,6 @@
       "type": "number",
       "default": 10
     },
-    "payout_method": {
-      "type": "string",
-      "enum": [
-        "mpesa",
-        "airtel",
-        "orange",
-        "bank"
-      ],
-      "default": "mpesa"
-    },
-    "payout_holder": {
-      "type": "string"
-    },
-    "payout_account": {
-      "type": "string"
-    },
-    "payout_bank_name": {
-      "type": "string"
-    },
-    "payout_updated_at": {
-      "type": "string"
-    },
     "status": {
       "type": "string",
       "enum": [

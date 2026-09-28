@@ -120,7 +120,6 @@ const tenantProvisioning = {
           description: `Boutique officielle de ${tenant.name}`,
           status: 'active',
           commission_rate: tenant.commission_rate || 12,
-          payout_method: 'mpesa',
         });
         ctx.data.store = store;
         return { store_id: store.id, created: true, name: store.name };
@@ -303,15 +302,20 @@ const sellerOnboarding = {
       label: 'Configurer le versement',
       run: async (ctx) => {
         const seller = ctx.data.seller;
-        const patch = {};
-        if (!seller.payout_method) patch.payout_method = 'mpesa';
-        if (!seller.payout_holder) patch.payout_holder = seller.owner_name || seller.name;
-        if (!seller.payout_account) patch.payout_account = seller.phone || '';
-        if (!seller.commission_rate) patch.commission_rate = 12;
-        if (!Object.keys(patch).length) return { configured: false, reason: 'Configuration déjà complète' };
-        const updated = await ctx.base44.asServiceRole.entities.Seller.update(seller.id, patch);
-        ctx.data.seller = updated;
-        return { configured: true, ...patch };
+        // No payment account is inferred from a public phone number.
+        const existing = await ctx.base44.asServiceRole.entities.SellerPayout.filter({ seller_id: seller.id });
+        if (!existing.length) {
+          await ctx.base44.asServiceRole.entities.SellerPayout.create({
+            seller_id: seller.id,
+            owner_email: seller.email || seller.tenant_owner_email,
+            payout_method: 'mpesa',
+            payout_holder: seller.owner_name || seller.name,
+          });
+        }
+        if (!seller.commission_rate) {
+          ctx.data.seller = await ctx.base44.asServiceRole.entities.Seller.update(seller.id, { commission_rate: 12 });
+        }
+        return { configured: !existing.length };
       },
     },
     {
@@ -323,7 +327,6 @@ const sellerOnboarding = {
         const updated = await ctx.base44.asServiceRole.entities.Seller.update(seller.id, {
           status: 'active',
           verified,
-          payout_updated_at: iso(new Date()),
         });
         ctx.data.seller = updated;
         return { seller_id: updated.id, status: updated.status, verified };
