@@ -404,8 +404,8 @@ async function runSteps(base44, params) {
 export async function startWorkflow(base44, options = {}) {
   const def = workflowByCode(options.code);
   if (!def) return { ok: false, error: `Workflow inconnu : ${options.code}` };
-  // Enforce privilege inside the engine as well as at every HTTP entry point.
-  await assertWorkflowAdmin(base44, def);
+  // All workflows perform service-role writes, even those without admin_only metadata.
+  await assertWorkflowAdmin(base44);
 
   const input = options.input && typeof options.input === 'object' ? { ...options.input } : {};
   validateWorkflowDecision(input);
@@ -477,7 +477,7 @@ export async function resumeExecution(base44, executionId, options = {}) {
   }
   const def = workflowByCode(execution.workflow_code);
   if (!def) return { ok: false, error: `Workflow inconnu : ${execution.workflow_code}` };
-  await assertWorkflowAdmin(base44, { admin_only: true });
+  await assertWorkflowAdmin(base44);
   const input = { ...(execution.input || {}), ...(options.inputPatch || {}) };
   validateWorkflowDecision(input);
 

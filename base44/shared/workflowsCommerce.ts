@@ -20,12 +20,12 @@ const productPublication = {
   name: 'Publication de produit',
   description:
     'Contrôle puis publie un produit : validation, modération, mise en ligne, indexation et notification du vendeur.',
-  version: '1.0',
+  version: '1.1',
   category: 'commerce',
   trigger: 'manual',
   aggregateType: 'Product',
   tenant_scoped: true,
-  admin_only: false,
+  admin_only: true,
   idempotent: true,
   max_attempts: 2,
   steps: [

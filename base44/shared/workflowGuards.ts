@@ -7,8 +7,8 @@ export function validateWorkflowDecision(input = {}) {
   }
 }
 
-export async function assertWorkflowAdmin(base44, definition) {
-  if (!definition.admin_only) return;
+export async function assertWorkflowAdmin(base44) {
+  // Every workflow runs service-role steps; definition metadata cannot grant access.
   const user = await base44.auth.me().catch(() => null);
   if (user?.role !== 'admin') {
     const error = new Error('Workflow réservé aux administrateurs');

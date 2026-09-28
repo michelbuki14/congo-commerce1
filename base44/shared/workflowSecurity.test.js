@@ -22,11 +22,11 @@ function memoryClient(role = 'admin') {
   return { auth: { me: async () => role ? { role, email: 'admin@example.test' } : null }, asServiceRole: { entities }, tables, writes };
 }
 
-for (const code of ['return_refund', 'creator_commission']) {
+for (const code of ['product_publication', 'return_refund', 'creator_commission']) {
   for (const role of ['user', null]) {
     test(`${code}: rejects ${role || 'anonymous'} before writes`, async () => {
       const client = memoryClient(role);
-      await assert.rejects(startWorkflow(client, { code, input: { decision: 'approve' } }), e => e.status === (role ? 403 : 401));
+      await assert.rejects(startWorkflow(client, { code, input: { product_id: 'another-product', return_id: 'another-return', decision: 'approve' } }), e => e.status === (role ? 403 : 401));
       assert.equal(client.writes.length, 0);
     });
   }
