@@ -143,11 +143,9 @@ export default function TrackOrder() {
                   <StatusBadge status={f.status} />
                 </div>
 
-                {f.tracking_number && (
-                  <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Truck className="h-3.5 w-3.5" /> {f.courier_name} · {f.tracking_number}
-                  </p>
-                )}
+                <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Truck className="h-3.5 w-3.5" /> {f.courier_name || t('orderTracking.carrierFallback')} · {f.tracking_number ? t('orderTracking.trackingNo', { number: f.tracking_number }) : t('orderTracking.trackingPending')}
+                </p>
 
                 <div className="mt-3 space-y-2">
                   {steps.map((step, i) => {

@@ -250,6 +250,10 @@ export default async function (req: Request) {
       return { ...g, index, sub, cost, creatorCommission, sellerPayout, platformRevenue, weight, pick };
     });
 
+    if (plan.some((p) => p.source_type === "local_seller" && !p.pick)) {
+      return err("Aucun transporteur ne dessert cette ville pour le moment.", 409);
+    }
+
     // ---- 9. Payment outcome — decided here, never asserted by the browser --
     // card → PENDING, the signed Wix webhook completes it.
     // wallet → PAID only after the signed-in owner's wallet is checked and debited.
@@ -309,8 +313,8 @@ export default async function (req: Request) {
 
     const fulfillmentPayloads = plan.map((p) => {
       const isLocal = p.source_type === "local_seller";
-      const tracking = isLocal && p.pick
-        ? `${p.pick.courier.code}-${Date.now().toString(36).toUpperCase().slice(-8)}`
+      const tracking = isLocal
+        ? `${p.pick.courier.code}-${orderNum.replaceAll("-", "")}-${p.index + 1}`
         : "";
       return {
         order_id: order.id, order_number: orderNum,
@@ -329,8 +333,8 @@ export default async function (req: Request) {
         supplier_cost_usd: p.cost, seller_payout_usd: p.sellerPayout,
         creator_commission_usd: p.creatorCommission, platform_revenue_usd: p.platformRevenue,
         status: "PENDING",
-        courier_id: isLocal ? p.pick?.courier.id || "kin_express" : "",
-        courier_name: isLocal ? p.pick?.courier.name || "Kin Express" : p.supplier_name || "Fournisseur international",
+        courier_id: isLocal ? p.pick.courier.id : "",
+        courier_name: isLocal ? p.pick.courier.name : "",
         tracking_number: tracking,
         estimated_delivery: isLocal ? p.pick?.courier.eta || "2-4 jours" : (p.lines[0]?.product?.estimated_delivery || "18 jours"),
         payout_released: false,
@@ -342,13 +346,14 @@ export default async function (req: Request) {
     const createdFulfillments = Array.isArray(fulfillments) ? fulfillments : [fulfillments];
 
     for (const f of createdFulfillments) {
-      if (!f?.tracking_number) continue;
+      const details = fulfillmentPayloads.find((p) => p.fulfillment_number === f?.fulfillment_number);
+      if (!f?.id || !details?.tracking_number) continue;
       await db.entities.Shipment.create({
         fulfillment_order_id: f.id, order_number: orderNum,
-        tenant_id: f.tenant_id || "", tenant_owner_email: f.tenant_owner_email || "",
-        courier_id: f.courier_id, courier_name: f.courier_name,
-        tracking_number: f.tracking_number, status: f.status,
-        events: [{ status: f.status, label: "Étiquette créée", at: new Date().toISOString() }],
+        tenant_id: details.tenant_id || "", tenant_owner_email: details.tenant_owner_email || "",
+        courier_id: details.courier_id, courier_name: details.courier_name,
+        tracking_number: details.tracking_number, status: details.status,
+        events: [{ status: details.status, label: "Étiquette créée", at: new Date().toISOString() }],
       });
     }
 

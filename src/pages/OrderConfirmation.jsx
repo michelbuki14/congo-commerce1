@@ -81,11 +81,9 @@ export default function OrderConfirmation() {
               <StatusBadge status={f.status} />
             </div>
             <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
-              {f.tracking_number && (
-                <span className="flex items-center gap-1">
-                  <Truck className="h-3 w-3" /> {f.courier_name} · {f.tracking_number}
-                </span>
-              )}
+              <span className="flex items-center gap-1">
+                <Truck className="h-3 w-3" /> {f.courier_name || t('orderTracking.carrierFallback')} · {f.tracking_number ? t('orderTracking.trackingNo', { number: f.tracking_number }) : t('orderTracking.trackingPending')}
+              </span>
               {f.estimated_delivery && (
                 <span className="flex items-center gap-1">
                   <Package className="h-3 w-3" /> {t('orderConfirmation.etaLabel', { date: f.estimated_delivery })}
