@@ -5,11 +5,15 @@ import { RotateCcw, ShieldCheck, AlertCircle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '@/components/StatusBadge';
 import { getProfile, uid } from '@/lib/session';
-import { formatDate } from '@/lib/format';
+import { formatDate, formatUSD } from '@/lib/format';
 import { emitEvent } from '@/lib/events';
+import { lookupOrder } from '@/lib/orderLookup';
+import { returnEligibility } from '@/lib/returns';
+import { RETURN_COPY } from '@/lib/returnCopy';
 
 export default function Returns() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const copy = RETURN_COPY[i18n.language === 'en' ? 'en' : 'fr'];
   const REASONS = [
     { id: 'not_received', label: t('returns.reasonNotReceived') },
     { id: 'wrong_product', label: t('returns.reasonWrongProduct') },
@@ -21,7 +25,7 @@ export default function Returns() {
   const profile = getProfile();
   const [returns, setReturns] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [form, setForm] = useState({ order_number: '', product_title: '', reason: 'not_received', description: '', phone: profile.phone || '' });
+  const [form, setForm] = useState({ order_number: new URLSearchParams(window.location.search).get('order') || '', product_title: '', reason: 'not_received', description: '', phone: profile.phone || '', refund_amount_usd: '' });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -45,21 +49,42 @@ export default function Returns() {
       setError(t('returns.orderNumberRequired'));
       return;
     }
+    if (!form.phone.trim()) {
+      setError(copy.phoneRequired);
+      return;
+    }
     setSubmitting(true);
     try {
-      const orderRows = await base44.entities.Order.filter({ order_number: form.order_number.trim().toUpperCase() }).catch(() => []);
-      const order = orderRows[0];
+      const { order } = await lookupOrder(form.order_number.trim().toUpperCase(), form.phone.trim());
+      const eligibility = returnEligibility(order);
+      if (!eligibility.ok) {
+        setError(order.status !== 'DELIVERED' ? t('returnsPortal.eligibleAfterDelivery') : t('returnsPortal.windowPassed', { days: 7 }));
+        return;
+      }
+      const expected = Number(form.refund_amount_usd);
+      if (!Number.isFinite(expected) || expected <= 0 || expected > Number(order.total_usd)) {
+        setError(copy.amountInvalid(formatUSD(order.total_usd)));
+        return;
+      }
+      if (!form.description.trim()) {
+        setError(copy.descriptionRequired);
+        return;
+      }
+      const item = (order.items || []).find((entry) => entry.title === form.product_title) || order.items?.[0];
       await base44.entities.Return.create({
         return_number: `RET-${uid('').slice(1, 7).toUpperCase()}`,
         order_id: order?.id || '',
         order_number: form.order_number.trim().toUpperCase(),
         customer_name: profile.name || 'Client',
-        customer_phone: form.phone || profile.phone || '',
-        product_title: form.product_title || (order?.items?.[0]?.title ?? ''),
+        customer_phone: form.phone.trim(),
+        product_id: item?.product_id || '',
+        product_title: item?.title || '',
         reason: form.reason,
-        description: form.description,
-        refund_amount_usd: order?.total_usd || 0,
+        description: form.description.trim(),
+        refund_amount_usd: expected,
         status: 'requested',
+        tenant_id: order.tenant_id || '',
+        tenant_owner_email: order.tenant_owner_email || '',
       });
       await base44.entities.Notification.create({
         title: 'Nouvelle demande de retour',
@@ -81,10 +106,10 @@ export default function Returns() {
         payload: { reason: form.reason, product_title: form.product_title || order?.items?.[0]?.title || '' },
       });
       setSuccess(t('returns.requestSent'));
-      setForm({ ...form, order_number: '', product_title: '', description: '' });
+      setForm({ ...form, order_number: '', product_title: '', description: '', refund_amount_usd: '' });
       await load();
-    } catch {
-      setError(t('returns.submitFailed'));
+      } catch (err) {
+        setError(err.message || t('returns.submitFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -143,6 +168,16 @@ export default function Returns() {
               <option key={r.id} value={r.id}>{r.label}</option>
             ))}
           </select>
+          <label className="block text-xs font-semibold">
+            {copy.expectedRefund}
+            <input
+              type="number" min="0.01" step="0.01" inputMode="decimal" required
+              value={form.refund_amount_usd}
+              onChange={(e) => setForm({ ...form, refund_amount_usd: e.target.value })}
+              placeholder={copy.expectedRefundPh}
+              className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"
+            />
+          </label>
           <textarea
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
@@ -181,7 +216,9 @@ export default function Returns() {
                 <p className="text-[11px] text-muted-foreground">
                   {r.order_number} · {REASONS.find((x) => x.id === r.reason)?.label} · {formatDate(r.created_date)}
                 </p>
+                <p className="mt-1 text-xs text-muted-foreground">{r.product_title} · {copy.expectedRefund}: {formatUSD(r.refund_amount_usd)}</p>
                 {r.resolution_notes && <p className="mt-1 text-xs text-muted-foreground">{t('returns.responseIs', { notes: r.resolution_notes })}</p>}
+                {!['refunded', 'closed'].includes(r.status) && <Link className="mt-2 inline-block text-xs font-semibold text-primary" to={`/disputes?order=${encodeURIComponent(r.order_number)}&phone=${encodeURIComponent(r.customer_phone)}&reason=${encodeURIComponent(r.reason)}`}>{copy.escalate}</Link>}
               </div>
             ))}
           </div>

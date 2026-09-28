@@ -7,9 +7,12 @@ import StatusBadge from '@/components/StatusBadge';
 import { getProfile } from '@/lib/session';
 import { formatUSD, formatDate } from '@/lib/format';
 import { emitEvent } from '@/lib/events';
+import { lookupOrder } from '@/lib/orderLookup';
+import { RETURN_COPY } from '@/lib/returnCopy';
 
 export default function Disputes() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const copy = RETURN_COPY[i18n.language === 'en' ? 'en' : 'fr'];
   const TYPES = [
     { id: 'not_received', label: t('disputes.typeNotReceived') },
     { id: 'wrong_product', label: t('disputes.typeWrongProduct') },
@@ -21,11 +24,15 @@ export default function Disputes() {
   const profile = getProfile();
   const [disputes, setDisputes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [form, setForm] = useState({
-    order_number: '',
-    type: 'not_received',
-    description: '',
-    phone: profile.phone || '',
+  const [form, setForm] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    const reason = params.get('reason');
+    return {
+      order_number: params.get('order') || '',
+      type: ['not_received', 'wrong_product', 'damaged', 'not_as_described', 'missing_item'].includes(reason) ? reason : 'not_received',
+      description: '',
+      phone: params.get('phone') || profile.phone || '',
+    };
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -50,11 +57,14 @@ export default function Disputes() {
       setError(t('disputes.orderNumberRequired'));
       return;
     }
+    if (!form.phone.trim()) {
+      setError(copy.phoneRequired);
+      return;
+    }
     setSubmitting(true);
     try {
       const number = form.order_number.trim().toUpperCase();
-      const orderRows = await base44.entities.Order.filter({ order_number: number }).catch(() => []);
-      const order = orderRows[0];
+      const { order } = await lookupOrder(number, form.phone);
       await base44.entities.Dispute.create({
         order_number: number,
         customer_name: profile.name || 'Client',
@@ -88,8 +98,8 @@ export default function Disputes() {
       setSuccess(t('disputes.disputeOpened'));
       setForm({ ...form, order_number: '', description: '' });
       await load(form.phone || profile.phone);
-    } catch {
-      setError(t('disputes.openFailed'));
+    } catch (err) {
+      setError(err.message || t('disputes.openFailed'));
     } finally {
       setSubmitting(false);
     }

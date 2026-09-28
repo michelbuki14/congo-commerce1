@@ -6,11 +6,13 @@ import { base44 } from '@/api/base44Client';
 import StatusBadge from '@/components/StatusBadge';
 import { getOrderIds, getProfile, uid } from '@/lib/session';
 import { formatUSD, formatDate } from '@/lib/format';
+import { RETURN_COPY } from '@/lib/returnCopy';
 
 const WINDOW_DAYS = 7;
 
 export default function ReturnsPortal() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const copy = RETURN_COPY[i18n.language === 'en' ? 'en' : 'fr'];
   const REASONS = [
     { id: 'not_received', label: t('returnsPortal.reasonNotReceived') },
     { id: 'wrong_product', label: t('returnsPortal.reasonWrongProduct') },
@@ -94,6 +96,7 @@ export default function ReturnsPortal() {
         is_demo: true,
       });
       setMessage(t('returnsPortal.requestCovers', { count: selected.length }));
+      setReturns(await base44.entities.Return.filter({ customer_phone: profile.phone || '—' }, '-created_date', 30));
       setSelected([]);
       setDescription('');
     } catch {
@@ -226,9 +229,11 @@ export default function ReturnsPortal() {
                   <StatusBadge status={r.status} />
                 </div>
                 <p className="text-[11px] text-muted-foreground">
-                  {r.order_number} · {r.product_title} · {formatDate(r.created_date)}
+                  {r.order_number} · {r.product_title} · {formatDate(r.created_date)} · {formatUSD(r.refund_amount_usd)}
                 </p>
-              </div>
+                {r.resolution_notes && <p className="mt-1 text-xs text-muted-foreground">{r.resolution_notes}</p>}
+                {!['refunded', 'closed'].includes(r.status) && <Link to={`/disputes?order=${encodeURIComponent(r.order_number)}&phone=${encodeURIComponent(r.customer_phone)}&reason=${encodeURIComponent(r.reason)}`} className="mt-2 inline-block text-xs font-semibold text-primary">{copy.escalate}</Link>}
+                </div>
             ))}
           </div>
         ) : (
