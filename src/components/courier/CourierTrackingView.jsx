@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import CourierTrackingCard from './CourierTrackingCard';
 
 /**
@@ -7,10 +8,11 @@ import CourierTrackingCard from './CourierTrackingCard';
  * update — including the proof-of-delivery capture.
  */
 export default function CourierTrackingView({ shipments, fulfillments, orders, busy, showFleet, onAdvance }) {
+  const { t } = useTranslation();
   if (!shipments.length) {
     return (
       <p className="rounded-xl border border-dashed border-border bg-card p-4 text-xs text-muted-foreground">
-        Aucune livraison en cours à suivre. Acceptez une course pour la suivre ici.
+        {t('courierTrackingView.empty')}
       </p>
     );
   }

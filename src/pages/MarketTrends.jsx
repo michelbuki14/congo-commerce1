@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Flame, Search, TrendingUp } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
@@ -11,6 +12,7 @@ const DAYS = 14;
 const dayKey = (date) => new Date(date).toISOString().slice(0, 10);
 
 export default function MarketTrends() {
+  const { t } = useTranslation();
   const { seller, loading: loadingSeller } = useActiveSeller();
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
@@ -47,13 +49,13 @@ export default function MarketTrends() {
   const categoryStats = useMemo(() => {
     const map = {};
     products.forEach((p) => {
-      const name = p.category_name || 'Non classé';
+      const name = p.category_name || '__UNCAT__';
       if (!map[name]) map[name] = { name, sold: 0, count: 0, revenue: 0 };
       map[name].sold += Number(p.sold_count) || 0;
       map[name].count += 1;
       map[name].revenue += (Number(p.sold_count) || 0) * (Number(p.price_usd) || 0);
     });
-    return Object.values(map).sort((a, b) => b.sold - a.sold).slice(0, 8);
+    return Object.values(map).sort((a, b) => b.sold - a.sold).slice(0, 8).map((r) => ({ ...r, name: r.name === '__UNCAT__' ? t('marketTrends.uncategorized') : r.name }));
   }, [products]);
 
   const demandSeries = useMemo(() => {
@@ -91,20 +93,20 @@ export default function MarketTrends() {
   return (
     <div className="space-y-5 pb-8">
       <OpsHeader
-        title="Tendances du marché"
-        subtitle="Articles les plus vendus, catégories en croissance et signaux de demande pour ajuster votre catalogue."
+        title={t('marketTrends.title')}
+        subtitle={t('marketTrends.subtitle')}
       />
 
       <div className="grid grid-cols-2 gap-2.5 md:grid-cols-4">
-        <StatCard label="Mes articles" value={mine.length} hint={`${mine.filter((p) => String(p.status) === 'published').length} publiés`} />
-        <StatCard label="Unités vendues (mes articles)" value={soldMine} tone={soldMine ? 'good' : 'default'} />
-        <StatCard label="Commandes (14 j)" value={orders.filter((o) => new Date(o.created_date).getTime() > Date.now() - DAYS * 86400000).length} />
-        <StatCard label="Catégorie en tête" value={categoryStats[0]?.name || '—'} hint={categoryStats[0] ? `${categoryStats[0].sold} unités` : 'aucune donnée'} />
+        <StatCard label={t('marketTrends.statItems')} value={mine.length} hint={t('marketTrends.statPublished', { count: mine.filter((p) => String(p.status) === 'published').length })} />
+        <StatCard label={t('marketTrends.statSold')} value={soldMine} tone={soldMine ? 'good' : 'default'} />
+        <StatCard label={t('marketTrends.statOrders')} value={orders.filter((o) => new Date(o.created_date).getTime() > Date.now() - DAYS * 86400000).length} />
+        <StatCard label={t('marketTrends.statTopCat')} value={categoryStats[0] ? (categoryStats[0].name === '__UNCAT__' ? t('marketTrends.uncategorized') : categoryStats[0].name) : '—'} hint={categoryStats[0] ? t('marketTrends.topCatHint', { count: categoryStats[0].sold }) : t('marketTrends.noData')} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <section className="min-w-0 rounded-2xl border border-border bg-card p-4">
-          <h2 className="flex items-center gap-2 text-sm font-bold"><TrendingUp className="h-4 w-4" /> Commandes des 14 derniers jours</h2>
+          <h2 className="flex items-center gap-2 text-sm font-bold"><TrendingUp className="h-4 w-4" /> {t('marketTrends.ordersChart')}</h2>
           <div className="mt-3 h-56">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={demandSeries}>
@@ -119,7 +121,7 @@ export default function MarketTrends() {
         </section>
 
         <section className="min-w-0 rounded-2xl border border-border bg-card p-4">
-          <h2 className="flex items-center gap-2 text-sm font-bold"><Flame className="h-4 w-4" /> Unités vendues par catégorie</h2>
+          <h2 className="flex items-center gap-2 text-sm font-bold"><Flame className="h-4 w-4" /> {t('marketTrends.catChart')}</h2>
           <div className="mt-3 h-56">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={categoryStats}>
@@ -137,7 +139,7 @@ export default function MarketTrends() {
       <div className="grid gap-4 lg:grid-cols-3">
         <section className="min-w-0 rounded-2xl border border-border bg-card lg:col-span-2">
           <header className="border-b border-border px-4 py-3">
-            <h2 className="text-sm font-bold">Articles les plus demandés</h2>
+            <h2 className="text-sm font-bold">{t('marketTrends.topItems')}</h2>
           </header>
           <div className="divide-y divide-border">
             {trending.length ? trending.map((p, i) => (
@@ -146,21 +148,21 @@ export default function MarketTrends() {
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-xs font-semibold">{p.title}</p>
                   <p className="text-[11px] text-muted-foreground">
-                    {p.category_name || 'Non classé'} · {p.seller_name || 'vendeur'} · stock {Number(p.stock) || 0}
+                    {p.category_name === '__UNCAT__' || !p.category_name ? t('marketTrends.uncategorized') : p.category_name} · {p.seller_name || t('marketTrends.sellerFallback')} · {t('marketTrends.stockLabel', { count: Number(p.stock) || 0 })}
                   </p>
                 </div>
-                <span className="text-xs font-bold">{Number(p.sold_count) || 0} vendus</span>
+                <span className="text-xs font-bold">{t('marketTrends.soldLabel', { count: Number(p.sold_count) || 0 })}</span>
                 <span className="hidden text-xs text-muted-foreground md:block">{formatUSD(p.price_usd)}</span>
               </div>
             )) : (
-              <p className="px-4 py-6 text-center text-xs text-muted-foreground">Pas encore de données de vente.</p>
+              <p className="px-4 py-6 text-center text-xs text-muted-foreground">{t('marketTrends.noSales')}</p>
             )}
           </div>
         </section>
 
         <section className="min-w-0 rounded-2xl border border-border bg-card">
           <header className="border-b border-border px-4 py-3">
-            <h2 className="flex items-center gap-2 text-sm font-bold"><Search className="h-4 w-4" /> Recherches les plus fréquentes</h2>
+            <h2 className="flex items-center gap-2 text-sm font-bold"><Search className="h-4 w-4" /> {t('marketTrends.topSearches')}</h2>
           </header>
           <div className="space-y-2 p-4">
             {searchTerms.length ? searchTerms.map(([term, count]) => (
@@ -170,8 +172,7 @@ export default function MarketTrends() {
               </div>
             )) : (
               <p className="text-[11px] text-muted-foreground">
-                Les termes de recherche sont enregistrés au niveau de la plateforme et sont visibles par les
-                administrateurs. En attendant, les articles les plus commandés ci-contre reflètent la demande réelle.
+{t('marketTrends.searchNote')}
               </p>
             )}
           </div>

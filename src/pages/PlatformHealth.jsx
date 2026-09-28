@@ -7,6 +7,7 @@ import ServiceStatusRow from '@/components/health/ServiceStatusRow';
 import IncidentList from '@/components/health/IncidentList';
 import { HEALTH_LABELS, loadPlatformHealth } from '@/lib/platformHealth';
 import { formatUSD, formatDateTime } from '@/lib/format';
+import { useTranslation } from 'react-i18next';
 
 const BANNER = {
   ok: 'border-emerald-300 bg-emerald-50 text-emerald-900',
@@ -16,6 +17,7 @@ const BANNER = {
 };
 
 export default function PlatformHealth() {
+  const { t } = useTranslation();
   const [health, setHealth] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -43,8 +45,8 @@ export default function PlatformHealth() {
   return (
     <div className="space-y-5 pb-8">
       <OpsHeader
-        title="Santé de la plateforme"
-        subtitle="État opérationnel des partenaires logistiques, des passerelles de paiement et des services cœur, calculé à partir des données réelles des sept derniers jours."
+        title={t('platformHealth.title')}
+        subtitle={t('platformHealth.subtitle')}
       >
         <button
           type="button"
@@ -52,63 +54,63 @@ export default function PlatformHealth() {
           onClick={() => load(true)}
           className="flex items-center gap-1.5 rounded-full border border-border px-4 py-2 text-xs font-semibold disabled:opacity-50"
         >
-          <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} /> Actualiser
+          <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`} /> {t('platformHealth.refresh')}
         </button>
       </OpsHeader>
 
       <div className={`flex flex-wrap items-center gap-2 rounded-xl border p-3 text-xs ${BANNER[overall] || BANNER.unknown}`}>
         <Activity className="h-4 w-4 shrink-0" />
-        <span className="font-semibold">État global : {HEALTH_LABELS[overall]}</span>
+        <span className="font-semibold">{t('platformHealth.overall', { status: t(HEALTH_LABELS[overall] || 'healthStatus.unknown') })}</span>
         <span className="opacity-80">
-          {all.length} composant(s) surveillé(s) · {degraded} dégradé(s) · {down} perturbé(s)
+          {t('platformHealth.componentsLine', { total: all.length, degraded, down })}
         </span>
-        <span className="opacity-80">Dernière analyse : {formatDateTime(loadedAt)}</span>
+        <span className="opacity-80">{t('platformHealth.lastAnalysis', { when: formatDateTime(loadedAt) })}</span>
       </div>
 
       <div className="grid grid-cols-2 gap-2.5 md:grid-cols-4">
-        <StatCard label="Composants" value={all.length} hint="surveillés en continu" />
-        <StatCard label="Dégradés" value={degraded} hint="performance en baisse" tone={degraded ? 'warn' : 'good'} />
-        <StatCard label="Perturbés" value={down} hint="action requise" tone={down ? 'bad' : 'good'} />
-        <StatCard label="Volume paiements (7 j)" value={formatUSD(volume)} hint={`${gateways.length} passerelle(s)`} />
+        <StatCard label={t('platformHealth.components')} value={all.length} hint={t('platformHealth.componentsHint')} />
+        <StatCard label={t('platformHealth.degraded')} value={degraded} hint={t('platformHealth.degradedHint')} tone={degraded ? 'warn' : 'good'} />
+        <StatCard label={t('platformHealth.down')} value={down} hint={t('platformHealth.downHint')} tone={down ? 'bad' : 'good'} />
+        <StatCard label={t('platformHealth.volume')} value={formatUSD(volume)} hint={t('platformHealth.gatewayCount', { count: gateways.length })} />
       </div>
 
-      <HealthSection icon={CreditCard} title="Passerelles de paiement" subtitle="Taux de confirmation réel par moyen de paiement.">
+      <HealthSection icon={CreditCard} title={t('platformHealth.gateways')} subtitle={t('platformHealth.gatewaysSub')}>
         {gateways.length ? gateways.map((g) => (
           <ServiceStatusRow
             key={g.name}
             name={g.name}
             detail={g.detail}
-            meta={g.lastSuccess ? `Dernier paiement confirmé : ${formatDateTime(g.lastSuccess)}` : 'Aucun paiement confirmé sur la période'}
+            meta={g.lastSuccess ? t('platformHealth.lastConfirmed', { when: formatDateTime(g.lastSuccess) }) : t('platformHealth.noConfirmed')}
             status={g.status}
             right={<span className="text-xs font-semibold">{Math.round(g.rate * 100)} %</span>}
           />
         )) : (
-          <p className="px-4 py-6 text-center text-xs text-muted-foreground">Aucun paiement enregistré sur les sept derniers jours.</p>
+          <p className="px-4 py-6 text-center text-xs text-muted-foreground">{t('platformHealth.noPayments')}</p>
         )}
       </HealthSection>
 
-      <HealthSection icon={Truck} title="Partenaires logistiques" subtitle="Acceptation des courses et délais d'acheminement.">
+      <HealthSection icon={Truck} title={t('platformHealth.partners')} subtitle={t('platformHealth.partnersSub')}>
         {partners.length ? partners.map((p) => (
           <ServiceStatusRow
             key={p.name}
             name={p.name}
             detail={p.detail}
-            meta={p.meta || (p.areas?.length ? `Zones : ${p.areas.join(', ')}` : '')}
+            meta={p.meta || (p.areas?.length ? t('platformHealth.zones', { zones: p.areas.join(', ') }) : '')}
             status={p.status}
-            right={p.total ? <span className="text-xs font-semibold">{Math.round((1 - p.declineRate) * 100)} % acceptées</span> : null}
+            right={p.total ? <span className="text-xs font-semibold">{t('platformHealth.accepted', { pct: Math.round((1 - p.declineRate) * 100) })}</span> : null}
           />
         )) : (
-          <p className="px-4 py-6 text-center text-xs text-muted-foreground">Aucun partenaire logistique configuré.</p>
+          <p className="px-4 py-6 text-center text-xs text-muted-foreground">{t('platformHealth.noPartners')}</p>
         )}
       </HealthSection>
 
-      <HealthSection icon={Server} title="Services cœur" subtitle="Orchestration, événements et disponibilité de l'offre.">
+      <HealthSection icon={Server} title={t('platformHealth.services')} subtitle={t('platformHealth.servicesSub')}>
         {services.map((s) => (
           <ServiceStatusRow key={s.name} name={s.name} detail={s.detail} meta={s.meta} status={s.status} />
         ))}
       </HealthSection>
 
-      <HealthSection icon={TriangleAlert} title="Incidents récents" subtitle="Événements et workflows en échec, du plus récent au plus ancien.">
+      <HealthSection icon={TriangleAlert} title={t('platformHealth.incidents')} subtitle={t('platformHealth.incidentsSub')}>
         <IncidentList incidents={incidents} />
       </HealthSection>
     </div>

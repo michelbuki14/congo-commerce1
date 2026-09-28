@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { base44 } from '@/api/base44Client';
 import { Image } from '@/components/ui/image';
 import SectionHeader from '@/components/SectionHeader';
 
 export default function Categories() {
+  const { t } = useTranslation();
   const [categories, setCategories] = useState([]);
   const [counts, setCounts] = useState({});
   const [loading, setLoading] = useState(true);
@@ -28,7 +30,7 @@ export default function Categories() {
 
   return (
     <div className="space-y-4 pb-6">
-      <SectionHeader title="Toutes les catégories" subtitle="Mode, beauté, maison, électronique et plus" />
+      <SectionHeader title={t('categories.title')} subtitle={t('categories.subtitle')} />
       {loading ? (
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           {Array.from({ length: 8 }).map((_, i) => (
@@ -53,7 +55,7 @@ export default function Categories() {
               </div>
               <div className="p-2.5">
                 <p className="text-sm font-semibold">{c.name}</p>
-                <p className="text-[11px] text-muted-foreground">{counts[c.id] || 0} articles</p>
+                <p className="text-[11px] text-muted-foreground">{t('categories.count', { count: counts[c.id] || 0 })}</p>
               </div>
             </Link>
           ))}

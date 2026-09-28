@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { base44 } from '@/api/base44Client';
 import { formatDateTime } from '@/lib/format';
 
 export default function ReceivingPanel() {
+  const { t } = useTranslation();
   const [products, setProducts] = useState([]);
   const [moves, setMoves] = useState([]);
   const [form, setForm] = useState({ product_id: '', quantity: 1, location: '', note: '' });
@@ -33,21 +35,21 @@ export default function ReceivingPanel() {
     <div className="space-y-4">
       <form onSubmit={submit} className="grid gap-2 rounded-2xl border border-border bg-card p-3 md:grid-cols-[2fr_100px_1fr_1fr_auto]">
         <select required value={form.product_id} onChange={(e) => setForm({ ...form, product_id: e.target.value })} className={field}>
-          <option value="">Produit…</option>
+          <option value="">{t('receivingPanel.productPh')}</option>
           {products.map((p) => <option key={p.id} value={p.id}>{p.title} (stock {p.stock ?? 0})</option>)}
         </select>
-        <input type="number" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} className={field} title="Quantité (négative = ajustement)" />
-        <input placeholder="Emplacement (ex. A-03)" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} className={field} />
-        <input placeholder="Note / bon de livraison" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} className={field} />
-        <button type="submit" disabled={saving} className="h-10 rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-50">Enregistrer</button>
+        <input type="number" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} className={field} title={t('receivingPanel.qtyTitle')} />
+        <input placeholder={t('receivingPanel.locationPh')} value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} className={field} />
+        <input placeholder={t('receivingPanel.notePh')} value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} className={field} />
+        <button type="submit" disabled={saving} className="h-10 rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-50">{t('receivingPanel.save')}</button>
       </form>
       <div className="space-y-1.5">
-        <h2 className="text-sm font-bold">Mouvements récents</h2>
-        {!moves.length && <p className="text-xs text-muted-foreground">Aucun mouvement enregistré.</p>}
+        <h2 className="text-sm font-bold">{t('receivingPanel.recentMoves')}</h2>
+        {!moves.length && <p className="text-xs text-muted-foreground">{t('receivingPanel.noMoves')}</p>}
         {moves.map((m) => (
           <div key={m.id} className="flex justify-between rounded-xl border border-border bg-card px-3 py-2 text-xs">
             <span><b>{m.quantity > 0 ? '+' : ''}{m.quantity}</b> {m.product_title}{m.location ? ` · ${m.location}` : ''}</span>
-            <span className="text-muted-foreground">stock {m.stock_after} · {formatDateTime(m.created_date)}</span>
+            <span className="text-muted-foreground">{t('receivingPanel.stockAfter', { stock: m.stock_after, date: formatDateTime(m.created_date) })}</span>
           </div>
         ))}
       </div>

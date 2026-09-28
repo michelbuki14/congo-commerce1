@@ -1,9 +1,11 @@
 import React from 'react';
 import { Check, Sparkles } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { FEATURE_LABELS, planAmountLabel, planLimit } from '@/lib/plans';
 
 /** Plan grid: price, commission, limits and tools, with a one-click switch. */
 export default function PlanComparisonTable({ plans, currentCode, cycle, busy, onChoose }) {
+  const { t } = useTranslation();
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
       {plans.map((plan) => {
@@ -18,10 +20,10 @@ export default function PlanComparisonTable({ plans, currentCode, cycle, busy, o
             <div className="flex items-center justify-between gap-2">
               <h2 className="text-sm font-bold">{plan.name}</h2>
               {current ? (
-                <span className="rounded-full bg-primary px-2.5 py-0.5 text-[10px] font-bold text-primary-foreground">Formule actuelle</span>
+                <span className="rounded-full bg-primary px-2.5 py-0.5 text-[10px] font-bold text-primary-foreground">{t('planComparisonTable.currentPlan')}</span>
               ) : plan.highlighted ? (
                 <span className="flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-bold text-amber-900">
-                  <Sparkles className="h-3 w-3" /> Recommandé
+                  <Sparkles className="h-3 w-3" /> {t('planComparisonTable.recommended')}
                 </span>
               ) : null}
             </div>
@@ -29,27 +31,27 @@ export default function PlanComparisonTable({ plans, currentCode, cycle, busy, o
             <p className="mt-2 text-xl font-bold">
               {planAmountLabel(plan, cycle)}
               {plan.code !== 'ENTERPRISE' && Number(cycle === 'yearly' ? plan.price_yearly_usd : plan.price_monthly_usd) > 0 ? (
-                <span className="text-xs font-normal text-muted-foreground">/{cycle === 'yearly' ? 'an' : 'mois'}</span>
+                <span className="text-xs font-normal text-muted-foreground">/{cycle === 'yearly' ? t('planComparisonTable.perYear') : t('planComparisonTable.perMonth')}</span>
               ) : null}
             </p>
             <p className="mt-1 text-[11px] text-muted-foreground">{plan.description}</p>
 
             <p className="mt-3 rounded-xl bg-secondary px-3 py-2 text-[11px] font-semibold">
-              Commission plateforme : {Number(plan.commission_rate) || 0} %
+              {t('planComparisonTable.commission', { rate: Number(plan.commission_rate) || 0 })}
             </p>
 
             <ul className="mt-3 space-y-1.5 text-[11px]">
-              <li>{planLimit(plan, 'product_limit').toLocaleString('fr-FR')} produits</li>
-              <li>{planLimit(plan, 'store_limit').toLocaleString('fr-FR')} boutique(s)</li>
-              <li>{planLimit(plan, 'seller_limit').toLocaleString('fr-FR')} vendeur(s)</li>
-              <li>{planLimit(plan, 'member_limit').toLocaleString('fr-FR')} membre(s) d'équipe</li>
-              <li>{Number(plan.trial_days) || 0} jours d'essai</li>
+              <li>{t('planComparisonTable.products', { count: planLimit(plan, 'product_limit').toLocaleString('fr-FR') })}</li>
+              <li>{t('planComparisonTable.stores', { count: planLimit(plan, 'store_limit').toLocaleString('fr-FR') })}</li>
+              <li>{t('planComparisonTable.sellers', { count: planLimit(plan, 'seller_limit').toLocaleString('fr-FR') })}</li>
+              <li>{t('planComparisonTable.members', { count: planLimit(plan, 'member_limit').toLocaleString('fr-FR') })}</li>
+              <li>{t('planComparisonTable.trial', { count: Number(plan.trial_days) || 0 })}</li>
             </ul>
 
             <ul className="mt-3 flex-1 space-y-1.5 text-[11px] text-muted-foreground">
               {(plan.features || []).map((f) => (
                 <li key={f} className="flex items-start gap-1.5">
-                  <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" /> {FEATURE_LABELS[f] || f}
+                  <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" /> {t(FEATURE_LABELS[f] || 'planFeature.unknown')}
                 </li>
               ))}
             </ul>
@@ -62,7 +64,7 @@ export default function PlanComparisonTable({ plans, currentCode, cycle, busy, o
                 current ? 'border border-border' : 'bg-primary text-primary-foreground'
               }`}
             >
-              {current ? 'Formule en cours' : `Choisir ${plan.name}`}
+              {current ? t('planComparisonTable.inProgress') : t('planComparisonTable.choose', { name: plan.name })}
             </button>
           </section>
         );

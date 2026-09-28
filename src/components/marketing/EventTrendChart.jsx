@@ -1,7 +1,9 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { useTranslation } from 'react-i18next';
 
 export default function EventTrendChart({ data }) {
+  const { t } = useTranslation();
   return (
     <div className="h-56 w-full">
       <ResponsiveContainer width="100%" height="100%">
@@ -10,8 +12,8 @@ export default function EventTrendChart({ data }) {
           <XAxis dataKey="day" tick={{ fontSize: 11 }} />
           <YAxis allowDecimals={false} tick={{ fontSize: 11 }} width={28} />
           <Tooltip />
-          <Bar dataKey="cart" name="Paniers" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} />
-          <Bar dataKey="checkout" name="Paiements entamés" fill="hsl(var(--chart-3))" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="cart" name={t('eventTrendChart.cart')} fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="checkout" name={t('eventTrendChart.checkout')} fill="hsl(var(--chart-3))" radius={[4, 4, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>

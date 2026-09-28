@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Circle, CircleMarker, MapContainer, Popup, TileLayer, Tooltip } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { base44 } from '@/api/base44Client';
@@ -35,13 +36,15 @@ const key = (city) => String(city || '').trim().toLowerCase();
 
 const CITY_INDEX = Object.fromEntries(Object.entries(CITIES).map(([name, coords]) => [key(name), { name, coords }]));
 
-const LAYERS = [
-  { id: 'points', label: 'Points de retrait' },
-  { id: 'zones', label: 'Zones de livraison' },
-  { id: 'couriers', label: 'Couverture transporteurs' },
+const LAYER_IDS = [
+  { id: 'points', key: 'layerPoints' },
+  { id: 'zones', key: 'layerZones' },
+  { id: 'couriers', key: 'layerCouriers' },
 ];
 
 export default function CoverageMap() {
+  const { t } = useTranslation();
+  const LAYERS = LAYER_IDS.map((l) => ({ id: l.id, label: t(`coverageMap.${l.key}`) }));
   const [points, setPoints] = useState([]);
   const [zones, setZones] = useState([]);
   const [couriers, setCouriers] = useState([]);
@@ -98,8 +101,8 @@ export default function CoverageMap() {
 
   const plotted = new Set([...Object.keys(pointsByCity), ...Object.keys(zonesByCity), ...Object.keys(courierCities)]);
   const unmapped = [
-    ...activePoints.filter((p) => !CITY_INDEX[key(p.city)]).map((p) => `${p.name} (${p.city || 'ville inconnue'})`),
-    ...activeZones.filter((z) => !CITY_INDEX[key(z.city)]).map((z) => `zone ${z.name} (${z.city || 'ville inconnue'})`),
+    ...activePoints.filter((p) => !CITY_INDEX[key(p.city)]).map((p) => `${p.name} (${p.city || t('coverageMap.unknownCity')})`),
+    ...activeZones.filter((z) => !CITY_INDEX[key(z.city)]).map((z) => `zone ${z.name} (${z.city || t('coverageMap.unknownCity')})`),
   ];
 
   if (loading) return <div className="h-64 animate-pulse rounded-2xl bg-secondary" />;
@@ -107,15 +110,15 @@ export default function CoverageMap() {
   return (
     <div className="space-y-5 pb-8">
       <OpsHeader
-        title="Couverture logistique"
-        subtitle="Points de retrait, zones de livraison et zones desservies par les transporteurs, ville par ville."
+        title={t('coverageMap.title')}
+        subtitle={t('coverageMap.subtitle')}
       />
 
       <div className="grid grid-cols-2 gap-2.5 md:grid-cols-4">
-        <StatCard label="Villes couvertes" value={plotted.size} hint="avec au moins un service actif" />
-        <StatCard label="Points de retrait actifs" value={activePoints.length} tone={activePoints.length ? 'good' : 'bad'} />
-        <StatCard label="Zones ouvertes" value={activeZones.length} />
-        <StatCard label="Transporteurs actifs" value={activeCouriers.length} tone={activeCouriers.length ? 'good' : 'bad'} />
+        <StatCard label={t('coverageMap.statCities')} value={plotted.size} hint={t('coverageMap.statCitiesHint')} />
+        <StatCard label={t('coverageMap.statPoints')} value={activePoints.length} tone={activePoints.length ? 'good' : 'bad'} />
+        <StatCard label={t('coverageMap.statZones')} value={activeZones.length} />
+        <StatCard label={t('coverageMap.statCouriers')} value={activeCouriers.length} tone={activeCouriers.length ? 'good' : 'bad'} />
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -151,7 +154,7 @@ export default function CoverageMap() {
                 radius={60000}
                 pathOptions={{ color: '#2563eb', fillColor: '#2563eb', fillOpacity: 0.08, weight: 1 }}
               >
-                <Tooltip>{`${city.name} — ${names.length} transporteur(s)`}</Tooltip>
+                <Tooltip>{t('coverageMap.courierTip', { city: city.name, count: names.length })}</Tooltip>
               </Circle>
             );
           })}
@@ -167,10 +170,10 @@ export default function CoverageMap() {
                 pathOptions={{ color: '#0f766e', fillColor: '#0f766e', fillOpacity: 0.12, weight: 1.5 }}
               >
                 <Popup>
-                  <p className="text-xs font-bold">{city.name} — zones</p>
+                  <p className="text-xs font-bold">{t('coverageMap.zonesTip', { city: city.name })}</p>
                   {rows.map((z) => (
                     <p key={z.id} className="text-[11px]">
-                      {z.name} · {formatUSD(z.fee_usd)} · {z.eta_days} j {z.supports_pickup ? '· retrait' : ''}
+                      {z.name} · {formatUSD(z.fee_usd)} · {t('coverageMap.etaDays', { days: z.eta_days })} {z.supports_pickup ? t('coverageMap.pickupSuffix') : ''}
                     </p>
                   ))}
                 </Popup>
@@ -189,7 +192,7 @@ export default function CoverageMap() {
                 pathOptions={{ color: '#111111', fillColor: '#e4572e', fillOpacity: 0.85, weight: 2 }}
               >
                 <Popup>
-                  <p className="text-xs font-bold">{city.name} — {rows.length} point(s) de retrait</p>
+                  <p className="text-xs font-bold">{t('coverageMap.pointsTip', { city: city.name, count: rows.length })}</p>
                   {rows.map((p) => (
                     <p key={p.id} className="text-[11px]">
                       {p.name}{p.commune ? ` · ${p.commune}` : ''} · {p.hours || '—'} · {formatUSD(p.fee_usd)}
@@ -204,25 +207,25 @@ export default function CoverageMap() {
 
       <div className="grid gap-2.5 md:grid-cols-2">
         <div className="rounded-2xl border border-border bg-card p-4">
-          <h2 className="text-sm font-bold">Légende</h2>
+          <h2 className="text-sm font-bold">{t('coverageMap.legend')}</h2>
           <ul className="mt-2 space-y-1.5 text-[11px] text-muted-foreground">
-            <li><span className="mr-2 inline-block h-3 w-3 rounded-full bg-[#e4572e]" /> Points de retrait (taille = nombre de points)</li>
-            <li><span className="mr-2 inline-block h-3 w-3 rounded-full bg-[#0f766e]" /> Zones de livraison ouvertes</li>
-            <li><span className="mr-2 inline-block h-3 w-3 rounded-full bg-[#2563eb]" /> Zones desservies par les transporteurs</li>
+            <li><span className="mr-2 inline-block h-3 w-3 rounded-full bg-[#e4572e]" /> {t('coverageMap.legendPoints')}</li>
+            <li><span className="mr-2 inline-block h-3 w-3 rounded-full bg-[#0f766e]" /> {t('coverageMap.legendZones')}</li>
+            <li><span className="mr-2 inline-block h-3 w-3 rounded-full bg-[#2563eb]" /> {t('coverageMap.legendCouriers')}</li>
           </ul>
           <p className="mt-3 text-[11px] text-muted-foreground">
-            Les nœuds sont positionnés à l'échelle de la ville : seules les villes sont enregistrées, pas les coordonnées exactes.
+            {t('coverageMap.nodesNote')}
           </p>
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-4">
-          <h2 className="text-sm font-bold">Villes non cartographiées</h2>
+          <h2 className="text-sm font-bold">{t('coverageMap.unmapped')}</h2>
           {unmapped.length ? (
             <ul className="mt-2 space-y-1 text-[11px] text-muted-foreground">
               {unmapped.slice(0, 8).map((label) => <li key={label}>{label}</li>)}
             </ul>
           ) : (
-            <p className="mt-2 text-[11px] text-muted-foreground">Toutes les villes actives sont cartographiées.</p>
+            <p className="mt-2 text-[11px] text-muted-foreground">{t('coverageMap.allMapped')}</p>
           )}
         </div>
       </div>

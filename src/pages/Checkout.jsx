@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { AlertCircle, ArrowLeft, ChevronRight, ShieldCheck } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useCart } from '@/lib/cart';
@@ -18,10 +19,12 @@ import StepDelivery from '@/components/checkout/StepDelivery';
 import StepPayment from '@/components/checkout/StepPayment';
 import StepReview from '@/components/checkout/StepReview';
 
-const STEPS = ['Livraison', 'Paiement', 'Confirmation'];
+const STEP_KEYS = ['checkout.stepDelivery', 'checkout.stepPayment', 'checkout.stepReview'];
 const STEP_COMPONENTS = [StepDelivery, StepPayment, StepReview];
 
 export default function Checkout() {
+  const { t } = useTranslation();
+  const STEPS = STEP_KEYS.map((k) => t(k));
   const { items, clear, count } = useCart();
   const { currency } = useCurrency();
   const navigate = useNavigate();
@@ -99,7 +102,7 @@ export default function Checkout() {
       const key = p.source_type === 'local_seller' ? `s-${p.seller_id}` : `f-${p.supplier_id || p.source_type}`;
       if (!map.has(key)) {
         map.set(key, {
-          label: p.source_type === 'local_seller' ? p.seller_name || 'Vendeur local' : p.supplier_name || 'Fournisseur international',
+          label: p.source_type === 'local_seller' ? p.seller_name || t('checkout.localSeller') : p.supplier_name || t('checkout.intlSupplier'),
           intl: p.source_type === 'international_supplier',
           count: 0,
         });
@@ -113,13 +116,13 @@ export default function Checkout() {
   const validateStep = (index) => {
     if (index === 0) {
       if (!profile.name?.trim() || !profile.phone?.trim()) {
-        return 'Renseignez votre nom et votre numéro de téléphone.';
+        return t('checkout.needNamePhone');
       }
       if (deliveryMethod === 'home_delivery' && !profile.address?.trim()) {
-        return 'Renseignez votre adresse de livraison.';
+        return t('checkout.needAddress');
       }
       if (deliveryMethod === 'pickup_point' && !selectedPickup) {
-        return 'Choisissez un point de retrait.';
+        return t('checkout.needPickup');
       }
       return '';
     }
@@ -129,7 +132,7 @@ export default function Checkout() {
       return '';
     }
     if (index === 2 && !consent.terms) {
-      return 'Vous devez accepter les conditions générales de vente et la politique de confidentialité.';
+      return t('checkout.needTerms');
     }
     return '';
   };
@@ -154,7 +157,7 @@ export default function Checkout() {
     const found = await findCoupon(couponInput);
     if (!found) {
       setCoupon(null);
-      setCouponMessage('Code promo invalide ou expiré.');
+      setCouponMessage(t('checkout.couponInvalid'));
       return;
     }
     setCoupon(found);
@@ -204,7 +207,7 @@ export default function Checkout() {
       clear();
       navigate(`/order/${result.order.order_number}`);
     } catch (err) {
-      setError(err.message || 'Le paiement a échoué. Vérifiez vos informations et réessayez.');
+      setError(err.message || t('checkout.failed'));
     } finally {
       setSubmitting(false);
     }
@@ -242,17 +245,17 @@ export default function Checkout() {
   if (!count) {
     return (
       <EmptyState
-        title="Aucun article à payer"
-        description="Ajoutez des articles à votre panier pour passer commande."
+        title={t('checkout.emptyTitle')}
+        description={t('checkout.emptyDesc')}
         actionTo="/"
-        actionLabel="Découvrir des produits"
+        actionLabel={t('checkout.emptyAction')}
       />
     );
   }
 
   return (
     <form onSubmit={submit} className="space-y-5 pb-32 md:pb-6">
-      <h1 className="text-lg font-bold md:text-xl">Paiement</h1>
+      <h1 className="text-lg font-bold md:text-xl">{t('checkout.title')}</h1>
 
       <CheckoutSteps steps={STEPS} current={step} />
 
@@ -282,14 +285,14 @@ export default function Checkout() {
         className="hidden w-full items-center justify-center gap-2 rounded-full bg-primary py-4 text-sm font-bold text-primary-foreground disabled:opacity-50 md:flex"
       >
         <ShieldCheck className="h-4 w-4" />
-        {submitting ? 'Traitement du paiement…' : `Payer ${quote ? formatUSD(quote.total) : ''}`}
+        {submitting ? t('checkout.processing') : t('checkout.payAmount', { total: quote ? formatUSD(quote.total) : '' })}
       </button>
 
       <MobileActionBar>
         {step === 0 ? (
           <Link
             to="/cart"
-            aria-label="Retour au panier"
+            aria-label={t('checkout.backToCart')}
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-border"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -298,7 +301,7 @@ export default function Checkout() {
           <button
             type="button"
             onClick={() => goToStep(step - 1)}
-            aria-label="Étape précédente"
+            aria-label={t('checkout.prevStep')}
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-border"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -306,7 +309,7 @@ export default function Checkout() {
         )}
 
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Total</p>
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{t('checkout.total')}</p>
           <p className="text-base font-black leading-tight">{quote ? formatUSD(quote.total) : '—'}</p>
         </div>
 
@@ -316,7 +319,7 @@ export default function Checkout() {
             onClick={goNext}
             className="flex h-11 items-center gap-1.5 rounded-full bg-primary px-6 text-sm font-bold text-primary-foreground"
           >
-            Continuer <ChevronRight className="h-4 w-4" />
+            {t('checkout.continue')} <ChevronRight className="h-4 w-4" />
           </button>
         ) : (
           <button
@@ -325,7 +328,7 @@ export default function Checkout() {
             className="flex h-11 items-center gap-2 rounded-full bg-primary px-6 text-sm font-bold text-primary-foreground disabled:opacity-50"
           >
             <ShieldCheck className="h-4 w-4" />
-            {submitting ? 'Traitement…' : 'Payer'}
+            {submitting ? t('checkout.processingShort') : t('checkout.pay')}
           </button>
         )}
       </MobileActionBar>

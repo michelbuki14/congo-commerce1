@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
@@ -11,6 +12,7 @@ import { BILLING_CYCLES, startSubscription } from '@/lib/saas';
 import { writeActiveTenantId } from '@/lib/tenancy';
 
 export default function TenantOnboarding() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const params = new URLSearchParams(window.location.search);
   const [plans, setPlans] = useState(DEFAULT_PLANS);
@@ -64,7 +66,7 @@ export default function TenantOnboarding() {
       writeActiveTenantId(tenant.id);
       setDone(tenant);
     } catch (e) {
-      setError(e?.message || 'Création impossible.');
+      setError(e?.message || t('tenantOnboarding.createFailed'));
     } finally {
       setBusy(false);
     }
@@ -75,13 +77,13 @@ export default function TenantOnboarding() {
       <Card className="mx-auto max-w-xl">
         <CardContent className="space-y-3 p-6 text-center">
           <CheckCircle2 className="mx-auto h-10 w-10 text-emerald-600" />
-          <h1 className="font-heading text-xl font-bold">{done.name} est en ligne</h1>
+          <h1 className="font-heading text-xl font-bold">{t('tenantOnboarding.doneTitle', { name: done.name })}</h1>
           <p className="text-sm text-muted-foreground">
-            Essai {plan.name} démarré. Votre sous-domaine est prêt, il ne reste plus qu’à publier vos premiers produits.
+            {t('tenantOnboarding.doneDesc', { plan: plan.name })}
           </p>
           <div className="flex flex-wrap justify-center gap-2">
-            <Button onClick={() => navigate('/tenant')}>Ouvrir ma console</Button>
-            <Button variant="outline" onClick={() => navigate('/seller-portal')}>Gérer mes produits</Button>
+            <Button onClick={() => navigate('/tenant')}>{t('tenantOnboarding.openConsole')}</Button>
+            <Button variant="outline" onClick={() => navigate('/seller-portal')}>{t('tenantOnboarding.manageProducts')}</Button>
           </div>
         </CardContent>
       </Card>
@@ -91,9 +93,9 @@ export default function TenantOnboarding() {
   return (
     <div className="space-y-5 py-2">
       <div>
-        <h1 className="font-heading text-2xl font-bold">Créer mon enseigne</h1>
+        <h1 className="font-heading text-2xl font-bold">{t('tenantOnboarding.title')}</h1>
         <p className="text-sm text-muted-foreground">
-          Choisissez une formule, décrivez votre enseigne, c’est ouvert. Aucun paiement n’est prélevé pendant l’essai.
+          {t('tenantOnboarding.subtitle')}
         </p>
       </div>
 
@@ -119,16 +121,16 @@ export default function TenantOnboarding() {
       <Card>
         <CardContent className="space-y-4 p-5">
           <div>
-            <h2 className="font-heading text-base font-bold">Informations de l’enseigne</h2>
+            <h2 className="font-heading text-base font-bold">{t('tenantOnboarding.infoTitle')}</h2>
             <p className="text-sm text-muted-foreground">
-              Formule retenue : <span className="font-semibold text-foreground">{plan.name}</span> ({cycle === 'yearly' ? 'annuelle' : 'mensuelle'}).
+              {t('tenantOnboarding.chosenPlan')} <span className="font-semibold text-foreground">{plan.name}</span> ({cycle === 'yearly' ? t('tenantOnboarding.yearly') : t('tenantOnboarding.monthly')}).
             </p>
           </div>
           <TenantForm
             initial={{ owner_email: me?.email || '', owner_name: me?.full_name || '' }}
             onSubmit={create}
             submitting={busy}
-            submitLabel={`Démarrer l’essai ${plan.name}`}
+            submitLabel={t('tenantOnboarding.startTrial', { plan: plan.name })}
           />
           {error && <p className="text-sm text-destructive">{error}</p>}
         </CardContent>

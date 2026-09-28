@@ -1,27 +1,28 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Gavel, AlertCircle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '@/components/StatusBadge';
 import { getProfile } from '@/lib/session';
 import { formatUSD, formatDate } from '@/lib/format';
 
-const TYPES = [
-  { id: 'not_received', label: 'Article non reçu' },
-  { id: 'wrong_product', label: 'Mauvais article reçu' },
-  { id: 'damaged', label: 'Article endommagé' },
-  { id: 'not_as_described', label: 'Article non conforme à la description' },
-  { id: 'missing_item', label: 'Article manquant dans le colis' },
-  { id: 'payment_issue', label: 'Problème de paiement' },
-];
-
-const STAGES = [
-  { id: 'open', label: 'Ouvert' },
-  { id: 'investigating', label: 'En examen' },
-  { id: 'resolved_buyer', label: 'Résolu' },
-  { id: 'closed', label: 'Clôturé' },
-];
-
 export default function DisputePanel() {
+  const { t } = useTranslation();
+  const TYPES = [
+    { id: 'not_received', label: t('disputePanel.typeNotReceived') },
+    { id: 'wrong_product', label: t('disputePanel.typeWrongProduct') },
+    { id: 'damaged', label: t('disputePanel.typeDamaged') },
+    { id: 'not_as_described', label: t('disputePanel.typeNotAsDescribed') },
+    { id: 'missing_item', label: t('disputePanel.typeMissingItem') },
+    { id: 'payment_issue', label: t('disputePanel.typePaymentIssue') },
+  ];
+
+  const STAGES = [
+    { id: 'open', label: t('disputePanel.stageOpen') },
+    { id: 'investigating', label: t('disputePanel.stageInvestigating') },
+    { id: 'resolved_buyer', label: t('disputePanel.stageResolved') },
+    { id: 'closed', label: t('disputePanel.stageClosed') },
+  ];
   const profile = getProfile();
   const [disputes, setDisputes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -46,7 +47,7 @@ export default function DisputePanel() {
     setError('');
     setSuccess('');
     if (!form.order_number.trim()) {
-      setError('Indiquez le numéro de commande concerné.');
+      setError(t('disputePanel.orderNumberRequired'));
       return;
     }
     setSubmitting(true);
@@ -73,11 +74,11 @@ export default function DisputePanel() {
         order_number: number,
         is_demo: true,
       });
-      setSuccess('Votre litige est ouvert. Un arbitre examine le dossier sous 48 h.');
+      setSuccess(t('disputePanel.disputeOpened'));
       setForm({ ...form, order_number: '', description: '' });
       await load(form.phone || profile.phone);
     } catch {
-      setError("Le litige n'a pas pu être ouvert. Réessayez.");
+      setError(t('disputePanel.openFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -87,20 +88,20 @@ export default function DisputePanel() {
     <>
       <section className="space-y-3 rounded-2xl border border-border bg-card p-4">
         <h2 className="flex items-center gap-2 text-sm font-bold">
-          <Gavel className="h-4 w-4 text-primary" /> Ouvrir un litige
+          <Gavel className="h-4 w-4 text-primary" /> {t('disputePanel.openDispute')}
         </h2>
         <form onSubmit={submit} className="space-y-3">
           <div className="grid gap-3 md:grid-cols-2">
             <input
               value={form.order_number}
               onChange={(e) => setForm({ ...form, order_number: e.target.value.toUpperCase() })}
-              placeholder="Numéro de commande (CC-…)"
+              placeholder={t('disputePanel.orderNumberPh')}
               className="h-11 rounded-lg border border-border bg-background px-3 text-sm"
             />
             <input
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              placeholder="Téléphone"
+              placeholder={t('disputePanel.phonePh')}
               className="h-11 rounded-lg border border-border bg-background px-3 text-sm"
             />
           </div>
@@ -109,15 +110,15 @@ export default function DisputePanel() {
             onChange={(e) => setForm({ ...form, type: e.target.value })}
             className="h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"
           >
-            {TYPES.map((t) => (
-              <option key={t.id} value={t.id}>{t.label}</option>
+            {TYPES.map((tx) => (
+              <option key={tx.id} value={tx.id}>{tx.label}</option>
             ))}
           </select>
           <textarea
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
             rows={3}
-            placeholder="Décrivez le problème : dates, échanges avec le vendeur, état du colis…"
+            placeholder={t('disputePanel.descPh')}
             className="w-full rounded-lg border border-border bg-background p-3 text-sm"
           />
           {error && (
@@ -131,13 +132,13 @@ export default function DisputePanel() {
             disabled={submitting}
             className="rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50"
           >
-            {submitting ? 'Envoi…' : 'Ouvrir le litige'}
+            {submitting ? t('disputePanel.sending') : t('disputePanel.openDispute')}
           </button>
         </form>
       </section>
 
       <section className="rounded-2xl border border-border bg-card p-4">
-        <h2 className="mb-3 text-sm font-bold">Mes litiges</h2>
+        <h2 className="mb-3 text-sm font-bold">{t('disputePanel.myDisputes')}</h2>
         {loading ? (
           <div className="h-16 animate-pulse rounded-lg bg-secondary" />
         ) : disputes.length ? (
@@ -167,13 +168,13 @@ export default function DisputePanel() {
                     ))}
                   </div>
                   {d.description && <p className="mt-1.5 text-xs text-muted-foreground">{d.description}</p>}
-                  {d.admin_notes && <p className="mt-1 text-xs font-medium text-primary">Décision : {d.admin_notes}</p>}
+                  {d.admin_notes && <p className="mt-1 text-xs font-medium text-primary">{t('disputePanel.decisionIs', { notes: d.admin_notes })}</p>}
                 </div>
               );
             })}
           </div>
         ) : (
-          <p className="text-xs text-muted-foreground">Aucun litige enregistré sur ce numéro de téléphone.</p>
+          <p className="text-xs text-muted-foreground">{t('disputePanel.noDisputes')}</p>
         )}
       </section>
     </>

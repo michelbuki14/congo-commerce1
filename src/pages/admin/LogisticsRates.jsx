@@ -10,8 +10,10 @@ import QuoteSimulator from '@/components/shipping/QuoteSimulator';
 import { DEFAULT_SHIPPING_CONFIG, averageRate, loadShippingConfig } from '@/lib/shippingRates';
 import { getCities, loadPlatformConfig } from '@/lib/config';
 import { formatUSD } from '@/lib/format';
+import { useTranslation } from 'react-i18next';
 
 export default function LogisticsRates() {
+  const { t } = useTranslation();
   const [rates, setRates] = useState([]);
   const [couriers, setCouriers] = useState([]);
   const [config, setConfig] = useState(DEFAULT_SHIPPING_CONFIG);
@@ -72,22 +74,20 @@ export default function LogisticsRates() {
 
   return (
     <div className="space-y-5 pb-8">
-      <DashboardNav title="Tarifs logistiques" links={ADMIN_LINKS} />
+      <DashboardNav title={t('logisticsRates.title')} links={ADMIN_LINKS} />
 
       <div className="flex items-start gap-2 rounded-xl border border-sky-200 bg-sky-50 p-3 text-xs text-sky-900">
         <Layers className="mt-0.5 h-4 w-4 shrink-0" />
         <p>
-          La grille ci-dessous s'applique par destination, transporteur et tranche de poids. Le devis retient la ligne la plus
-          précise : une ligne Kinshasa 0–1 kg l'emporte sur une ligne « pays » générique. Les tarifs simples par zone et par
-          transporteur restent utilisés au paiement tant que cette grille n'est pas branchée sur le tunnel de commande.
+          {t('logisticsRates.gridNote')}
         </p>
       </div>
 
       <div className="grid grid-cols-2 gap-2.5 md:grid-cols-4">
-        <StatCard label="Lignes actives" value={active.length} hint={`${rates.length - active.length} inactive(s)`} />
-        <StatCard label="Destinations couvertes" value={coveredDestinations} hint="villes, pays ou zones" />
-        <StatCard label="Transporteurs" value={couriers.length} hint="partenaires logistiques" />
-        <StatCard label="Colis 1 kg (moyenne)" value={avg1kg != null ? formatUSD(avg1kg) : '—'} hint="hors surcharges" />
+        <StatCard label={t('logisticsRates.active')} value={active.length} hint={t('logisticsRates.inactive', { count: rates.length - active.length })} />
+        <StatCard label={t('logisticsRates.destinations')} value={coveredDestinations} hint={t('logisticsRates.destHint')} />
+        <StatCard label={t('logisticsRates.carriers')} value={couriers.length} hint={t('logisticsRates.carrierHint')} />
+        <StatCard label={t('logisticsRates.avg1kg')} value={avg1kg != null ? formatUSD(avg1kg) : '—'} hint={t('logisticsRates.avgHint')} />
       </div>
 
       <RateForm couriers={couriers} destinations={destinations} onSubmit={createRate} busy={busy} />
@@ -97,8 +97,7 @@ export default function LogisticsRates() {
       <QuoteSimulator rates={active} config={config} couriers={couriers} destinations={destinations} />
 
       <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-        <Ruler className="h-3.5 w-3.5" /> Le poids facturable est le plus élevé entre le poids réel et le poids volumétrique
-        (L×l×H ÷ {config.volumetric_divisor}), paramétrable dans la configuration livraison.
+        <Ruler className="h-3.5 w-3.5" /> {t('logisticsRates.volumetric', { divisor: config.volumetric_divisor })}
         <Truck className="ml-1 h-3.5 w-3.5" />
       </p>
     </div>

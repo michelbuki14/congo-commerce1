@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Gavel, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { base44 } from '@/api/base44Client';
 import DashboardNav from '@/components/DashboardNav';
 import StatusBadge from '@/components/StatusBadge';
@@ -7,22 +8,18 @@ import DisputeProofUpload from '@/components/disputes/DisputeProofUpload';
 import { ADMIN_LINKS } from '@/lib/navLinks';
 import { formatUSD, formatDateTime } from '@/lib/format';
 
-const TYPE_LABELS = {
-  not_received: 'Article non reçu',
-  wrong_product: 'Mauvais article',
-  damaged: 'Article endommagé',
-  not_as_described: 'Non conforme',
-  missing_item: 'Article manquant',
-  payment_issue: 'Problème de paiement',
-};
+const TYPE_IDS = ['not_received', 'wrong_product', 'damaged', 'not_as_described', 'missing_item', 'payment_issue'];
 
-const TABS = [
-  { id: 'open', label: 'Ouverts', statuses: ['open', 'investigating', 'escalated'] },
-  { id: 'resolved', label: 'Résolus', statuses: ['resolved_buyer', 'resolved_seller', 'closed'] },
-  { id: 'all', label: 'Tous', statuses: null },
+const TAB_DEFS = [
+  { id: 'open', statuses: ['open', 'investigating', 'escalated'] },
+  { id: 'resolved', statuses: ['resolved_buyer', 'resolved_seller', 'closed'] },
+  { id: 'all', statuses: null },
 ];
 
 export default function AdminDisputes() {
+  const { t } = useTranslation();
+  const TYPE_LABELS = Object.fromEntries(TYPE_IDS.map((id) => [id, t(`adminDisputes.type_${id}`)]));
+  const TABS = TAB_DEFS.map((tx) => ({ ...tx, label: t(`adminDisputes.tab_${tx.id}`) }));
   const [disputes, setDisputes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('open');
@@ -56,7 +53,7 @@ export default function AdminDisputes() {
       severity: status === 'resolved_seller' ? 'warning' : 'info',
       details: { amount_usd: dispute.amount_usd, reviewer },
     });
-    setMessage(`Litige ${dispute.order_number} mis à jour : ${status}.`);
+    setMessage(t('adminDisputes.updated', { order: dispute.order_number, status }));
   };
 
   const attachProof = async (dispute, fileUri) => {
@@ -79,11 +76,11 @@ export default function AdminDisputes() {
         })
         .catch(() => null);
     }
-    setMessage(`Preuve de livraison jointe au litige ${dispute.order_number}.`);
+    setMessage(t('adminDisputes.proofAttached', { order: dispute.order_number }));
   };
 
   const visible = disputes.filter((d) => {
-    const statuses = TABS.find((t) => t.id === tab)?.statuses;
+    const statuses = TABS.find((tx) => tx.id === tab)?.statuses;
     return !statuses || statuses.includes(d.status);
   });
 
@@ -91,14 +88,14 @@ export default function AdminDisputes() {
 
   return (
     <div className="space-y-5 pb-8">
-      <DashboardNav title="Litiges ouverts" links={ADMIN_LINKS} />
+      <DashboardNav title={t('adminDisputes.title')} links={ADMIN_LINKS} />
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {[
-          { label: 'Ouverts', value: disputes.filter((d) => d.status === 'open').length },
-          { label: 'En enquête', value: disputes.filter((d) => d.status === 'investigating').length },
-          { label: 'Escaladés', value: disputes.filter((d) => d.status === 'escalated').length },
-          { label: 'Avec preuve', value: disputes.filter((d) => d.proof_of_delivery).length },
+          { label: t('adminDisputes.kpiOpen'), value: disputes.filter((d) => d.status === 'open').length },
+          { label: t('adminDisputes.kpiInvestigating'), value: disputes.filter((d) => d.status === 'investigating').length },
+          { label: t('adminDisputes.kpiEscalated'), value: disputes.filter((d) => d.status === 'escalated').length },
+          { label: t('adminDisputes.kpiProof'), value: disputes.filter((d) => d.proof_of_delivery).length },
         ].map((k) => (
           <div key={k.label} className="rounded-xl border border-border bg-card p-3.5">
             <Gavel className="h-4 w-4 text-primary" />
@@ -111,22 +108,21 @@ export default function AdminDisputes() {
       <div className="flex items-start gap-2 rounded-xl border border-primary/30 bg-primary/5 p-3 text-xs">
         <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
         <p>
-          Joindre la preuve de livraison (photo du colis remis, signature ou reçu) permet de trancher un litige « article non
-          reçu » sans attendre la réponse du transporteur.
+          {t('adminDisputes.proofTip')}
         </p>
       </div>
 
       <div className="flex gap-2">
-        {TABS.map((t) => (
+        {TABS.map((tx) => (
           <button
-            key={t.id}
+            key={tx.id}
             type="button"
-            onClick={() => setTab(t.id)}
+            onClick={() => setTab(tx.id)}
             className={`rounded-full px-3.5 py-1.5 text-xs font-semibold ${
-              tab === t.id ? 'bg-primary text-primary-foreground' : 'bg-secondary'
+              tab === tx.id ? 'bg-primary text-primary-foreground' : 'bg-secondary'
             }`}
           >
-            {t.label}
+            {tx.label}
           </button>
         ))}
       </div>
@@ -142,7 +138,7 @@ export default function AdminDisputes() {
                   <Gavel className="h-4 w-4 text-primary" /> {d.order_number}
                 </p>
                 <p className="text-[11px] text-muted-foreground">
-                  {d.customer_name || 'Client'} vs {d.seller_name || 'Congo Commerce'} · {TYPE_LABELS[d.type] || d.type} ·{' '}
+                  {d.customer_name || t('adminDisputes.customer')} vs {d.seller_name || 'Congo Commerce'} · {TYPE_LABELS[d.type] || d.type} ·{' '}
                   {formatDateTime(d.created_date)}
                 </p>
               </div>
@@ -156,33 +152,32 @@ export default function AdminDisputes() {
             {d.description && <p className="mt-2 rounded-lg bg-secondary/50 p-2.5 text-xs">{d.description}</p>}
             {d.proof_of_delivery && (
               <p className="mt-2 flex items-center gap-1.5 text-[11px] text-emerald-700">
-                <AlertTriangle className="h-3.5 w-3.5" /> Preuve jointe le {formatDateTime(d.proof_uploaded_at)} par{' '}
-                {d.proof_uploaded_by || 'administration'}
+                <AlertTriangle className="h-3.5 w-3.5" /> {t('adminDisputes.proofLine', { when: formatDateTime(d.proof_uploaded_at), by: d.proof_uploaded_by || t('adminDisputes.staff') })}
               </p>
             )}
 
             <input
               value={notes[d.id] ?? d.admin_notes ?? ''}
               onChange={(e) => setNotes({ ...notes, [d.id]: e.target.value })}
-              placeholder="Décision et notes d'arbitrage"
+              placeholder={t('adminDisputes.notesPlaceholder')}
               className="mt-2 h-10 w-full rounded-lg border border-border bg-background px-3 text-xs"
             />
 
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <button type="button" onClick={() => resolve(d, 'investigating')} className="rounded-full border border-border px-3.5 py-1.5 text-xs font-semibold">
-                Enquêter
+                {t('adminDisputes.investigate')}
               </button>
               <button type="button" onClick={() => resolve(d, 'resolved_buyer')} className="rounded-full bg-emerald-100 px-3.5 py-1.5 text-xs font-semibold text-emerald-900">
-                Faveur acheteur
+                {t('adminDisputes.favorBuyer')}
               </button>
               <button type="button" onClick={() => resolve(d, 'resolved_seller')} className="rounded-full bg-sky-100 px-3.5 py-1.5 text-xs font-semibold text-sky-900">
-                Faveur vendeur
+                {t('adminDisputes.favorSeller')}
               </button>
               <button type="button" onClick={() => resolve(d, 'escalated')} className="rounded-full bg-amber-100 px-3.5 py-1.5 text-xs font-semibold text-amber-900">
-                Escalader
+                {t('adminDisputes.escalate')}
               </button>
               <button type="button" onClick={() => resolve(d, 'closed')} className="rounded-full border border-border px-3.5 py-1.5 text-xs font-semibold">
-                Clôturer
+                {t('adminDisputes.close')}
               </button>
               <DisputeProofUpload dispute={d} onUploaded={attachProof} />
             </div>
@@ -191,7 +186,7 @@ export default function AdminDisputes() {
 
         {!visible.length && (
           <p className="rounded-xl border border-dashed border-border bg-card p-6 text-center text-xs text-muted-foreground">
-            Aucun litige dans ce filtre.
+            {t('adminDisputes.empty')}
           </p>
         )}
       </div>

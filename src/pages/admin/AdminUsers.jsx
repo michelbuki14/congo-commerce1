@@ -7,15 +7,13 @@ import { ADMIN_LINKS } from '@/lib/navLinks';
 import { formatUSD } from '@/lib/format';
 import { getCities } from '@/lib/config';
 import TenantEmailField from '@/components/admin/TenantEmailField';
+import { useTranslation } from 'react-i18next';
 
-const TABS = [
-  { id: 'sellers', label: 'Vendeurs' },
-  { id: 'creators', label: 'Créateurs' },
-  { id: 'couriers', label: 'Livreurs' },
-  { id: 'team', label: 'Équipe plateforme' },
-];
+const TAB_IDS = ['sellers', 'creators', 'couriers', 'team'];
 
 export default function AdminUsers() {
+  const { t } = useTranslation();
+  const TABS = TAB_IDS.map((id) => ({ id, label: t(`adminUsers.tab_${id}`) }));
   const [tab, setTab] = useState('sellers');
   const [sellers, setSellers] = useState([]);
   const [creators, setCreators] = useState([]);
@@ -90,7 +88,7 @@ export default function AdminUsers() {
     });
     setNewSeller({ name: '', email: '', city: getCities()[0], phone: '', commission_rate: 10 });
     setShowSellerForm(false);
-    setMessage('Boutique créée. Validez-la pour la rendre active.');
+    setMessage(t('adminUsers.shopCreated'));
     await load();
   };
 
@@ -100,10 +98,10 @@ export default function AdminUsers() {
     if (!invite.email) return;
     try {
       await base44.users.inviteUser(invite.email, invite.role);
-      setMessage(`Invitation envoyée à ${invite.email} avec le rôle ${invite.role}.`);
+      setMessage(t('adminUsers.inviteSent', { email: invite.email, role: invite.role }));
       setInvite({ email: '', role: 'user' });
     } catch {
-      setMessage("L'invitation n'a pas pu être envoyée.");
+      setMessage(t('adminUsers.inviteFailed'));
     }
   };
 
@@ -111,17 +109,17 @@ export default function AdminUsers() {
 
   return (
     <div className="space-y-5 pb-8">
-      <DashboardNav title="Utilisateurs & partenaires" links={ADMIN_LINKS} />
+      <DashboardNav title={t('adminUsers.title')} links={ADMIN_LINKS} />
 
       <div className="flex flex-wrap gap-2">
-        {TABS.map((t) => (
+        {TABS.map((tx) => (
           <button
-            key={t.id}
+            key={tx.id}
             type="button"
-            onClick={() => setTab(t.id)}
-            className={`rounded-full px-3.5 py-1.5 text-xs font-semibold ${tab === t.id ? 'bg-primary text-primary-foreground' : 'bg-secondary'}`}
+            onClick={() => setTab(tx.id)}
+            className={`rounded-full px-3.5 py-1.5 text-xs font-semibold ${tab === tx.id ? 'bg-primary text-primary-foreground' : 'bg-secondary'}`}
           >
-            {t.label}
+            {tx.label}
           </button>
         ))}
       </div>
@@ -136,21 +134,21 @@ export default function AdminUsers() {
               onClick={() => setShowSellerForm((s) => !s)}
               className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground"
             >
-              <Plus className="h-3.5 w-3.5" /> Nouvelle boutique
+              <Plus className="h-3.5 w-3.5" /> {t('adminUsers.newShop')}
             </button>
           </div>
           {showSellerForm && (
             <form onSubmit={createSeller} className="grid gap-3 rounded-2xl border border-border bg-card p-4 md:grid-cols-2">
-              <input value={newSeller.name} onChange={(e) => setNewSeller({ ...newSeller, name: e.target.value })} placeholder="Nom de la boutique" required className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
+              <input value={newSeller.name} onChange={(e) => setNewSeller({ ...newSeller, name: e.target.value })} placeholder={t('adminUsers.shopName')} required className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
               <select value={newSeller.city} onChange={(e) => setNewSeller({ ...newSeller, city: e.target.value })} className="h-11 rounded-lg border border-border bg-background px-3 text-sm">
                 {getCities().map((c) => (
                   <option key={c} value={c}>{c}</option>
                 ))}
               </select>
-              <input value={newSeller.phone} onChange={(e) => setNewSeller({ ...newSeller, phone: e.target.value })} placeholder="Téléphone" className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
-              <input type="email" value={newSeller.email} onChange={(e) => setNewSeller({ ...newSeller, email: e.target.value })} placeholder="E-mail de connexion du vendeur" className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
-              <input type="number" value={newSeller.commission_rate} onChange={(e) => setNewSeller({ ...newSeller, commission_rate: Number(e.target.value) })} placeholder="Commission %" className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
-              <button type="submit" className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground md:col-span-2">Créer la boutique</button>
+              <input value={newSeller.phone} onChange={(e) => setNewSeller({ ...newSeller, phone: e.target.value })} placeholder={t('adminUsers.phone')} className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
+              <input type="email" value={newSeller.email} onChange={(e) => setNewSeller({ ...newSeller, email: e.target.value })} placeholder={t('adminUsers.sellerEmail')} className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
+              <input type="number" value={newSeller.commission_rate} onChange={(e) => setNewSeller({ ...newSeller, commission_rate: Number(e.target.value) })} placeholder={t('adminUsers.commission')} className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
+              <button type="submit" className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground md:col-span-2">{t('adminUsers.createShop')}</button>
             </form>
           )}
           <div className="space-y-2">
@@ -162,14 +160,14 @@ export default function AdminUsers() {
                     {s.verified && <BadgeCheck className="h-4 w-4 text-primary" />}
                   </p>
                   <p className="text-[11px] text-muted-foreground">
-                    {s.city} · {s.phone || 'sans téléphone'} · commission {s.commission_rate ?? 10}%
+                    {t('adminUsers.sellerMeta', { city: s.city, phone: s.phone || t('adminUsers.noPhone'), rate: s.commission_rate ?? 10 })}
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <TenantEmailField entity="Seller" record={s} onChange={(u) => setSellers((prev) => prev.map((x) => (x.id === u.id ? u : x)))} />
                   <StatusBadge status={s.status} />
                   <button type="button" onClick={() => verifySeller(s)} className="rounded-full border border-border px-3.5 py-1.5 text-xs font-semibold">
-                    {s.verified ? 'Retirer le badge' : 'Vérifier'}
+                    {s.verified ? t('adminUsers.unverify') : t('adminUsers.verify')}
                   </button>
                   <button
                     type="button"
@@ -178,7 +176,7 @@ export default function AdminUsers() {
                       s.status === 'active' ? 'bg-red-100 text-red-900' : 'bg-emerald-100 text-emerald-900'
                     }`}
                   >
-                    <Power className="h-3.5 w-3.5" /> {s.status === 'active' ? 'Suspendre' : 'Activer'}
+                    <Power className="h-3.5 w-3.5" /> {s.status === 'active' ? t('adminUsers.suspend') : t('adminUsers.activate')}
                   </button>
                 </div>
               </div>
@@ -196,7 +194,7 @@ export default function AdminUsers() {
               <div>
                 <p className="text-sm font-semibold">{c.name} <span className="text-muted-foreground">@{c.handle}</span></p>
                 <p className="text-[11px] text-muted-foreground">
-                  Code {c.referral_code} · commission {c.commission_rate}% · {stats.conversions} conversion(s) · {formatUSD(stats.earnings)} générés
+                  {t('adminUsers.creatorMeta', { code: c.referral_code, rate: c.commission_rate, conversions: stats.conversions, earnings: formatUSD(stats.earnings) })}
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -209,13 +207,13 @@ export default function AdminUsers() {
                     c.status === 'active' ? 'bg-red-100 text-red-900' : 'bg-emerald-100 text-emerald-900'
                   }`}
                 >
-                  <Power className="h-3.5 w-3.5" /> {c.status === 'active' ? 'Suspendre' : 'Activer'}
+                  <Power className="h-3.5 w-3.5" /> {c.status === 'active' ? t('adminUsers.suspend') : t('adminUsers.activate')}
                 </button>
               </div>
             </div>
             );
           })}
-          {!creators.length && <p className="rounded-xl border border-dashed border-border bg-card p-6 text-center text-xs text-muted-foreground">Aucun créateur inscrit.</p>}
+          {!creators.length && <p className="rounded-xl border border-dashed border-border bg-card p-6 text-center text-xs text-muted-foreground">{t('adminUsers.noCreators')}</p>}
         </div>
       )}
 
@@ -225,10 +223,10 @@ export default function AdminUsers() {
             <div key={k.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card p-3.5">
               <div>
                 <p className="text-sm font-semibold">
-                  {k.name} {k.is_mock && <span className="ml-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-900">démo</span>}
+                  {k.name} {k.is_mock && <span className="ml-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-900">{t('adminUsers.demo')}</span>}
                 </p>
                 <p className="text-[11px] text-muted-foreground">
-                  {k.code} · base {formatUSD(k.base_rate_usd)} + {formatUSD(k.per_kg_usd)}/kg · {k.avg_days} jours · zones : {(k.service_areas || []).join(', ')}
+                  {t('adminUsers.courierMeta', { code: k.code, base: formatUSD(k.base_rate_usd), perKg: formatUSD(k.per_kg_usd), days: k.avg_days, zones: (k.service_areas || []).join(', ') })}
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -240,7 +238,7 @@ export default function AdminUsers() {
                     k.active ? 'bg-emerald-100 text-emerald-900' : 'bg-slate-200 text-slate-700'
                   }`}
                 >
-                  <Power className="h-3.5 w-3.5" /> {k.active ? 'Actif' : 'Inactif'}
+                  <Power className="h-3.5 w-3.5" /> {k.active ? t('adminUsers.active') : t('adminUsers.inactive')}
                 </button>
               </div>
             </div>
@@ -251,7 +249,7 @@ export default function AdminUsers() {
       {tab === 'team' && (
         <form onSubmit={sendInvite} className="space-y-3 rounded-2xl border border-border bg-card p-4">
           <h2 className="flex items-center gap-2 text-sm font-bold">
-            <UserPlus className="h-4 w-4 text-primary" /> Inviter un membre de l'équipe
+            <UserPlus className="h-4 w-4 text-primary" /> {t('adminUsers.inviteTitle')}
           </h2>
           <div className="grid gap-3 md:grid-cols-2">
             <input
@@ -262,15 +260,15 @@ export default function AdminUsers() {
               className="h-11 rounded-lg border border-border bg-background px-3 text-sm"
             />
             <select value={invite.role} onChange={(e) => setInvite({ ...invite, role: e.target.value })} className="h-11 rounded-lg border border-border bg-background px-3 text-sm">
-              <option value="user">Utilisateur</option>
-              <option value="admin">Administrateur</option>
+              <option value="user">{t('adminUsers.roleUser')}</option>
+              <option value="admin">{t('adminUsers.roleAdmin')}</option>
             </select>
           </div>
           <button type="submit" className="rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground">
-            Envoyer l'invitation
+            {t('adminUsers.sendInvite')}
           </button>
           <p className="text-[11px] text-muted-foreground">
-            Les rôles sont appliqués côté plateforme : un accès administrateur ne peut jamais être obtenu depuis l'interface client.
+            {t('adminUsers.inviteNote')}
           </p>
         </form>
       )}

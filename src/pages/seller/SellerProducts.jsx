@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Plus, Pencil, Trash2, Eye, EyeOff } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useActiveSeller } from '@/lib/seller';
@@ -9,14 +10,7 @@ import { formatUSD } from '@/lib/format';
 import { readActiveTenantId } from '@/lib/tenancy';
 import { emitEvent } from '@/lib/events';
 
-const LINKS = [
-  { to: '/seller', label: 'Tableau de bord', end: true },
-  { to: '/seller/products', label: 'Produits' },
-  { to: '/seller/orders', label: 'Commandes' },
-  { to: '/seller/import', label: 'Import fournisseur' },
-  { to: '/seller/wallet', label: 'Portefeuille' },
-  { to: '/seller/settings', label: 'Boutique' },
-];
+
 
 const EMPTY = {
   title: '',
@@ -29,6 +23,7 @@ const EMPTY = {
 };
 
 export default function SellerProducts() {
+  const { t } = useTranslation();
   const { seller, loading: loadingSeller } = useActiveSeller();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -147,22 +142,29 @@ export default function SellerProducts() {
 
   return (
     <div className="space-y-5 pb-8">
-      <DashboardNav title="Mes produits" links={LINKS} />
+      <DashboardNav title={t('sellerProducts.title')} links={[
+        { to: '/seller', label: t('sellerProducts.navDashboard'), end: true },
+        { to: '/seller/products', label: t('sellerProducts.navProducts') },
+        { to: '/seller/orders', label: t('sellerProducts.navOrders') },
+        { to: '/seller/import', label: t('sellerProducts.navImport') },
+        { to: '/seller/wallet', label: t('sellerProducts.navWallet') },
+        { to: '/seller/settings', label: t('sellerProducts.navShop') },
+      ]} />
 
       <div className="flex items-center justify-between">
-        <p className="text-xs text-muted-foreground">{products.length} produit(s) — {seller?.name || '—'}</p>
+        <p className="text-xs text-muted-foreground">{t('sellerProducts.count', { count: products.length, name: seller?.name || '—' })}</p>
         <button type="button" onClick={startCreate} className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground">
-          <Plus className="h-3.5 w-3.5" /> Nouveau produit
+          <Plus className="h-3.5 w-3.5" /> {t('sellerProducts.newProduct')}
         </button>
       </div>
 
       {showForm && (
         <form onSubmit={save} className="space-y-3 rounded-2xl border border-border bg-card p-4">
-          <h2 className="text-sm font-bold">{editingId ? 'Modifier le produit' : 'Créer un produit'}</h2>
+          <h2 className="text-sm font-bold">{editingId ? t('sellerProducts.editProduct') : t('sellerProducts.createProduct')}</h2>
           <input
             value={form.title}
             onChange={(e) => setForm({ ...form, title: e.target.value })}
-            placeholder="Titre du produit"
+            placeholder={t('sellerProducts.phTitle')}
             required
             className="h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"
           />
@@ -170,7 +172,7 @@ export default function SellerProducts() {
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
             rows={3}
-            placeholder="Description"
+            placeholder={t('sellerProducts.phDescription')}
             className="w-full rounded-lg border border-border bg-background p-3 text-sm"
           />
           <div className="grid gap-3 md:grid-cols-3">
@@ -179,7 +181,7 @@ export default function SellerProducts() {
               step="0.01"
               value={form.price_usd}
               onChange={(e) => setForm({ ...form, price_usd: e.target.value })}
-              placeholder="Prix USD"
+              placeholder={t('sellerProducts.phPrice')}
               required
               className="h-11 rounded-lg border border-border bg-background px-3 text-sm"
             />
@@ -188,14 +190,14 @@ export default function SellerProducts() {
               step="0.01"
               value={form.compare_at_usd}
               onChange={(e) => setForm({ ...form, compare_at_usd: e.target.value })}
-              placeholder="Prix barré (optionnel)"
+              placeholder={t('sellerProducts.phCompareAt')}
               className="h-11 rounded-lg border border-border bg-background px-3 text-sm"
             />
             <input
               type="number"
               value={form.stock}
               onChange={(e) => setForm({ ...form, stock: e.target.value })}
-              placeholder="Stock"
+              placeholder={t('sellerProducts.phStock')}
               className="h-11 rounded-lg border border-border bg-background px-3 text-sm"
             />
           </div>
@@ -204,7 +206,7 @@ export default function SellerProducts() {
             onChange={(e) => setForm({ ...form, category_id: e.target.value })}
             className="h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"
           >
-            <option value="">Catégorie…</option>
+            <option value="">{t('sellerProducts.phCategory')}</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
@@ -212,12 +214,12 @@ export default function SellerProducts() {
           <input
             value={form.images}
             onChange={(e) => setForm({ ...form, images: e.target.value })}
-            placeholder="URLs des images, séparées par des virgules"
+            placeholder={t('sellerProducts.phImages')}
             className="h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"
           />
           <div className="flex gap-2">
             <button type="submit" disabled={saving} className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">
-              {saving ? 'Enregistrement…' : 'Enregistrer'}
+              {saving ? t('sellerProducts.saving') : t('sellerProducts.save')}
             </button>
             <button type="button" onClick={() => setShowForm(false)} className="rounded-full border border-border px-5 py-2.5 text-sm font-semibold">
               Annuler
@@ -242,18 +244,18 @@ export default function SellerProducts() {
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{p.title}</p>
                 <p className="text-[11px] text-muted-foreground">
-                  {formatUSD(p.price_usd)} · stock {p.stock ?? 0} · {p.sold_count || 0} vendus
+                  {t('sellerProducts.rowMeta', { price: formatUSD(p.price_usd), stock: p.stock ?? 0, sold: p.sold_count || 0 })}
                 </p>
                 <StatusBadge status={p.status} />
               </div>
               <div className="flex shrink-0 items-center gap-1">
-                <button type="button" onClick={() => startEdit(p)} className="rounded-lg p-2 hover:bg-secondary" aria-label="Modifier">
+                <button type="button" onClick={() => startEdit(p)} className="rounded-lg p-2 hover:bg-secondary" aria-label={t('sellerProducts.ariaEdit')}>
                   <Pencil className="h-4 w-4" />
                 </button>
-                <button type="button" onClick={() => toggleStatus(p)} className="rounded-lg p-2 hover:bg-secondary" aria-label="Publier / archiver">
+                <button type="button" onClick={() => toggleStatus(p)} className="rounded-lg p-2 hover:bg-secondary" aria-label={t('sellerProducts.ariaToggle')}>
                   {p.status === 'published' ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
-                <button type="button" onClick={() => remove(p)} className="rounded-lg p-2 text-destructive hover:bg-secondary" aria-label="Supprimer">
+                <button type="button" onClick={() => remove(p)} className="rounded-lg p-2 text-destructive hover:bg-secondary" aria-label={t('sellerProducts.ariaDelete')}>
                   <Trash2 className="h-4 w-4" />
                 </button>
               </div>
@@ -261,7 +263,7 @@ export default function SellerProducts() {
           ))}
           {!products.length && (
             <p className="rounded-xl border border-dashed border-border bg-card p-6 text-center text-xs text-muted-foreground">
-              Aucun produit. Créez-en un ou importez depuis un fournisseur.
+              {t('sellerProducts.empty')}
             </p>
           )}
         </div>

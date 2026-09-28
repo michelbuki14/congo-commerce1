@@ -1,15 +1,11 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { MapPin, Trash2 } from 'lucide-react';
 import { formatUSD } from '@/lib/format';
 
-const NUMERIC = [
-  { field: 'base_usd', label: 'Prise en charge' },
-  { field: 'per_kg_usd', label: 'Par kg' },
-  { field: 'surcharge_usd', label: 'Supplément' },
-  { field: 'max_weight_kg', label: 'Poids max (kg)' },
-];
+const NUMERIC_IDS = ['base_usd', 'per_kg_usd', 'surcharge_usd', 'max_weight_kg'];
 
-const TYPE_LABELS = { city: 'Ville', country: 'Pays', zone: 'Zone' };
+const TYPE_KEYS = { city: 'typeCity', country: 'typeCountry', zone: 'typeZone' };
 
 function groupRates(rates) {
   return rates.reduce((acc, rate) => {
@@ -22,10 +18,12 @@ function groupRates(rates) {
 
 /** The rate table itself, grouped by destination. Values save on blur. */
 export default function RateTable({ rates = [], onPatch, onToggle, onDelete }) {
+  const { t } = useTranslation();
+  const NUMERIC = NUMERIC_IDS.map((field) => ({ field, label: t(`rateTable.num_${field}`) }));
   if (!rates.length) {
     return (
       <p className="rounded-2xl border border-dashed border-border bg-card p-6 text-center text-xs text-muted-foreground">
-        Aucune ligne tarifaire. Ajoutez-en une ci-dessus pour que les devis utilisent cette grille.
+        {t('rateTable.empty')}
       </p>
     );
   }
@@ -41,19 +39,19 @@ export default function RateTable({ rates = [], onPatch, onToggle, onDelete }) {
             <header className="flex flex-wrap items-center justify-between gap-2">
               <p className="flex items-center gap-2 text-sm font-bold">
                 <MapPin className="h-4 w-4 text-primary" /> {destination}
-                <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold">{TYPE_LABELS[type] || type}</span>
+                <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold">{TYPE_KEYS[type] ? t(`rateTable.${TYPE_KEYS[type]}`) : type}</span>
               </p>
-              <span className="text-[11px] text-muted-foreground">{rows.length} ligne(s)</span>
+              <span className="text-[11px] text-muted-foreground">{t('rateTable.rowCount', { count: rows.length })}</span>
             </header>
             <div className="mt-3 space-y-3">
               {rows.map((rate) => (
                 <div key={rate.id} className={`rounded-xl border p-3 ${rate.active === false ? 'border-dashed border-border opacity-60' : 'border-border'}`}>
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="text-xs font-semibold">
-                      {rate.courier_name || 'Transporteur'}
+                      {rate.courier_name || t('rateTable.carrierFallback')}
                       <span className="ml-2 font-normal text-muted-foreground">
                         {Number(rate.min_weight_kg) || 0}–{Number(rate.max_weight_kg) || 0} kg
-                        {Number(rate.max_dimension_cm) > 0 ? ` · côté ≤ ${rate.max_dimension_cm} cm` : ''}
+                        {Number(rate.max_dimension_cm) > 0 ? t('rateTable.sideLimit', { cm: rate.max_dimension_cm }) : ''}
                       </span>
                     </p>
                     <div className="flex items-center gap-1.5">
@@ -64,9 +62,9 @@ export default function RateTable({ rates = [], onPatch, onToggle, onDelete }) {
                           rate.active === false ? 'bg-secondary text-muted-foreground' : 'bg-emerald-100 text-emerald-900'
                         }`}
                       >
-                        {rate.active === false ? 'Inactive' : 'Active'}
+                        {rate.active === false ? t('rateTable.inactive') : t('rateTable.active')}
                       </button>
-                      <button type="button" onClick={() => onDelete(rate)} className="rounded-lg p-2 text-destructive hover:bg-secondary" aria-label="Supprimer la ligne">
+                      <button type="button" onClick={() => onDelete(rate)} className="rounded-lg p-2 text-destructive hover:bg-secondary" aria-label={t('rateTable.deleteAria')}>
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
@@ -85,7 +83,7 @@ export default function RateTable({ rates = [], onPatch, onToggle, onDelete }) {
                       </label>
                     ))}
                     <label className="text-[11px] text-muted-foreground">
-                      Délai annoncé
+                      {t('rateTable.etaLabel')}
                       <input
                         defaultValue={rate.eta_days || ''}
                         onBlur={(e) => onPatch(rate, 'eta_days', e.target.value)}
@@ -94,7 +92,7 @@ export default function RateTable({ rates = [], onPatch, onToggle, onDelete }) {
                     </label>
                   </div>
                   <p className="mt-2 text-[11px] text-muted-foreground">
-                    Coût d'un colis de 1 kg : {formatUSD((Number(rate.base_usd) || 0) + (Number(rate.per_kg_usd) || 0))}
+                    {t('rateTable.cost1kg', { amount: formatUSD((Number(rate.base_usd) || 0) + (Number(rate.per_kg_usd) || 0)) })}
                   </p>
                 </div>
               ))}

@@ -3,10 +3,12 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
+import { useTranslation } from 'react-i18next';
 import { PLAN_FEATURES } from '@/lib/plans';
 
 /** Platform-admin plan editor: prices, limits and features live in the database. */
 export default function PlanEditor({ plan, onSaved }) {
+  const { t } = useTranslation();
   const [form, setForm] = useState({
     price_monthly_usd: plan.price_monthly_usd || 0,
     price_yearly_usd: plan.price_yearly_usd || 0,
@@ -48,19 +50,19 @@ export default function PlanEditor({ plan, onSaved }) {
         <div className="flex items-center justify-between">
           <h3 className="font-heading text-sm font-bold">{plan.name} <span className="font-mono text-xs text-muted-foreground">{plan.code}</span></h3>
           <label className="flex items-center gap-2 text-xs">
-            <input type="checkbox" checked={form.active} onChange={(e) => set('active', e.target.checked)} /> Actif
+            <input type="checkbox" checked={form.active} onChange={(e) => set('active', e.target.checked)} /> {t('planEditor.active')}
           </label>
         </div>
 
         <div className="grid grid-cols-2 gap-2">
-          <label className="space-y-1 text-xs">Prix mensuel (USD)<Input type="number" min="0" step="1" value={form.price_monthly_usd} onChange={(e) => set('price_monthly_usd', e.target.value)} /></label>
-          <label className="space-y-1 text-xs">Prix annuel (USD)<Input type="number" min="0" step="1" value={form.price_yearly_usd} onChange={(e) => set('price_yearly_usd', e.target.value)} /></label>
-          <label className="space-y-1 text-xs">Essai (jours)<Input type="number" min="0" value={form.trial_days} onChange={(e) => set('trial_days', e.target.value)} /></label>
-          <label className="space-y-1 text-xs">Commission (%)<Input type="number" min="0" step="0.5" value={form.commission_rate} onChange={(e) => set('commission_rate', e.target.value)} /></label>
-          <label className="space-y-1 text-xs">Produits<Input type="number" min="0" value={form.product_limit} onChange={(e) => set('product_limit', e.target.value)} /></label>
-          <label className="space-y-1 text-xs">Boutiques<Input type="number" min="0" value={form.store_limit} onChange={(e) => set('store_limit', e.target.value)} /></label>
-          <label className="space-y-1 text-xs">Vendeurs<Input type="number" min="0" value={form.seller_limit} onChange={(e) => set('seller_limit', e.target.value)} /></label>
-          <label className="space-y-1 text-xs">Membres<Input type="number" min="0" value={form.member_limit} onChange={(e) => set('member_limit', e.target.value)} /></label>
+          <label className="space-y-1 text-xs">{t('planEditor.monthlyPrice')}<Input type="number" min="0" step="1" value={form.price_monthly_usd} onChange={(e) => set('price_monthly_usd', e.target.value)} /></label>
+          <label className="space-y-1 text-xs">{t('planEditor.yearlyPrice')}<Input type="number" min="0" step="1" value={form.price_yearly_usd} onChange={(e) => set('price_yearly_usd', e.target.value)} /></label>
+          <label className="space-y-1 text-xs">{t('planEditor.trial')}<Input type="number" min="0" value={form.trial_days} onChange={(e) => set('trial_days', e.target.value)} /></label>
+          <label className="space-y-1 text-xs">{t('planEditor.commission')}<Input type="number" min="0" step="0.5" value={form.commission_rate} onChange={(e) => set('commission_rate', e.target.value)} /></label>
+          <label className="space-y-1 text-xs">{t('planEditor.products')}<Input type="number" min="0" value={form.product_limit} onChange={(e) => set('product_limit', e.target.value)} /></label>
+          <label className="space-y-1 text-xs">{t('planEditor.stores')}<Input type="number" min="0" value={form.store_limit} onChange={(e) => set('store_limit', e.target.value)} /></label>
+          <label className="space-y-1 text-xs">{t('planEditor.sellers')}<Input type="number" min="0" value={form.seller_limit} onChange={(e) => set('seller_limit', e.target.value)} /></label>
+          <label className="space-y-1 text-xs">{t('planEditor.members')}<Input type="number" min="0" value={form.member_limit} onChange={(e) => set('member_limit', e.target.value)} /></label>
         </div>
 
         <div className="flex flex-wrap gap-1.5">
@@ -76,7 +78,7 @@ export default function PlanEditor({ plan, onSaved }) {
           ))}
         </div>
 
-        <Button size="sm" onClick={save} disabled={busy}>{busy ? 'Enregistrement…' : 'Enregistrer le plan'}</Button>
+        <Button size="sm" onClick={save} disabled={busy}>{busy ? t('planEditor.saving') : t('planEditor.save')}</Button>
       </CardContent>
     </Card>
   );

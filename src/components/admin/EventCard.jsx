@@ -1,5 +1,6 @@
 import React from 'react';
 import { CheckCircle2, Circle, XCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { EVENT_LABELS } from '@/lib/events';
 import { formatDateTime } from '@/lib/format';
 
@@ -9,10 +10,6 @@ const SEVERITY_STYLES = {
   critical: 'bg-red-100 text-red-900',
 };
 
-const SEVERITY_LABELS = { info: 'Info', warning: 'À surveiller', critical: 'Critique' };
-
-const STATUS_LABELS = { received: 'Reçu', handled: 'Traité', failed: 'Échec' };
-
 const ACTION_ICONS = {
   done: CheckCircle2,
   failed: XCircle,
@@ -20,6 +17,9 @@ const ACTION_ICONS = {
 };
 
 export default function EventCard({ event }) {
+  const { t } = useTranslation();
+  const SEVERITY_LABELS = { info: t('eventCard.severityInfo'), warning: t('eventCard.severityWarning'), critical: t('eventCard.severityCritical') };
+  const STATUS_LABELS = { received: t('eventCard.statusReceived'), handled: t('eventCard.statusHandled'), failed: t('eventCard.statusFailed') };
   const actions = event.actions || [];
   const failed = event.status === 'failed';
 
@@ -27,9 +27,9 @@ export default function EventCard({ event }) {
     <div className="rounded-2xl border border-border bg-card p-4">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-sm font-bold">{EVENT_LABELS[event.name] || event.name}</p>
+          <p className="text-sm font-bold">{t(EVENT_LABELS[event.name] || 'eventLog.unknown')}</p>
           <p className="truncate text-[11px] text-muted-foreground">
-            {event.reference || event.source || '—'} · {event.actor_email || 'système'} · {formatDateTime(event.created_date)}
+            {event.reference || event.source || '—'} · {event.actor_email || t('eventCard.system')} · {formatDateTime(event.created_date)}
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">

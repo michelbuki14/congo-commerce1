@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +9,7 @@ import { Mail, ArrowLeft, Loader2 } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 
 export default function ForgotPassword() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -28,22 +30,22 @@ export default function ForgotPassword() {
   return (
     <AuthLayout
       icon={Mail}
-      title="Mot de passe oublié"
-      subtitle="Nous vous enverrons un lien de réinitialisation"
+      title={t('auth.forgotTitle')}
+      subtitle={t('auth.forgotSubtitle')}
       footer={
         <Link to="/login" className="text-primary font-medium hover:underline">
-          <ArrowLeft className="w-3 h-3 inline mr-1" />Retour à la connexion
+          <ArrowLeft className="w-3 h-3 inline mr-1" />{t('auth.backToLogin')}
         </Link>
       }
     >
       {sent ? (
         <p className="text-sm text-foreground text-center">
-          Si un compte existe avec cet e-mail, vous recevrez un lien de réinitialisation sous peu.
+          {t('auth.resetSentMsg')}
         </p>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Adresse e-mail</Label>
+            <Label htmlFor="email">{t('auth.emailAddress')}</Label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
               <Input
@@ -63,10 +65,10 @@ export default function ForgotPassword() {
             {loading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Envoi…
+                {t('auth.sending')}
               </>
             ) : (
-              "Envoyer le lien"
+              t('auth.sendLink')
             )}
           </Button>
         </form>

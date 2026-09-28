@@ -28,8 +28,6 @@ export const RISK_BANDS = [
   { level: 'low', min: 0 },
 ];
 
-export const LEVEL_LABELS = { low: 'Faible', medium: 'Moyen', high: 'Élevé', critical: 'Critique' };
-
 export function riskLevel(score) {
   return RISK_BANDS.find((b) => (Number(score) || 0) >= b.min)?.level || 'low';
 }

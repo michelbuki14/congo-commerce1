@@ -1,118 +1,109 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ScrollText, ShieldCheck, Ban, Store, Users, Megaphone, AlertTriangle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import InfoPage, { InfoSection } from '@/components/InfoPage';
 
-const PROHIBITED = [
-  'Armes, munitions et objets dangereux',
-  'Médicaments non autorisés et produits pharmaceutiques sans agrément',
-  'Stupéfiants et substances illicites',
-  'Contrefaçons, copies de marques et faux documents',
-  'Espèces protégées, ivoire et produits d’origine animale interdits',
-  'Contenus illégaux, haineux ou portant atteinte à la personne',
-  'Données personnelles, comptes et services financiers revendus',
-];
+const PROHIBITED_KEYS = ['weapons', 'meds', 'drugs', 'counterfeit', 'wildlife', 'hateful', 'data'];
 
 export default function PlatformGuidelines() {
+  const { t } = useTranslation();
   return (
     <InfoPage
       icon={ScrollText}
-      title="Règles de la communauté"
-      subtitle="Ce que nous attendons des vendeurs, des acheteurs et des créateurs pour garder une place de marché sûre, honnête et transparente en RDC."
+      title={t('platformGuidelines.title')}
+      subtitle={t('platformGuidelines.subtitle')}
     >
-      <InfoSection title="Notre engagement">
+      <InfoSection title={t('platformGuidelines.commitment')}>
         <p>
-          Nous voulons que chaque commande soit prévisible : produits conformes, prix réels, délais tenus et recours
-          possible en cas de problème. Ces règles s'appliquent à tous les comptes, sans exception, et sont appliquées de
-          façon progressive et documentée.
+          {t('platformGuidelines.commitmentText')}
         </p>
       </InfoSection>
 
-      <InfoSection title="Règles pour les vendeurs">
+      <InfoSection title={t('platformGuidelines.sellers')}>
         <ul className="space-y-1.5">
-          <li>• Publier des produits licites, disponibles et conformes aux photos et descriptions.</li>
-          <li>• Afficher un prix total clair, sans frais cachés ajoutés après la commande.</li>
-          <li>• Tenir les délais de préparation annoncés et informer en cas de rupture.</li>
-          <li>• Répondre aux questions des acheteurs sous 24 h ouvrées.</li>
-          <li>• Ne jamais demander à un client de payer en dehors de la plateforme pour contourner la commission.</li>
-          <li>• Respecter la décision d'arbitrage en cas de litige.</li>
+          <li>• {t('platformGuidelines.seller1')}</li>
+          <li>• {t('platformGuidelines.seller2')}</li>
+          <li>• {t('platformGuidelines.seller3')}</li>
+          <li>• {t('platformGuidelines.seller4')}</li>
+          <li>• {t('platformGuidelines.seller5')}</li>
+          <li>• {t('platformGuidelines.seller6')}</li>
         </ul>
       </InfoSection>
 
-      <InfoSection title="Produits interdits">
+      <InfoSection title={t('platformGuidelines.prohibited')}>
         <div className="flex items-start gap-2">
           <Ban className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
           <ul className="space-y-1.5">
-            {PROHIBITED.map((p) => (
-              <li key={p}>• {p}</li>
+            {PROHIBITED_KEYS.map((k) => (
+              <li key={k}>• {t(`platformGuidelines.banned_${k}`)}</li>
             ))}
           </ul>
         </div>
       </InfoSection>
 
-      <InfoSection title="Règles pour les acheteurs">
+      <InfoSection title={t('platformGuidelines.buyers')}>
         <ul className="space-y-1.5">
-          <li>• Fournir un nom, un téléphone et une adresse exacts pour permettre la livraison.</li>
-          <li>• Régler la commande ou se présenter au retrait dans les délais convenus.</li>
-          <li>• Signaler un problème réel : les fausses déclarations entraînent la suspension du compte.</li>
-          <li>• Traiter les vendeurs et livreurs avec respect, y compris lors d'un désaccord.</li>
+          <li>• {t('platformGuidelines.buyer1')}</li>
+          <li>• {t('platformGuidelines.buyer2')}</li>
+          <li>• {t('platformGuidelines.buyer3')}</li>
+          <li>• {t('platformGuidelines.buyer4')}</li>
         </ul>
       </InfoSection>
 
-      <InfoSection title="Règles pour les créateurs affiliés">
+      <InfoSection title={t('platformGuidelines.creators')}>
         <ul className="space-y-1.5">
-          <li>• Annoncer clairement qu'un lien est affilié et ne pas promettre de résultat mensonger.</li>
-          <li>• Ne pas créer de faux avis, de fausses commandes ni de trafic artificiel.</li>
-          <li>• Ne pas utiliser de contenus d'autrui sans autorisation.</li>
-          <li>• Respecter la commission annoncée et les règles de confidentialité sur les données clients.</li>
+          <li>• {t('platformGuidelines.creator1')}</li>
+          <li>• {t('platformGuidelines.creator2')}</li>
+          <li>• {t('platformGuidelines.creator3')}</li>
+          <li>• {t('platformGuidelines.creator4')}</li>
         </ul>
       </InfoSection>
 
-      <InfoSection title="Protection acheteur">
+      <InfoSection title={t('platformGuidelines.protection')}>
         <div className="flex items-start gap-2">
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
           <div className="space-y-1.5">
-            <p>• Les fonds d'une vente sont libérés au vendeur après confirmation de la livraison.</p>
-            <p>• Un litige ou un retour peut être ouvert dans les 7 jours suivant la réception.</p>
-            <p>• L'équipe d'arbitrage répond sous 48 h et peut prononcer remboursement, remplacement ou rejet motivé.</p>
-            <p>• Les remboursements sont crédités sur votre portefeuille ou votre compte mobile money.</p>
+            <p>• {t('platformGuidelines.prot1')}</p>
+            <p>• {t('platformGuidelines.prot2')}</p>
+            <p>• {t('platformGuidelines.prot3')}</p>
+            <p>• {t('platformGuidelines.prot4')}</p>
             <p>
-              Détail complet sur la <Link to="/buyer-protection" className="font-semibold text-primary">protection acheteur</Link>.
+              {t('platformGuidelines.detailPrefix')} <Link to="/buyer-protection" className="font-semibold text-primary">{t('platformGuidelines.detailLink')}</Link>.
             </p>
           </div>
         </div>
       </InfoSection>
 
-      <InfoSection title="Sanctions et application">
+      <InfoSection title={t('platformGuidelines.sanctions')}>
         <div className="flex items-start gap-2">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
           <div className="space-y-1.5">
-            <p>Selon la gravité et la répétition, nous appliquons :</p>
-            <p>1. Un avertissement écrit avec un délai de mise en conformité.</p>
-            <p>2. Le retrait des fiches produits concernées.</p>
-            <p>3. La suspension temporaire du compte et le gel des retraits en cours d'examen.</p>
-            <p>4. La fermeture définitive du compte en cas de fraude, contrefaçon ou danger pour les clients.</p>
+            <p>{t('platformGuidelines.sanctionsIntro')}</p>
+            <p>{t('platformGuidelines.sanction1')}</p>
+            <p>{t('platformGuidelines.sanction2')}</p>
+            <p>{t('platformGuidelines.sanction3')}</p>
+            <p>{t('platformGuidelines.sanction4')}</p>
           </div>
         </div>
       </InfoSection>
 
-      <InfoSection title="Signaler un problème">
+      <InfoSection title={t('platformGuidelines.report')}>
         <p>
-          Signalez une fiche, un comportement ou un paiement suspect : chaque signalement est examiné par l'équipe de
-          confiance et de sécurité.
+          {t('platformGuidelines.reportText')}
         </p>
         <div className="flex flex-wrap gap-2 pt-1">
           <Link to="/support-tickets" className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground">
-            <Megaphone className="h-3.5 w-3.5" /> Ouvrir un ticket
+            <Megaphone className="h-3.5 w-3.5" /> {t('platformGuidelines.openTicket')}
           </Link>
           <Link to="/dispute-center" className="rounded-full border border-border px-4 py-2 text-xs font-semibold text-foreground">
-            Centre de litiges
+            {t('platformGuidelines.disputeCenter')}
           </Link>
           <Link to="/seller-application" className="inline-flex items-center gap-1.5 rounded-full border border-border px-4 py-2 text-xs font-semibold text-foreground">
-            <Store className="h-3.5 w-3.5" /> Devenir vendeur
+            <Store className="h-3.5 w-3.5" /> {t('platformGuidelines.becomeSeller')}
           </Link>
           <Link to="/terms-of-service" className="inline-flex items-center gap-1.5 rounded-full border border-border px-4 py-2 text-xs font-semibold text-foreground">
-            <Users className="h-3.5 w-3.5" /> Conditions d'utilisation
+            <Users className="h-3.5 w-3.5" /> {t('platformGuidelines.terms')}
           </Link>
         </div>
       </InfoSection>

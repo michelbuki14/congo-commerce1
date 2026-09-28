@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { base44 } from '@/api/base44Client';
 import { Activity } from 'lucide-react';
 import FeedItem from '@/components/feed/FeedItem';
 
-const TABS = [['all', 'Tout'], ['purchase', 'Achats'], ['review', 'Avis'], ['trending', 'Tendances']];
+const TAB_IDS = ['all', 'purchase', 'review', 'trending'];
 
 // Privacy: only a first name + initial is ever shown, and purchases are only
 // listed for customers who opted in to marketing at checkout.
@@ -14,6 +15,7 @@ const anon = (name) => {
 const ago = (d) => new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
 
 export default function ActivityFeed() {
+  const { t } = useTranslation();
   const [items, setItems] = useState(null);
   const [tab, setTab] = useState('all');
 
@@ -25,40 +27,50 @@ export default function ActivityFeed() {
     ]).then(([orders, reviews, products]) => {
       const purchases = orders.filter((o) => o.items?.length).map((o) => ({
         id: `o${o.id}`, type: 'purchase', date: o.created_date,
-        text: `${anon(o.customer_name)}${o.city ? ` à ${o.city}` : ''} a acheté ${o.items[0].title || 'un article'}${o.items.length > 1 ? ` et ${o.items.length - 1} autre(s)` : ''}`,
+        text: t('activityFeed.purchased', {
+          name: anon(o.customer_name),
+          city: o.city ? t('activityFeed.inCity', { city: o.city }) : '',
+          item: o.items[0].title || t('activityFeed.anItem'),
+          rest: o.items.length > 1 ? t('activityFeed.moreItems', { count: o.items.length - 1 }) : '',
+        }),
         meta: ago(o.created_date), link: o.items[0].slug ? `/product/${o.items[0].slug}` : null,
       }));
       const revs = reviews.map((r) => ({
         id: `r${r.id}`, type: 'review', date: r.created_date,
-        text: `${anon(r.customer_name)} a donné ${r.rating}/5 à ${r.product_title || 'un produit'}`,
-        quote: r.comment, meta: `${ago(r.created_date)}${r.verified_purchase ? ' · Achat vérifié' : ''}`,
+        text: t('activityFeed.gaveRating', {
+          name: anon(r.customer_name),
+          rating: r.rating,
+          product: r.product_title || t('activityFeed.aProduct'),
+        }),
+        quote: r.comment, meta: `${ago(r.created_date)}${r.verified_purchase ? t('activityFeed.verifiedPurchaseSuffix') : ''}`,
       }));
       const trend = products.map((p) => ({
         id: `p${p.id}`, type: 'trending', date: p.updated_date,
-        text: `${p.title} est tendance`, meta: `${p.sold_count || 0} vendus · ${p.price_usd} $`, link: `/product/${p.slug}`,
+        text: t('activityFeed.isTrending', { title: p.title }), meta: t('activityFeed.trendMeta', { sold: p.sold_count || 0, price: p.price_usd }), link: `/product/${p.slug}`,
       }));
       setItems([...purchases, ...revs].sort((a, b) => new Date(b.date) - new Date(a.date)).concat(trend));
     });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const shown = (items || []).filter((i) => tab === 'all' || i.type === tab);
 
   return (
     <div className="mx-auto max-w-2xl space-y-4 px-4 py-5 pb-24">
-      <h1 className="flex items-center gap-2 text-lg font-bold"><Activity className="h-5 w-5" /> Activité de la communauté</h1>
+      <h1 className="flex items-center gap-2 text-lg font-bold"><Activity className="h-5 w-5" /> {t('activityFeed.title')}</h1>
       <div className="flex gap-2 overflow-x-auto">
-        {TABS.map(([k, l]) => (
-          <button key={k} onClick={() => setTab(k)} className={`shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-semibold ${tab === k ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-card'}`}>{l}</button>
+        {TAB_IDS.map((k) => (
+          <button key={k} onClick={() => setTab(k)} className={`shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-semibold ${tab === k ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-card'}`}>{t(`activityFeed.tab_${k}`)}</button>
         ))}
       </div>
       {!items ? <div className="h-60 animate-pulse rounded-2xl bg-secondary" /> : shown.length === 0 ? (
-        <p className="text-xs text-muted-foreground">Rien à afficher pour l'instant.</p>
+        <p className="text-xs text-muted-foreground">{t('activityFeed.empty')}</p>
       ) : (
         <div className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
           {shown.map((i) => <FeedItem key={i.id} item={i} />)}
         </div>
       )}
-      <p className="text-[11px] text-muted-foreground">Seuls un prénom et une initiale sont affichés. Les achats n'apparaissent que pour les clients ayant accepté la communication marketing.</p>
+      <p className="text-[11px] text-muted-foreground">{t('activityFeed.privacyNote')}</p>
     </div>
   );
 }

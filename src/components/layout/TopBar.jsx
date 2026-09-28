@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Search, ShoppingBag, Heart, Bell, Store, ShieldCheck, MessageCircle } from 'lucide-react';
 import { useCart } from '@/lib/cart';
 import CurrencyToggle from '@/components/CurrencyToggle';
+import LanguageToggle from '@/components/LanguageToggle';
 import BrandLogo from '@/components/BrandLogo';
 
 export default function TopBar() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { count } = useCart();
   const [term, setTerm] = useState('');
@@ -27,27 +30,28 @@ export default function TopBar() {
           <input
             value={term}
             onChange={(e) => setTerm(e.target.value)}
-            placeholder="Rechercher un produit, une boutique…"
+            placeholder={t('nav.searchPlaceholder')}
             className="h-10 w-full rounded-full border border-border bg-background pl-9 pr-3 text-sm outline-none focus:border-primary"
           />
         </form>
 
         <CurrencyToggle className="hidden sm:inline-flex" />
+        <LanguageToggle className="hidden h-10 sm:block" />
 
         <div className="flex items-center gap-1">
-          <Link to="/wishlist" className="hidden h-10 w-10 items-center justify-center rounded-full hover:bg-secondary sm:flex">
+          <Link to="/wishlist" aria-label={t('nav.wishlist')} className="hidden h-10 w-10 items-center justify-center rounded-full hover:bg-secondary sm:flex">
             <Heart className="h-5 w-5" />
           </Link>
-          <Link to="/messages" className="hidden h-10 w-10 items-center justify-center rounded-full hover:bg-secondary sm:flex" title="Messages">
+          <Link to="/messages" className="hidden h-10 w-10 items-center justify-center rounded-full hover:bg-secondary sm:flex" title={t('nav.messages')}>
             <MessageCircle className="h-5 w-5" />
           </Link>
-          <Link to="/notifications" className="hidden h-10 w-10 items-center justify-center rounded-full hover:bg-secondary sm:flex">
+          <Link to="/notifications" className="hidden h-10 w-10 items-center justify-center rounded-full hover:bg-secondary sm:flex" title={t('nav.notifications')}>
             <Bell className="h-5 w-5" />
           </Link>
-          <Link to="/seller" className="hidden h-10 w-10 items-center justify-center rounded-full hover:bg-secondary md:flex" title="Espace vendeur">
+          <Link to="/seller" className="hidden h-10 w-10 items-center justify-center rounded-full hover:bg-secondary md:flex" title={t('nav.sellerSpace')}>
             <Store className="h-5 w-5" />
           </Link>
-          <Link to="/admin" className="hidden h-10 w-10 items-center justify-center rounded-full hover:bg-secondary md:flex" title="Administration">
+          <Link to="/admin" className="hidden h-10 w-10 items-center justify-center rounded-full hover:bg-secondary md:flex" title={t('nav.admin')}>
             <ShieldCheck className="h-5 w-5" />
           </Link>
           <Link to="/cart" className="relative flex h-10 w-10 items-center justify-center rounded-full hover:bg-secondary">

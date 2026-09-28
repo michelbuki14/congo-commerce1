@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { HEALTH_LABELS } from '@/lib/platformHealth';
 
 const DOT = {
@@ -17,6 +18,7 @@ const PILL = {
 
 /** One monitored service, gateway or logistics partner. */
 export default function ServiceStatusRow({ name, detail, meta, status = 'unknown', right }) {
+  const { t } = useTranslation();
   return (
     <div className="flex items-start justify-between gap-3 px-4 py-3">
       <div className="flex min-w-0 items-start gap-2.5">
@@ -30,7 +32,7 @@ export default function ServiceStatusRow({ name, detail, meta, status = 'unknown
       <div className="flex shrink-0 items-center gap-2">
         {right}
         <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${PILL[status] || PILL.unknown}`}>
-          {HEALTH_LABELS[status] || status}
+          {t(HEALTH_LABELS[status] || 'healthStatus.unknown')}
         </span>
       </div>
     </div>

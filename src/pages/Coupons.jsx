@@ -1,19 +1,25 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Ticket, Copy, Check } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import EmptyState from '@/components/EmptyState';
 import { formatUSD, formatDate } from '@/lib/format';
 
-function describe(c) {
-  if (c.type === 'percent') return `${c.value}% de remise${c.max_discount_usd ? ` (max ${formatUSD(c.max_discount_usd)})` : ''}`;
-  if (c.type === 'fixed') return `${formatUSD(c.value)} de remise`;
-  return 'Livraison offerte';
-}
-
 export default function Coupons() {
+  const { t } = useTranslation();
   const [coupons, setCoupons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState('');
+
+  function describe(c) {
+    if (c.type === 'percent') {
+      return c.max_discount_usd
+        ? t('coupons.percentOffMax', { value: c.value, max: formatUSD(c.max_discount_usd) })
+        : t('coupons.percentOff', { value: c.value });
+    }
+    if (c.type === 'fixed') return t('coupons.fixedOff', { value: formatUSD(c.value) });
+    return t('coupons.freeShip');
+  }
 
   useEffect(() => {
     base44.entities.Coupon.filter({ active: true }, '-created_date', 30)
@@ -34,9 +40,9 @@ export default function Coupons() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-5 pb-8">
-      <h1 className="text-lg font-bold md:text-xl">Codes promo</h1>
+      <h1 className="text-lg font-bold md:text-xl">{t('coupons.title')}</h1>
       <p className="text-sm text-muted-foreground">
-        Copiez un code et saisissez-le à l'étape du paiement. Les remises sont appliquées sur le sous-total.
+        {t('coupons.subtitle')}
       </p>
 
       {loading ? (
@@ -54,8 +60,8 @@ export default function Coupons() {
                 <p className="text-sm font-bold">{c.code}</p>
                 <p className="text-xs text-muted-foreground">{describe(c)}</p>
                 <p className="text-[11px] text-muted-foreground">
-                  {c.min_order_usd > 0 ? `Minimum ${formatUSD(c.min_order_usd)} · ` : ''}
-                  {c.expires_at ? `Expire le ${formatDate(c.expires_at)}` : 'Sans date limite'}
+                  {c.min_order_usd > 0 ? t('coupons.minOrder', { min: formatUSD(c.min_order_usd) }) : ''}
+                  {c.expires_at ? t('coupons.expiresOn', { date: formatDate(c.expires_at) }) : t('coupons.noExpiry')}
                 </p>
               </div>
               <button
@@ -64,13 +70,13 @@ export default function Coupons() {
                 className="flex shrink-0 items-center gap-1 rounded-full bg-secondary px-3 py-1.5 text-xs font-semibold"
               >
                 {copied === c.code ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                {copied === c.code ? 'Copié' : 'Copier'}
+                {copied === c.code ? t('coupons.copied') : t('coupons.copy')}
               </button>
             </div>
           ))}
         </div>
       ) : (
-        <EmptyState icon={Ticket} title="Aucun code disponible" description="De nouvelles promotions sont publiées régulièrement." />
+        <EmptyState icon={Ticket} title={t('coupons.emptyTitle')} description={t('coupons.emptyText')} />
       )}
     </div>
   );

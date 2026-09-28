@@ -5,20 +5,15 @@ import DashboardNav from '@/components/DashboardNav';
 import WorkflowDefinitionCard from '@/components/admin/WorkflowDefinitionCard';
 import WorkflowExecutionCard from '@/components/admin/WorkflowExecutionCard';
 import { ADMIN_LINKS } from '@/lib/navLinks';
+import { useTranslation } from 'react-i18next';
 
 const STUCK_AFTER_MS = 15 * 60 * 1000;
 
-const TABS = [
-  { id: 'all', label: 'Tout' },
-  { id: 'RUNNING', label: 'En cours' },
-  { id: 'WAITING', label: 'En attente' },
-  { id: 'COMPLETED', label: 'Terminés' },
-  { id: 'FAILED', label: 'En échec' },
-  { id: 'RETRYING', label: 'Nouvelle tentative' },
-  { id: 'CANCELLED', label: 'Annulés' },
-];
+const TAB_IDS = ['all', 'RUNNING', 'WAITING', 'COMPLETED', 'FAILED', 'RETRYING', 'CANCELLED'];
 
 export default function AdminWorkflows() {
+  const { t } = useTranslation();
+  const TABS = TAB_IDS.map((id) => ({ id, label: t(`adminWorkflows.tab_${id}`) }));
   const [definitions, setDefinitions] = useState([]);
   const [executions, setExecutions] = useState([]);
   const [stepsByExecution, setStepsByExecution] = useState({});
@@ -82,7 +77,7 @@ export default function AdminWorkflows() {
       setNotice(
         data.error
           ? data.error
-          : `${execution.execution_number} — ${data.status || action}${data.error ? ` : ${data.error}` : ''}`,
+          : t('adminWorkflows.operated', { num: execution.execution_number, status: data.status || action }),
       );
       const rows = await loadExecutions();
       const refreshed = rows.find((r) => r.id === execution.id);
@@ -119,30 +114,30 @@ export default function AdminWorkflows() {
 
   return (
     <div className="space-y-5 pb-8">
-      <DashboardNav title="Workflows" links={ADMIN_LINKS} />
+      <DashboardNav title={t('adminWorkflows.title')} links={ADMIN_LINKS} />
 
       <section className="grid gap-3 md:grid-cols-4">
         <div className="rounded-2xl border border-border bg-card p-4">
           <p className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-            <Activity className="h-4 w-4 text-primary" /> Exécutions suivies
+            <Activity className="h-4 w-4 text-primary" /> {t('adminWorkflows.tracked')}
           </p>
           <p className="mt-1 text-2xl font-black">{counts.total}</p>
         </div>
         <div className="rounded-2xl border border-border bg-card p-4">
           <p className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-            <Loader2 className="h-4 w-4 text-sky-600" /> En cours
+            <Loader2 className="h-4 w-4 text-sky-600" /> {t('adminWorkflows.running')}
           </p>
           <p className="mt-1 text-2xl font-black">{counts.running + counts.retrying}</p>
         </div>
         <div className="rounded-2xl border border-border bg-card p-4">
           <p className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-            <PauseCircle className="h-4 w-4 text-amber-600" /> En attente d’une décision
+            <PauseCircle className="h-4 w-4 text-amber-600" /> {t('adminWorkflows.waiting')}
           </p>
           <p className="mt-1 text-2xl font-black">{counts.waiting}</p>
         </div>
         <div className="rounded-2xl border border-border bg-card p-4">
           <p className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-            <AlertTriangle className="h-4 w-4 text-destructive" /> En échec
+            <AlertTriangle className="h-4 w-4 text-destructive" /> {t('adminWorkflows.failed')}
           </p>
           <p className="mt-1 text-2xl font-black">{counts.failed}</p>
         </div>
@@ -150,27 +145,27 @@ export default function AdminWorkflows() {
 
       <p className="flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
         <span className="flex items-center gap-1">
-          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> {counts.completed} terminés
+          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> {t('adminWorkflows.completed', { count: counts.completed })}
         </span>
         <span className="flex items-center gap-1">
-          <Clock className="h-3.5 w-3.5" /> {counts.stuck} bloqués (plus de 15 min)
+          <Clock className="h-3.5 w-3.5" /> {t('adminWorkflows.stuck', { count: counts.stuck })}
         </span>
-        <span>{counts.cancelled} annulés</span>
+        <span>{t('adminWorkflows.cancelled', { count: counts.cancelled })}</span>
       </p>
 
       {notice && <p className="rounded-xl border border-border bg-card p-3 text-xs">{notice}</p>}
 
       <div className="flex flex-wrap gap-2">
-        {TABS.map((t) => (
+        {TABS.map((tx) => (
           <button
-            key={t.id}
+            key={tx.id}
             type="button"
-            onClick={() => setTab(t.id)}
+            onClick={() => setTab(tx.id)}
             className={`rounded-full px-3.5 py-1.5 text-xs font-semibold ${
-              tab === t.id ? 'bg-primary text-primary-foreground' : 'bg-secondary'
+              tab === tx.id ? 'bg-primary text-primary-foreground' : 'bg-secondary'
             }`}
           >
-            {t.label}
+            {tx.label}
           </button>
         ))}
       </div>
@@ -190,14 +185,14 @@ export default function AdminWorkflows() {
         ))}
         {!visible.length && (
           <p className="rounded-xl border border-dashed border-border bg-card p-6 text-center text-xs text-muted-foreground">
-            Aucune exécution dans cet état.
+            {t('adminWorkflows.empty')}
           </p>
         )}
       </div>
 
       <section className="space-y-2.5">
         <h2 className="flex items-center gap-2 text-sm font-bold">
-          <Workflow className="h-4 w-4 text-primary" /> Workflows disponibles ({definitions.length})
+          <Workflow className="h-4 w-4 text-primary" /> {t('adminWorkflows.available', { count: definitions.length })}
         </h2>
         {definitions.map((definition) => (
           <WorkflowDefinitionCard key={definition.code} definition={definition} />

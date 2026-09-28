@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Heart, Truck, Zap } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import { useCurrency } from '@/lib/currency';
@@ -9,6 +10,7 @@ import RatingStars from './RatingStars';
 import { compactNumber } from '@/lib/format';
 
 export default function ProductCard({ product }) {
+  const { t } = useTranslation();
   const { format } = useCurrency();
   const { addItem } = useCart();
   const [liked, setLiked] = useState(() => isWishlisted(product.id));
@@ -42,7 +44,7 @@ export default function ProductCard({ product }) {
           )}
           {Number(product.stock) <= 0 && (
             <span className="absolute inset-x-0 bottom-0 bg-foreground/80 py-1 text-center text-[10px] font-semibold text-background">
-              Rupture de stock
+              {t('product.outOfStock')}
             </span>
           )}
         </div>
@@ -56,16 +58,16 @@ export default function ProductCard({ product }) {
           </div>
           <div className="flex items-center justify-between gap-1">
             <RatingStars rating={product.rating || 0} count={product.reviews_count || 0} />
-            <span className="text-[10px] text-muted-foreground">{compactNumber(product.sold_count || 0)} vendus</span>
+            <span className="text-[10px] text-muted-foreground">{t('product.soldCount', { count: compactNumber(product.sold_count || 0) })}</span>
           </div>
           <div className="flex items-center gap-1 pt-0.5 text-[10px] text-muted-foreground">
             {isIntl ? (
               <>
-                <Truck className="h-3 w-3" /> International · {product.estimated_delivery || '18 jours'}
+                <Truck className="h-3 w-3" /> {t('product.international', { eta: product.estimated_delivery || '18 jours' })}
               </>
             ) : (
               <>
-                <Zap className="h-3 w-3 text-emerald-600" /> Vendeur local · {product.estimated_delivery || '2-4 jours'}
+                <Zap className="h-3 w-3 text-emerald-600" /> {t('product.localSeller', { eta: product.estimated_delivery || '2-4 jours' })}
               </>
             )}
           </div>
@@ -74,7 +76,7 @@ export default function ProductCard({ product }) {
 
       <button
         type="button"
-        aria-label="Ajouter aux favoris"
+        aria-label={t('product.addToWishlist')}
         onClick={() => setLiked(toggleWishlist(product.id).includes(product.id))}
         className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-card/90 shadow-sm"
       >

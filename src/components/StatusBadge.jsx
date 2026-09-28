@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 const STYLES = {
   PENDING: 'bg-amber-100 text-amber-900',
@@ -69,11 +70,12 @@ const LABELS = {
 };
 
 export default function StatusBadge({ status, className = '' }) {
+  const { t } = useTranslation();
   if (!status) return null;
   const key = String(status).toUpperCase();
   return (
     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${STYLES[key] || 'bg-secondary text-foreground'} ${className}`}>
-      {LABELS[key] || status}
+      {t(`status.${key}`, { defaultValue: LABELS[key] || status })}
     </span>
   );
 }

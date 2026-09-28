@@ -6,8 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { TENANT_PERMISSIONS, TENANT_ROLES, permissionLabel, permissionsForRole } from '@/lib/permissions';
 import { formatDate } from '@/lib/format';
+import { useTranslation } from 'react-i18next';
 
 export default function TenantTeamPanel({ tenant, members, onChange }) {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [role, setRole] = useState('SUPPORT');
@@ -34,7 +36,7 @@ export default function TenantTeamPanel({ tenant, members, onChange }) {
       setName('');
       onChange();
     } catch (e) {
-      setError(e?.message || 'Invitation impossible.');
+      setError(e?.message || t('tenantTeamPanel.inviteFailed'));
     } finally {
       setBusy(false);
     }
@@ -61,31 +63,31 @@ export default function TenantTeamPanel({ tenant, members, onChange }) {
     <Card>
       <CardContent className="space-y-4 p-5">
         <div>
-          <h2 className="font-heading text-base font-bold">Équipe & rôles</h2>
-          <p className="text-sm text-muted-foreground">Chaque membre reçoit les permissions de son rôle, ajustables une par une.</p>
+          <h2 className="font-heading text-base font-bold">{t('tenantTeamPanel.title')}</h2>
+          <p className="text-sm text-muted-foreground">{t('tenantTeamPanel.subtitle')}</p>
         </div>
 
         <div className="grid gap-2 sm:grid-cols-[1.2fr_1fr_auto_auto]">
           <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="membre@exemple.cd" />
-          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nom complet" />
+          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('tenantTeamPanel.namePlaceholder')} />
           <select value={role} onChange={(e) => setRole(e.target.value)} className="h-10 rounded-md border border-input bg-background px-3 text-sm">
             {TENANT_ROLES.map((r) => <option key={r.id} value={r.id}>{r.label}</option>)}
           </select>
           <Button onClick={invite} disabled={busy || !email}>
-            <UserPlus className="mr-1.5 h-4 w-4" /> Inviter
+            <UserPlus className="mr-1.5 h-4 w-4" /> {t('tenantTeamPanel.invite')}
           </Button>
         </div>
         {error && <p className="text-sm text-destructive">{error}</p>}
 
         <div className="space-y-2">
-          {members.length === 0 && <p className="text-sm text-muted-foreground">Aucun membre pour le moment.</p>}
+          {members.length === 0 && <p className="text-sm text-muted-foreground">{t('tenantTeamPanel.empty')}</p>}
           {members.map((m) => (
             <div key={m.id} className="rounded-xl border border-border p-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <p className="text-sm font-semibold">{m.full_name || m.email}</p>
                   <p className="text-xs text-muted-foreground">
-                    {m.email} · {m.status === 'active' ? 'actif' : 'invité'} · {formatDate(m.created_date)}
+                    {t('tenantTeamPanel.memberMeta', { email: m.email, status: m.status === 'active' ? t('tenantTeamPanel.active') : t('tenantTeamPanel.invited'), date: formatDate(m.created_date) })}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">

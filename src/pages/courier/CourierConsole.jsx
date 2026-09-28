@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Truck } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { respondToShipment, courierUpdateShipment } from '@/lib/orderService';
@@ -11,6 +12,7 @@ import CourierEarnings from '@/components/courier/CourierEarnings';
 const TERMINAL = ['DELIVERED', 'FAILED', 'RETURNED', 'CANCELLED'];
 
 export default function CourierConsole() {
+  const { t } = useTranslation();
   const { tenants: couriers, tenant: courier, isAdmin, loading: loadingCourier, selectTenant } = useTenantScope('Courier');
   const [user, setUser] = useState(null);
   const [shipments, setShipments] = useState([]);
@@ -113,7 +115,7 @@ export default function CourierConsole() {
       if (accepted) setTab('active');
       return true;
     } catch (e) {
-      setError("L'action n'a pas pu être enregistrée. Vérifiez votre connexion et réessayez.");
+      setError(t('courierConsole.actionFailed'));
       return false;
     } finally {
       setBusy('');
@@ -134,7 +136,7 @@ export default function CourierConsole() {
       await load(fleetNames);
       return true;
     } catch (e) {
-      setError("L'action n'a pas pu être enregistrée. Vérifiez votre connexion et réessayez.");
+      setError(t('courierConsole.actionFailed'));
       return false;
     } finally {
       setBusy('');
@@ -142,10 +144,10 @@ export default function CourierConsole() {
   };
 
   const TABS = [
-    { id: 'offers', label: `Nouvelles courses (${buckets.offers.length})` },
-    { id: 'active', label: `En cours (${buckets.active.length})` },
-    { id: 'tracking', label: `Suivi (${buckets.active.length})` },
-    { id: 'done', label: `Terminées (${buckets.done.length})` },
+    { id: 'offers', label: t('courierConsole.tabOffers', { count: buckets.offers.length }) },
+    { id: 'active', label: t('courierConsole.tabActive', { count: buckets.active.length }) },
+    { id: 'tracking', label: t('courierConsole.tabTracking', { count: buckets.active.length }) },
+    { id: 'done', label: t('courierConsole.tabDone', { count: buckets.done.length }) },
   ];
 
   const visible = buckets[tab];
@@ -153,7 +155,7 @@ export default function CourierConsole() {
   return (
     <div className="space-y-5 pb-8">
       <h1 className="flex items-center gap-2 text-lg font-bold md:text-xl">
-        <Truck className="h-5 w-5 text-primary" /> Espace livreur
+        <Truck className="h-5 w-5 text-primary" /> {t('courierConsole.title')}
       </h1>
 
       {!loadingCourier && (
@@ -170,16 +172,16 @@ export default function CourierConsole() {
       <CourierEarnings wallet={wallet} transactions={transactions} />
 
       <div className="flex flex-wrap gap-2">
-        {TABS.map((t) => (
+        {TABS.map((tx) => (
           <button
-            key={t.id}
+            key={tx.id}
             type="button"
-            onClick={() => setTab(t.id)}
+            onClick={() => setTab(tx.id)}
             className={`rounded-full px-3.5 py-1.5 text-xs font-semibold ${
-              tab === t.id ? 'bg-primary text-primary-foreground' : 'bg-secondary'
+              tab === tx.id ? 'bg-primary text-primary-foreground' : 'bg-secondary'
             }`}
           >
-            {t.label}
+            {tx.label}
           </button>
         ))}
       </div>
@@ -192,8 +194,7 @@ export default function CourierConsole() {
         <div className="h-40 animate-pulse rounded-2xl bg-secondary" />
       ) : !courier ? (
         <p className="rounded-xl border border-dashed border-border bg-card p-4 text-xs text-muted-foreground">
-          Aucun compte livreur n'est relié à votre connexion. L'administration doit rattacher votre flotte à
-          l'adresse e-mail avec laquelle vous vous connectez.
+{t('courierConsole.noFleet')}
         </p>
       ) : tab === 'tracking' ? (
         <CourierTrackingView
@@ -207,10 +208,10 @@ export default function CourierConsole() {
       ) : visible.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border bg-card p-4 text-xs text-muted-foreground">
           {tab === 'offers'
-            ? 'Aucune nouvelle course pour le moment.'
+            ? t('courierConsole.emptyOffers')
             : tab === 'active'
-              ? 'Aucune course en cours.'
-              : 'Aucune course terminée.'}
+              ? t('courierConsole.emptyActive')
+              : t('courierConsole.emptyDone')}
         </p>
       ) : (
         <div className="space-y-3">

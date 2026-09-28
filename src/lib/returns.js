@@ -8,15 +8,15 @@ import { getOrderIds, getSessionId, uid } from '@/lib/session';
  */
 
 export const RETURN_REASONS = [
-  { id: 'not_received', label: 'Article non reçu' },
-  { id: 'wrong_product', label: 'Mauvais article reçu' },
-  { id: 'damaged', label: 'Article endommagé' },
-  { id: 'not_as_described', label: 'Article très différent de la description' },
-  { id: 'missing_item', label: 'Article manquant dans le colis' },
-  { id: 'changed_mind', label: "Changement d'avis" },
+  { id: 'not_received', labelKey: 'returnReason.notReceived' },
+  { id: 'wrong_product', labelKey: 'returnReason.wrongProduct' },
+  { id: 'damaged', labelKey: 'returnReason.damaged' },
+  { id: 'not_as_described', labelKey: 'returnReason.notAsDescribed' },
+  { id: 'missing_item', labelKey: 'returnReason.missingItem' },
+  { id: 'changed_mind', labelKey: 'returnReason.changedMind' },
 ];
 
-export const RETURN_REASON_LABELS = RETURN_REASONS.reduce((acc, r) => ({ ...acc, [r.id]: r.label }), {});
+export const RETURN_REASON_LABELS = RETURN_REASONS.reduce((acc, r) => ({ ...acc, [r.id]: r.labelKey }), {});
 
 export const RETURN_WINDOW_DAYS = 7;
 

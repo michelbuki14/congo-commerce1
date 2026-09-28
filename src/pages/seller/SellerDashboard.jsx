@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Package, ShoppingBag, Wallet as WalletIcon, TrendingUp, Sparkles, Store, Upload, Settings, BarChart3, Boxes, Banknote, CreditCard, FileDown } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useActiveSeller } from '@/lib/seller';
@@ -9,28 +10,29 @@ import StatusBadge from '@/components/StatusBadge';
 import { formatUSD } from '@/lib/format';
 
 const LINKS = [
-  { to: '/seller', label: 'Tableau de bord', end: true },
-  { to: '/seller/products', label: 'Produits' },
-  { to: '/seller/orders', label: 'Commandes' },
-  { to: '/seller/import', label: 'Import fournisseur' },
-  { to: '/seller/wallet', label: 'Portefeuille' },
-  { to: '/seller/settings', label: 'Boutique' },
+  { to: '/seller', key: 'sellerNav.dashboard', end: true },
+  { to: '/seller/products', key: 'sellerNav.products' },
+  { to: '/seller/orders', key: 'sellerNav.orders' },
+  { to: '/seller/import', key: 'seller.import' },
+  { to: '/seller/wallet', key: 'sellerNav.wallet' },
+  { to: '/seller/settings', key: 'sellerNav.shop' },
 ];
 
 const TILES = [
-  { to: '/seller/products', label: 'Gérer mes produits', icon: Package },
-  { to: '/seller/orders', label: 'Traiter les commandes', icon: ShoppingBag },
-  { to: '/seller/import', label: 'Importer un produit', icon: Upload },
-  { to: '/seller/wallet', label: 'Retirer mes gains', icon: WalletIcon },
-  { to: '/seller/settings', label: 'Configurer ma boutique', icon: Settings },
-  { to: '/seller-portal', label: 'Portail vendeur', icon: Store },
-  { to: '/inventory-management', label: 'Gestion du stock', icon: Boxes },
-  { to: '/payout-history', label: 'Historique des retraits', icon: Banknote },
-  { to: '/payout-settings', label: 'Coordonnées de paiement', icon: CreditCard },
-  { to: '/data-export', label: 'Exporter mes données', icon: FileDown },
+  { to: '/seller/products', key: 'seller.tileProducts', icon: Package },
+  { to: '/seller/orders', key: 'seller.tileOrders', icon: ShoppingBag },
+  { to: '/seller/import', key: 'seller.tileImport', icon: Upload },
+  { to: '/seller/wallet', key: 'seller.tileWallet', icon: WalletIcon },
+  { to: '/seller/settings', key: 'seller.tileSettings', icon: Settings },
+  { to: '/seller-portal', key: 'seller.tilePortal', icon: Store },
+  { to: '/inventory-management', key: 'seller.tileInventory', icon: Boxes },
+  { to: '/payout-history', key: 'seller.tilePayouts', icon: Banknote },
+  { to: '/payout-settings', key: 'seller.tilePayment', icon: CreditCard },
+  { to: '/data-export', key: 'seller.tileExport', icon: FileDown },
 ];
 
 export default function SellerDashboard() {
+  const { t } = useTranslation();
   const { sellers, seller, isAdmin, loading: loadingSeller, selectSeller } = useActiveSeller();
   const [products, setProducts] = useState([]);
   const [fulfillments, setFulfillments] = useState([]);
@@ -49,7 +51,7 @@ export default function SellerDashboard() {
       const [p, f, wallets] = await Promise.all([
         base44.entities.Product.filter({ seller_id: seller.id }, '-created_date', 100).catch(() => []),
         base44.entities.FulfillmentOrder.filter({ seller_id: seller.id }, '-created_date', 50).catch(() => []),
-        base44.entities.Wallet.filter({ owner_type: 'seller', owner_name: seller.name }).catch(() => []),
+        base44.entities.Wallet.filter({ owner_type: 'seller', owner_id: seller.id }).catch(() => []),
       ]);
       if (!alive) return;
       setProducts(p);
@@ -73,14 +75,13 @@ export default function SellerDashboard() {
     return (
       <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
         <Store className="mx-auto h-8 w-8 text-muted-foreground" />
-        <p className="mt-2 font-semibold">Aucune boutique associée à votre compte</p>
+        <p className="mt-2 font-semibold">{t('seller.noShop')}</p>
         <p className="mt-1 text-sm text-muted-foreground">
-          Votre espace vendeur n'est relié à aucune boutique. L'administration doit rattacher une boutique à
-          l'adresse e-mail avec laquelle vous vous connectez.
+          {t('seller.noShopDesc')}
         </p>
         {isAdmin && (
           <Link to="/admin/users" className="mt-4 inline-block rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground">
-            Créer une boutique
+            {t('seller.createShop')}
           </Link>
         )}
       </div>
@@ -93,11 +94,11 @@ export default function SellerDashboard() {
 
   return (
     <div className="space-y-5 pb-8">
-      <DashboardNav title="Espace vendeur" links={LINKS} />
+      <DashboardNav title={t('seller.title')} links={LINKS} />
 
       <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card p-3">
         <Store className="h-4 w-4 text-primary" />
-        <span className="text-xs font-semibold">Boutique gérée :</span>
+        <span className="text-xs font-semibold">{t('seller.managedShop')}</span>
         {isAdmin ? (
           <select
             value={seller.id}
@@ -122,15 +123,15 @@ export default function SellerDashboard() {
       ) : (
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           {[
-            { icon: Package, label: 'Produits publiés', value: `${published}/${products.length}` },
-            { icon: TrendingUp, label: "Chiffre d'affaires", value: formatUSD(revenue) },
-            { icon: ShoppingBag, label: 'À traiter', value: pending.length },
-            { icon: WalletIcon, label: 'Solde retirable', value: formatUSD(wallet?.balance_usd || 0) },
+            { icon: Package, key: 'seller.publishedProducts', value: `${published}/${products.length}` },
+            { icon: TrendingUp, key: 'seller.revenue', value: formatUSD(revenue) },
+            { icon: ShoppingBag, key: 'seller.toProcess', value: pending.length },
+            { icon: WalletIcon, key: 'wallet.available', value: formatUSD(wallet?.balance_usd || 0) },
           ].map((k) => (
-            <div key={k.label} className="rounded-xl border border-border bg-card p-3.5">
+            <div key={k.key} className="rounded-xl border border-border bg-card p-3.5">
               <k.icon className="h-4 w-4 text-primary" />
               <p className="mt-1.5 text-lg font-bold">{k.value}</p>
-              <p className="text-[11px] text-muted-foreground">{k.label}</p>
+              <p className="text-[11px] text-muted-foreground">{t(k.key)}</p>
             </div>
           ))}
         </div>
@@ -139,18 +140,18 @@ export default function SellerDashboard() {
       {!!insights.length && (
         <section className="rounded-2xl border border-primary/25 bg-primary/5 p-4">
           <h2 className="flex items-center gap-2 text-sm font-bold">
-            <Sparkles className="h-4 w-4 text-primary" /> Conseils IA pour votre boutique
+            <Sparkles className="h-4 w-4 text-primary" /> {t('seller.aiTips')}
           </h2>
           <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
-            {insights.map((t, i) => (
-              <li key={i}>• {t}</li>
+            {insights.map((tip, i) => (
+              <li key={i}>• {tip}</li>
             ))}
           </ul>
         </section>
       )}
 
       <section className="rounded-2xl border border-border bg-card p-4">
-        <h2 className="mb-3 text-sm font-bold">Dernières commandes</h2>
+        <h2 className="mb-3 text-sm font-bold">{t('seller.latestOrders')}</h2>
         {fulfillments.length ? (
           <div className="space-y-2">
             {fulfillments.slice(0, 6).map((f) => (
@@ -158,7 +159,7 @@ export default function SellerDashboard() {
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold">{f.order_number}</p>
                   <p className="text-[11px] text-muted-foreground">
-                    {f.fulfillment_number} · {(f.items || []).length} article(s)
+                    {f.fulfillment_number} · {t('seller.itemCount', { count: (f.items || []).length })}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -168,24 +169,24 @@ export default function SellerDashboard() {
               </div>
             ))}
             <Link to="/seller/orders" className="inline-block text-xs font-semibold text-primary">
-              Voir toutes les commandes
+              {t('seller.viewAllOrders')}
             </Link>
           </div>
         ) : (
-          <p className="text-xs text-muted-foreground">Aucune commande pour le moment.</p>
+          <p className="text-xs text-muted-foreground">{t('seller.noOrders')}</p>
         )}
       </section>
 
       <section className="grid gap-2 md:grid-cols-3">
-        {TILES.map((t) => (
-          <Link key={t.to} to={t.to} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3.5">
-            <t.icon className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium">{t.label}</span>
+        {TILES.map((tile) => (
+          <Link key={tile.to} to={tile.to} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3.5">
+            <tile.icon className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium">{t(tile.key)}</span>
           </Link>
         ))}
         <Link to="/admin" className="flex items-center gap-3 rounded-xl border border-border bg-card p-3.5">
           <BarChart3 className="h-4 w-4 text-primary" />
-          <span className="text-sm font-medium">Vue administration</span>
+          <span className="text-sm font-medium">{t('seller.adminView')}</span>
         </Link>
       </section>
     </div>

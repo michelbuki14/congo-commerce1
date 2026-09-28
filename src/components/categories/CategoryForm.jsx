@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
 const slugify = (s) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
 export default function CategoryForm({ initial, onSave, onCancel }) {
+  const { t } = useTranslation();
   const [f, setF] = useState({ name: '', slug: '', description: '', image_url: '', ...initial });
   const [saving, setSaving] = useState(false);
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value, ...(k === 'name' && !initial?.id ? { slug: slugify(e.target.value) } : {}) });
@@ -18,13 +20,13 @@ export default function CategoryForm({ initial, onSave, onCancel }) {
 
   return (
     <form onSubmit={submit} className="grid gap-2 md:grid-cols-2">
-      <Input placeholder="Nom de la catégorie" value={f.name} onChange={set('name')} />
-      <Input placeholder="Adresse (slug)" value={f.slug} onChange={set('slug')} />
-      <Input placeholder="Description" value={f.description || ''} onChange={set('description')} />
-      <Input placeholder="Lien de l'image" value={f.image_url || ''} onChange={set('image_url')} />
+      <Input placeholder={t('categoryForm.namePh')} value={f.name} onChange={set('name')} />
+      <Input placeholder={t('categoryForm.slugPh')} value={f.slug} onChange={set('slug')} />
+      <Input placeholder={t('categoryForm.descPh')} value={f.description || ''} onChange={set('description')} />
+      <Input placeholder={t('categoryForm.imagePh')} value={f.image_url || ''} onChange={set('image_url')} />
       <div className="flex gap-2 md:col-span-2">
-        <Button type="submit" disabled={!f.name || saving}>{saving ? 'Enregistrement…' : initial?.id ? 'Enregistrer' : 'Créer la catégorie'}</Button>
-        {onCancel && <Button type="button" variant="ghost" onClick={onCancel}>Annuler</Button>}
+        <Button type="submit" disabled={!f.name || saving}>{saving ? t('categoryForm.saving') : initial?.id ? t('categoryForm.save') : t('categoryForm.create')}</Button>
+        {onCancel && <Button type="button" variant="ghost" onClick={onCancel}>{t('common.cancel')}</Button>}
       </div>
     </form>
   );

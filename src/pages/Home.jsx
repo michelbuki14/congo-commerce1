@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Zap, Truck, Play, ArrowRight, Store as StoreIcon } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { loadPlatformConfig } from '@/lib/config';
@@ -13,6 +14,7 @@ import EmptyState from '@/components/EmptyState';
 import { resolveStorefrontScope, scopeRecords } from '@/lib/tenancy';
 
 export default function Home() {
+  const { t } = useTranslation();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [sellers, setSellers] = useState([]);
@@ -70,14 +72,14 @@ export default function Home() {
       {loadFailed && (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-border bg-card p-4">
           <p className="text-xs text-muted-foreground">
-            Certains contenus n'ont pas pu être chargés. Vérifiez votre connexion.
+            {t('home.loadFailed')}
           </p>
           <button
             type="button"
             onClick={() => setReloadKey((k) => k + 1)}
             className="rounded-full bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-foreground"
           >
-            Réessayer
+            {t('common.retry')}
           </button>
         </div>
       )}
@@ -92,23 +94,23 @@ export default function Home() {
         <div className="absolute inset-0 bg-gradient-to-r from-foreground/85 via-foreground/55 to-transparent" />
         <div className="absolute inset-0 flex flex-col justify-center gap-2 p-5 text-background md:p-9">
           <span className="w-fit rounded-full bg-primary px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary-foreground">
-            Livraison Kinshasa 2-4 jours
+            {t('home.heroBadge')}
           </span>
           <h1 className="max-w-sm text-xl font-black leading-tight md:max-w-lg md:text-3xl">
-            Le meilleur du Congo et du monde, livré chez vous
+            {t('home.heroTitle')}
           </h1>
           <p className="max-w-xs text-xs text-background/85 md:max-w-md md:text-sm">
-            Vendeurs locaux vérifiés, importations suivies, paiement mobile money ou à la livraison.
+            {t('home.heroSubtitle')}
           </p>
           <div className="mt-1 flex flex-wrap gap-2">
             <Link to="/discover" className="rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground md:text-sm">
-              Découvrir en vidéo
+              {t('home.discoverVideo')}
             </Link>
             <Link to="/categories" className="rounded-full bg-background/20 px-4 py-2 text-xs font-semibold backdrop-blur md:text-sm">
-              Parcourir les catégories
+              {t('home.browseCategories')}
             </Link>
             <Link to="/creator" className="w-full text-[11px] font-medium text-background/80 underline md:text-xs">
-              Devenir créateur →
+              {t('home.becomeCreator')}
             </Link>
           </div>
         </div>
@@ -135,14 +137,14 @@ export default function Home() {
       <section>
         <div className="mb-3 flex items-center gap-2">
           <Zap className="h-5 w-5 text-primary" />
-          <h2 className="text-base font-bold md:text-lg">Ventes flash</h2>
-          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">Durée limitée</span>
+          <h2 className="text-base font-bold md:text-lg">{t('home.flashSale')}</h2>
+          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">{t('home.limitedTime')}</span>
         </div>
         {sections.flash.length ? (
           <ProductRow products={sections.flash} loading={loading} />
         ) : (
           <p className="rounded-xl border border-dashed border-border bg-card p-4 text-xs text-muted-foreground">
-            Aucune vente flash en cours. Revenez bientôt.
+            {t('home.noFlash')}
           </p>
         )}
       </section>
@@ -151,7 +153,7 @@ export default function Home() {
 
       {/* Discovery feed */}
       <section>
-        <SectionHeader title="Découverte" subtitle="Acheté directement depuis les vidéos créateurs" to="/discover" />
+        <SectionHeader title={t('home.discovery')} subtitle={t('home.discoverySub')} to="/discover" />
         {loading ? (
           <div className="flex gap-3 overflow-hidden">
             {[0, 1, 2, 3].map((i) => (
@@ -177,21 +179,21 @@ export default function Home() {
 
       {/* Trending */}
       <section>
-        <SectionHeader title="Tendances" subtitle="Les articles les plus commandés" to="/search?sort=sold" />
+        <SectionHeader title={t('home.trending')} subtitle={t('home.trendingSub')} to="/search?sort=sold" />
         <ProductGrid products={sections.trending} loading={loading} skeletonCount={4} />
       </section>
 
       {/* Featured */}
       {!!sections.featured.length && (
         <section>
-          <SectionHeader title="Sélection Congo Commerce" to="/search?sort=rating" />
+          <SectionHeader title={t('home.featured')} to="/search?sort=rating" />
           <ProductRow products={sections.featured} />
         </section>
       )}
 
       {/* Local sellers */}
       <section>
-        <SectionHeader title="Vendeurs locaux vérifiés" subtitle="Paiement à la livraison disponible" />
+        <SectionHeader title={t('home.localSellers')} subtitle={t('home.localSellersSub')} />
         {loading ? (
           <div className="grid gap-2.5 md:grid-cols-2">
             {[0, 1, 2, 3].map((i) => (
@@ -207,10 +209,10 @@ export default function Home() {
         ) : (
           <EmptyState
             icon={StoreIcon}
-            title="Aucun vendeur pour le moment"
-            description="Les boutiques partenaires apparaîtront ici."
+            title={t('home.noSellers')}
+            description={t('home.noSellersDesc')}
             actionTo="/seller"
-            actionLabel="Ouvrir une boutique"
+            actionLabel={t('home.openShop')}
           />
         )}
       </section>
@@ -218,7 +220,7 @@ export default function Home() {
       {/* Local products */}
       {!!sections.local.length && (
         <section>
-          <SectionHeader title="Produits locaux" subtitle="Expédiés depuis la RDC" to="/search?source=local" />
+          <SectionHeader title={t('home.localProducts')} subtitle={t('home.localProductsSub')} to="/search?source=local" />
           <ProductRow products={sections.local} />
         </section>
       )}
@@ -226,7 +228,7 @@ export default function Home() {
       {/* New arrivals */}
       {!!sections.fresh.length && (
         <section>
-          <SectionHeader title="Nouveautés" to="/search?sort=new" />
+          <SectionHeader title={t('home.newArrivals')} to="/search?sort=new" />
           <ProductRow products={sections.fresh} />
         </section>
       )}
@@ -236,10 +238,10 @@ export default function Home() {
         <section>
           <div className="mb-3 flex items-center gap-2">
             <Truck className="h-5 w-5 text-primary" />
-            <h2 className="text-base font-bold md:text-lg">Import international</h2>
+            <h2 className="text-base font-bold md:text-lg">{t('home.intlTitle')}</h2>
           </div>
           <p className="mb-3 text-xs text-muted-foreground">
-            Prix final affiché, transport et frais d'importation inclus — aucune surprise à la livraison.
+            {t('home.intlNote')}
           </p>
           <ProductRow products={sections.intl} />
         </section>
@@ -248,10 +250,10 @@ export default function Home() {
       <section className="rounded-2xl border border-border bg-card p-4">
         <div className="grid gap-4 md:grid-cols-4">
           {[
-            { icon: Truck, title: 'Livraison suivie', text: 'Suivi en temps réel, retrait en point relais possible.' },
-            { icon: Zap, title: 'Paiement mobile money', text: 'M-Pesa, Airtel Money, Orange Money ou à la livraison.' },
-            { icon: StoreIcon, title: 'Vendeurs vérifiés', text: 'Chaque boutique est contrôlée par notre équipe.' },
-            { icon: ArrowRight, title: 'Protection acheteur', text: 'Article non conforme ? Ouverture d’un litige en 2 clics.' },
+            { icon: Truck, title: t('home.featTrackedTitle'), text: t('home.featTrackedText') },
+            { icon: Zap, title: t('home.featMobileTitle'), text: t('home.featMobileText') },
+            { icon: StoreIcon, title: t('home.featVerifiedTitle'), text: t('home.featVerifiedText') },
+            { icon: ArrowRight, title: t('home.featProtectionTitle'), text: t('home.featProtectionText') },
           ].map((f) => (
             <div key={f.title} className="flex gap-3">
               <f.icon className="mt-0.5 h-5 w-5 shrink-0 text-primary" />

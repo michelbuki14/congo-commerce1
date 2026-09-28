@@ -1,0 +1,74 @@
+name: iOS
+
+on:
+  push:
+    branches: [main, cto-hardening]
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'index.html'
+      - 'capacitor.config.ts'
+      - 'ios/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/ios.yml'
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'index.html'
+      - 'capacitor.config.ts'
+      - 'ios/**'
+      - 'package.json'
+      - 'package-lock.json'
+
+jobs:
+  build-ios:
+    # Compile signal only: proves the web bundle builds and the Xcode shell
+    # compiles on every push. This produces NO signed IPA — release signing
+    # (certificates + provisioning + App Store Connect upload) is a separate
+    # manual/secret-backed job, see MOBILE_DEPLOY.md.
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Web build (compile check)
+        # NOTE: plain `vite build`, not `base44 build` — the Base44 app id and
+        # backend env are injected by `base44 build` on a linked machine
+        # (`npm run mobile:sync`). Release bundles must always be produced
+        # that way; this step only proves the web app compiles.
+        run: npm run build
+
+      - name: Sync iOS shell
+        run: npx cap sync ios
+
+      - name: Build iOS app (unsigned)
+        run: >
+          xcodebuild
+          -workspace ios/App/App.xcworkspace
+          -scheme App
+          -configuration Release
+          -destination 'generic/platform=iOS'
+          -derivedDataPath build
+          CODE_SIGNING_ALLOWED=NO
+          build

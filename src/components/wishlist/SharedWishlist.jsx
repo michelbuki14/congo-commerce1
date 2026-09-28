@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Heart, ShoppingBag } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import { useCart } from '@/lib/cart';
@@ -10,6 +11,7 @@ import { useCurrency } from '@/lib/currency';
  * recipient's own favourites, but every item can be added to the cart.
  */
 export default function SharedWishlist({ products, loading }) {
+  const { t } = useTranslation();
   const { addItem } = useCart();
   const { format } = useCurrency();
 
@@ -17,10 +19,10 @@ export default function SharedWishlist({ products, loading }) {
     <div className="space-y-4 pb-6">
       <section className="rounded-2xl border border-border bg-card p-4">
         <h1 className="flex items-center gap-2 text-lg font-bold md:text-xl">
-          <Heart className="h-5 w-5 text-primary" /> Liste partagée
+          <Heart className="h-5 w-5 text-primary" /> {t('sharedWishlist.title')}
         </h1>
         <p className="mt-1 text-xs text-muted-foreground">
-          Une sélection de favoris partagée avec vous. Les prix et la disponibilité sont ceux du moment.
+          {t('sharedWishlist.desc')}
         </p>
       </section>
 
@@ -49,7 +51,7 @@ export default function SharedWishlist({ products, loading }) {
                 onClick={() => addItem(p, 1)}
                 className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-40"
               >
-                <ShoppingBag className="h-3.5 w-3.5" /> Ajouter
+                <ShoppingBag className="h-3.5 w-3.5" /> {t('sharedWishlist.add')}
               </button>
             </div>
           ))}
@@ -57,7 +59,7 @@ export default function SharedWishlist({ products, loading }) {
       )}
 
       <Link to="/" className="inline-block rounded-full border border-border px-4 py-2 text-xs font-semibold">
-        Explorer la boutique
+        {t('sharedWishlist.explore')}
       </Link>
     </div>
   );

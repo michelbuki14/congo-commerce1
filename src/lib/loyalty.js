@@ -11,44 +11,44 @@ export const POINTS_PER_USD = 10;
 export const LOYALTY_TIERS = [
   {
     code: 'BRONZE',
-    name: 'Bronze',
+    nameKey: 'loyalty.tierBronze',
     min_points: 0,
     multiplier: 1,
     badge: 'bg-amber-100 text-amber-900',
-    perks: ['10 points par dollar dépensé', 'Accès aux ventes flash', 'Suivi de commande en temps réel'],
+    perksKey: 'loyalty.tierBronzePerks',
   },
   {
     code: 'ARGENT',
-    name: 'Argent',
+    nameKey: 'loyalty.tierSilver',
     min_points: 1500,
     multiplier: 1.25,
     badge: 'bg-slate-200 text-slate-800',
-    perks: ['+25 % de points sur chaque commande', 'Livraison suivie offerte dès 40 $', 'Support prioritaire'],
+    perksKey: 'loyalty.tierSilverPerks',
   },
   {
     code: 'OR',
-    name: 'Or',
+    nameKey: 'loyalty.tierGold',
     min_points: 4000,
     multiplier: 1.5,
     badge: 'bg-yellow-100 text-yellow-900',
-    perks: ['+50 % de points', 'Retours gratuits', 'Accès anticipé aux nouveautés'],
+    perksKey: 'loyalty.tierGoldPerks',
   },
   {
     code: 'PLATINE',
-    name: 'Platine',
+    nameKey: 'loyalty.tierPlatinum',
     min_points: 10000,
     multiplier: 2,
     badge: 'bg-violet-100 text-violet-900',
-    perks: ['Points doublés', 'Livraison offerte sans minimum', 'Conseiller dédié'],
+    perksKey: 'loyalty.tierPlatinumPerks',
   },
 ];
 
 export const LOYALTY_REWARDS = [
-  { code: 'SHIP_OFFERED', label: 'Livraison offerte', points: 800, value_usd: 3.5, note: 'Sur une commande livrée à domicile.' },
-  { code: 'DISCOUNT_5', label: 'Bon de réduction 5 USD', points: 1200, value_usd: 5, note: "Sans minimum d'achat." },
-  { code: 'PRIORITY_PACK', label: 'Préparation prioritaire', points: 1500, value_usd: 0, note: 'Votre colis passe en tête de file.' },
-  { code: 'DISCOUNT_10PCT', label: 'Bon de réduction 10 %', points: 1800, value_usd: 0, note: "Sur une commande jusqu'à 80 USD." },
-  { code: 'GIFT_BOX', label: 'Coffret cadeau', points: 3000, value_usd: 12, note: 'Sélection surprise de produits locaux.' },
+  { code: 'SHIP_OFFERED', labelKey: 'loyalty.rewardShip', points: 800, value_usd: 3.5, noteKey: 'loyalty.rewardShipNote' },
+  { code: 'DISCOUNT_5', labelKey: 'loyalty.rewardDiscount5', points: 1200, value_usd: 5, noteKey: 'loyalty.rewardDiscount5Note' },
+  { code: 'PRIORITY_PACK', labelKey: 'loyalty.rewardPriority', points: 1500, value_usd: 0, noteKey: 'loyalty.rewardPriorityNote' },
+  { code: 'DISCOUNT_10PCT', labelKey: 'loyalty.rewardDiscount10', points: 1800, value_usd: 0, noteKey: 'loyalty.rewardDiscount10Note' },
+  { code: 'GIFT_BOX', labelKey: 'loyalty.rewardGift', points: 3000, value_usd: 12, noteKey: 'loyalty.rewardGiftNote' },
 ];
 
 export function tierFor(points) {

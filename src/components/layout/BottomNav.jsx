@@ -1,17 +1,19 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Home, Compass, LayoutGrid, ShoppingBag, User } from 'lucide-react';
 import { useCart } from '@/lib/cart';
 
 const ITEMS = [
-  { label: 'Accueil', path: '/', icon: Home },
-  { label: 'Découvrir', path: '/discover', icon: Compass },
-  { label: 'Catégories', path: '/categories', icon: LayoutGrid },
-  { label: 'Panier', path: '/cart', icon: ShoppingBag, badge: true },
-  { label: 'Profil', path: '/profile', icon: User },
+  { key: 'nav.home', path: '/', icon: Home },
+  { key: 'nav.discover', path: '/discover', icon: Compass },
+  { key: 'nav.categories', path: '/categories', icon: LayoutGrid },
+  { key: 'nav.cart', path: '/cart', icon: ShoppingBag, badge: true },
+  { key: 'nav.profile', path: '/profile', icon: User },
 ];
 
 export default function BottomNav() {
+  const { t } = useTranslation();
   const location = useLocation();
   const { count } = useCart();
 
@@ -35,7 +37,7 @@ export default function BottomNav() {
                   {count}
                 </span>
               )}
-              {item.label}
+              {t(item.key)}
             </Link>
           );
         })}
