@@ -31,6 +31,7 @@ export default function StepDelivery({
           value={profile.name}
           onChange={(e) => setProfile({ ...profile, name: e.target.value })}
           placeholder={t('checkout.fullName')}
+          aria-label={t('checkout.fullName')}
           autoComplete="name"
           className={FIELD}
         />
@@ -41,6 +42,7 @@ export default function StepDelivery({
           value={profile.phone}
           onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
           placeholder={t('checkout.phonePlaceholder')}
+          aria-label={t('checkout.phonePlaceholder')}
           className={FIELD}
         />
         <input
@@ -50,9 +52,11 @@ export default function StepDelivery({
           value={profile.email || ''}
           onChange={(e) => setProfile({ ...profile, email: e.target.value })}
           placeholder={t('checkout.emailOptional')}
+          aria-label={t('checkout.emailOptional')}
           className={FIELD}
         />
         <select
+          aria-label="Ville de livraison"
           value={profile.city}
           onChange={(e) => setProfile({ ...profile, city: e.target.value })}
           className={FIELD}
@@ -72,6 +76,7 @@ export default function StepDelivery({
             key={m.id}
             type="button"
             onClick={() => setDeliveryMethod(m.id)}
+            aria-pressed={deliveryMethod === m.id}
             className={`flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl border px-3 text-xs font-semibold ${
               deliveryMethod === m.id ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-background'
             }`}
@@ -87,6 +92,7 @@ export default function StepDelivery({
           onChange={(e) => setProfile({ ...profile, address: e.target.value })}
           rows={2}
           placeholder={t('checkout.addressPlaceholder')}
+          aria-label={t('checkout.addressPlaceholder')}
           autoComplete="street-address"
           className="w-full rounded-lg border border-border bg-background p-3 text-sm"
         />
@@ -120,6 +126,7 @@ export default function StepDelivery({
         value={notes}
         onChange={(e) => setNotes(e.target.value)}
         placeholder={t('checkout.notesPlaceholder')}
+        aria-label={t('checkout.notesPlaceholder')}
         className={FIELD}
       />
 

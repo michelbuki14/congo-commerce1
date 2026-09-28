@@ -68,7 +68,7 @@ export default function Home() {
   }, [products]);
 
   return (
-    <div className="space-y-7 pb-6">
+    <div className="space-y-9 pb-6 md:space-y-12">
       {loadFailed && (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-border bg-card p-4">
           <p className="text-xs text-muted-foreground">
@@ -89,27 +89,27 @@ export default function Home() {
         <Image
           src="https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=1200&q=70"
           alt="Congo Commerce"
-          className="h-52 w-full object-cover md:h-72"
+          className="absolute inset-0 h-full w-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-foreground/85 via-foreground/55 to-transparent" />
-        <div className="absolute inset-0 flex flex-col justify-center gap-2 p-5 text-background md:p-9">
+        <div className="relative flex min-h-80 flex-col justify-center gap-4 p-6 text-background md:min-h-96 md:p-10">
           <span className="w-fit rounded-full bg-primary px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary-foreground">
             {t('home.heroBadge')}
           </span>
-          <h1 className="max-w-sm text-xl font-black leading-tight md:max-w-lg md:text-3xl">
+          <h1 className="max-w-sm text-3xl font-bold leading-tight tracking-tight md:max-w-xl md:text-4xl">
             {t('home.heroTitle')}
           </h1>
-          <p className="max-w-xs text-xs text-background/85 md:max-w-md md:text-sm">
+          <p className="max-w-md text-sm leading-relaxed text-background/90 md:text-base">
             {t('home.heroSubtitle')}
           </p>
           <div className="mt-1 flex flex-wrap gap-2">
-            <Link to="/discover" className="rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground md:text-sm">
+            <Link to="/discover" className="inline-flex min-h-11 items-center rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground">
               {t('home.discoverVideo')}
             </Link>
-            <Link to="/categories" className="rounded-full bg-background/20 px-4 py-2 text-xs font-semibold backdrop-blur md:text-sm">
+            <Link to="/categories" className="inline-flex min-h-11 items-center rounded-full border border-background/40 bg-background/10 px-5 py-3 text-sm font-semibold backdrop-blur">
               {t('home.browseCategories')}
             </Link>
-            <Link to="/creator" className="w-full text-[11px] font-medium text-background/80 underline md:text-xs">
+            <Link to="/creator" className="inline-flex min-h-11 w-fit items-center text-sm font-medium text-background underline underline-offset-4">
               {t('home.becomeCreator')}
             </Link>
           </div>
@@ -124,7 +124,7 @@ export default function Home() {
               <Link
                 key={c.id}
                 to={`/search?category=${c.slug}`}
-                className="shrink-0 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-medium hover:border-primary"
+                className="inline-flex min-h-11 shrink-0 items-center rounded-full border border-border bg-card px-4 py-2 text-sm font-medium hover:border-primary hover:text-primary"
               >
                 {c.name}
               </Link>

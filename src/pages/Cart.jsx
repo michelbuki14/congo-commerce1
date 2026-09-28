@@ -53,11 +53,13 @@ export default function Cart() {
 
   return (
     <div className="space-y-5 pb-6">
-      <h1 className="text-lg font-bold md:text-xl">{t('cart.title', { count })}</h1>
+      <h1 className="text-2xl font-bold tracking-tight md:text-3xl">{t('cart.title', { count })}</h1>
 
-      <div className="space-y-2.5">
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+      <div className="min-w-0 space-y-4">
+      <div className="space-y-3">
         {items.map((item) => (
-          <div key={`${item.product_id}-${item.variant || ''}`} className="flex gap-3 rounded-xl border border-border bg-card p-2.5">
+          <div key={`${item.product_id}-${item.variant || ''}`} className="flex gap-3 rounded-2xl border border-border bg-card p-3 sm:p-4">
             <Link to={`/product/${item.slug || item.product_id}`} className="h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-secondary">
               <Image src={item.image} alt={item.title} className="h-full w-full object-cover" />
             </Link>
@@ -69,7 +71,7 @@ export default function Cart() {
               <p className="text-[11px] text-muted-foreground">
                 {item.source_type === 'international_supplier' ? t('cart.intlImport') : item.seller_name || t('cart.localSeller')}
               </p>
-              <div className="mt-1.5 flex items-center justify-between">
+              <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
                 <span className="text-sm font-bold text-primary">{format(item.price_usd)}</span>
                 <div className="flex items-center gap-2">
                   <QuantityStepper
@@ -96,7 +98,9 @@ export default function Cart() {
         <Ticket className="h-4 w-4" /> {t('cart.couponHint')}
       </Link>
 
-      <div className="space-y-2 rounded-xl border border-border bg-card p-4">
+      </div>
+      <aside className="min-w-0 space-y-4 lg:sticky lg:top-40">
+      <div className="space-y-4 rounded-2xl border border-border bg-card p-5">
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">{t('cart.subtotal')}</span>
           <span className="font-semibold">{format(subtotal)}</span>
@@ -126,6 +130,8 @@ export default function Cart() {
       >
         {t('cart.checkout')}
       </button>
+      </aside>
+      </div>
 
       {!!suggestions.length && (
         <section>

@@ -29,6 +29,7 @@ export default function StepPayment({
               key={p.id}
               type="button"
               onClick={() => setPaymentMethod(p.id)}
+              aria-pressed={paymentMethod === p.id}
               className={`flex min-h-[56px] w-full items-center gap-3 rounded-xl border p-3 text-left ${
                 paymentMethod === p.id ? 'border-primary bg-primary/5' : 'border-border'
               }`}

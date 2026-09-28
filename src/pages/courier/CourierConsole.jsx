@@ -154,7 +154,7 @@ export default function CourierConsole() {
 
   return (
     <div className="space-y-5 pb-8">
-      <h1 className="flex items-center gap-2 text-lg font-bold md:text-xl">
+      <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight md:text-3xl">
         <Truck className="h-5 w-5 text-primary" /> {t('courierConsole.title')}
       </h1>
 

@@ -1,0 +1,49 @@
+{
+  "name": "Follow",
+  "type": "object",
+  "properties": {
+    "description": {
+      "type": "string",
+      "maxLength": 1000
+    },
+    "session_id": {
+      "type": "string"
+    },
+    "target_type": {
+      "type": "string",
+      "enum": [
+        "seller",
+        "creator"
+      ],
+      "default": "seller"
+    },
+    "target_id": {
+      "type": "string"
+    },
+    "target_name": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "session_id",
+    "target_id"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": null,
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

@@ -3,19 +3,13 @@ import React from 'react';
 /** Mobile progress indicator: which checkout step the buyer is on. Hidden on desktop, where every step is on one page. */
 export default function CheckoutSteps({ steps, current }) {
   return (
-    <div className="space-y-2 md:hidden">
-      <div className="flex items-center gap-1.5">
-        {steps.map((label, i) => (
-          <span
-            key={label}
-            className={`h-1.5 flex-1 rounded-full ${i <= current ? 'bg-primary' : 'bg-secondary'}`}
-          />
-        ))}
-      </div>
-      <p className="text-xs font-semibold">
-        Étape {current + 1} sur {steps.length}
-        <span className="font-normal text-muted-foreground"> · {steps[current]}</span>
-      </p>
-    </div>
+    <ol aria-label="Progression de la commande" className="grid grid-cols-3 gap-2 md:hidden">
+      {steps.map((label, i) => (
+        <li key={label} aria-current={i === current ? 'step' : undefined} className={`flex min-w-0 flex-col gap-2 border-b-2 pb-3 text-xs ${i <= current ? 'border-primary text-primary' : 'border-border text-muted-foreground'}`}>
+          <span className={`flex h-7 w-7 items-center justify-center rounded-full font-bold ${i <= current ? 'bg-primary text-primary-foreground' : 'bg-secondary'}`}>{i + 1}</span>
+          <span className={i === current ? 'font-bold' : 'font-medium'}>{label}</span>
+        </li>
+      ))}
+    </ol>
   );
 }

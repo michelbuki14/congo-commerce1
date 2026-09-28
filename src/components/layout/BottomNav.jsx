@@ -19,7 +19,7 @@ export default function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card/95 backdrop-blur md:hidden">
-      <div className="grid grid-cols-5">
+      <div className="grid h-14 grid-cols-5 pb-0" style={{ marginBottom: 'env(safe-area-inset-bottom, 0px)' }}>
         {ITEMS.map((item) => {
           const Icon = item.icon;
           const active = item.path === '/' ? location.pathname === '/' : location.pathname.startsWith(item.path);
@@ -27,8 +27,9 @@ export default function BottomNav() {
             <Link
               key={item.path}
               to={item.path}
-              className={`relative flex flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition-colors ${
-                active ? 'text-primary' : 'text-muted-foreground'
+              aria-current={active ? 'page' : undefined}
+              className={`relative flex min-h-14 flex-col items-center justify-center gap-1 text-[11px] font-semibold transition-colors ${
+                active ? 'bg-primary/5 text-primary' : 'text-muted-foreground'
               }`}
             >
               <Icon className="h-5 w-5" strokeWidth={active ? 2.4 : 1.8} />

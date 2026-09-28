@@ -112,7 +112,7 @@ export default function CreatorDashboard() {
   return (
     <div className="space-y-5 pb-8">
       <div className="flex flex-wrap items-center gap-2">
-        <h1 className="text-lg font-bold md:text-xl">Espace créateur</h1>
+        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Espace créateur</h1>
         {isAdmin ? (
           <select
             value={creator.id}

@@ -6,11 +6,11 @@ export default function SectionHeader({ title, subtitle, to, linkLabel = 'Tout v
   return (
     <div className="mb-3 flex items-end justify-between gap-3">
       <div>
-        <h2 className="text-base font-bold tracking-tight md:text-lg">{title}</h2>
+        <h2 className="text-lg font-bold tracking-tight md:text-xl">{title}</h2>
         {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
       </div>
       {to && (
-        <Link to={to} className="flex shrink-0 items-center gap-0.5 text-xs font-semibold text-primary">
+        <Link to={to} className="flex min-h-11 shrink-0 items-center gap-1 rounded-lg px-2 text-sm font-semibold text-primary hover:bg-accent">
           {linkLabel}
           <ChevronRight className="h-3.5 w-3.5" />
         </Link>
