@@ -41,8 +41,8 @@ export default function CourierProofForm({ order, shipment, busy, onConfirm }) {
     }
     await onConfirm({
       delivered_to: recipient,
-      delivered_at: new Date().toISOString(),
       proof_of_delivery: proofUri || shipment.proof_of_delivery || '',
+      pickup_code: code.trim(),
     });
   };
 
