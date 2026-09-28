@@ -44,46 +44,22 @@ export default function AdminReturns() {
     setReturns((prev) => prev.map((x) => (x.id === ret.id ? updated : x)));
 
     if (status === 'refunded') {
-      const wallets = await base44.entities.Wallet.filter({ owner_type: 'customer', owner_name: ret.customer_name }).catch(() => []);
-      let wallet = wallets[0];
-      if (!wallet) {
-        wallet = await base44.entities.Wallet.create({
-          owner_type: 'customer',
-          owner_name: ret.customer_name,
-          owner_email: '',
-          balance_usd: 0,
-        });
-      }
       const amount = Number(ret.refund_amount_usd) || 0;
-      const updatedWallet = await base44.entities.Wallet.update(wallet.id, {
-        balance_usd: Math.round(((wallet.balance_usd || 0) + amount) * 100) / 100,
-        lifetime_credit_usd: Math.round(((wallet.lifetime_credit_usd || 0) + amount) * 100) / 100,
-      });
-      await base44.entities.WalletTransaction.create({
-        wallet_id: wallet.id,
-        owner_type: 'customer',
-        owner_name: ret.customer_name,
-        type: 'REFUND',
-        direction: 'credit',
-        amount_usd: amount,
-        balance_after_usd: updatedWallet.balance_usd,
-        currency: 'USD',
-        description: `Remboursement retour ${ret.return_number}`,
-        reference: ret.return_number,
+      const res = await base44.functions.invoke('refund-payment', {
         order_number: ret.order_number,
+        amount,
+        reason: `Retour ${ret.return_number}`,
+        return_number: ret.return_number,
       });
-      if (ret.order_id) {
-        await base44.entities.Order.update(ret.order_id, { payment_status: 'REFUNDED' }).catch(() => {});
+      if (!res?.data?.order) {
+        setMessage(res?.data?.error || 'Remboursement impossible.');
+        return;
       }
-      await base44.entities.Notification.create({
-        title: `Remboursement de ${formatUSD(amount)}`,
-        message: `Votre retour ${ret.return_number} a été accepté. Le montant est crédité sur votre portefeuille.`,
-        type: 'payment',
-        audience: 'customer',
-        order_number: ret.order_number,
-        is_demo: true,
-      });
-      setMessage(`Retour ${ret.return_number} remboursé (${formatUSD(amount)} crédités).`);
+      if (res.data.provider_refund === 'manual_required') {
+        setMessage(`Retour ${ret.return_number} remboursé en portefeuille. Solde carte à rembourser dans le dashboard du prestataire.`);
+      } else {
+        setMessage(`Retour ${ret.return_number} remboursé (${formatUSD(amount)} crédités).`);
+      }
     } else {
       setMessage(`Retour ${ret.return_number} mis à jour : ${status}.`);
     }

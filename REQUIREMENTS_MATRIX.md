@@ -17,9 +17,9 @@ Statuts : `COMPLETE` · `PARTIAL` · `BROKEN` · `MISSING` · `MOCK` · `NEEDS_H
 | Conformité & RGPD | COMPLETE | CGV, mentions, confidentialité, droits | — | — |
 | Isolation vendeur / livreur / créateur | NEEDS_HARDENING | Écriture limitée dans l'interface, RLS public (revu 2026-09-28) | RLS + tunnel serveur | blocked |
 | Isolation stricte des données publiques | PARTIAL | Tunnel `place-order` + `get-order` + `request-withdrawal` + `confirm-payment` côté serveur, lookup commande vérifié par téléphone (revu 2026-09-28) | RLS écriture admin sur Order/Wallet/Coupon + tunnel vendeur/livraison | build |
-| Avis vérifiés | NEEDS_HARDENING | Contrôle d'éligibilité côté interface uniquement, RLS `Review.create` public (revu 2026-09-28) | Modération + application serveur | — |
+| Avis vérifiés | PARTIAL | Éligibilité + badge + agrégat appliqués par `submit-review` serveur, `Review.create` admin (revu 2026-09-28) | `Product.update` public (agrégat falsifiable hors tunnel) | — |
 | Paiement mobile money réel | MOCK | Abstraction + simulacre | Adaptateurs M-Pesa / Airtel / Orange | blocked |
-| Webhooks & remboursements | PARTIAL | Webhook carte (Wix) `payments-webhook` vérifié + idempotent ; webhooks mobile-money et remboursements manquants (revu 2026-09-28) | Intentions, signatures, réconciliation | blocked |
+| Webhooks & remboursements | PARTIAL | Webhook carte vérifié ; tunnel `refund-payment` admin (plafond, portefeuille, reprise des parts vendeur non libérées) ; remboursement carte prestataire manuel (revu 2026-09-28) | Charge-id Wix stocké pour remboursement API auto | blocked |
 | Fournisseurs internationaux | MOCK | Interface + catalogue factice | Adaptateurs API + identifiants | blocked |
 | Abonnements SaaS | COMPLETE | Entités `Plan` / `Subscription` / `TenantInvoice`, moteur `src/lib/saas.js`, pages `/pricing`, `/tenant`, `/admin/tenants` | Encaissement automatique par prestataire (Builder+) | — |
 | Domaines clients / marque blanche | PARTIAL | Entité `TenantDomain`, enregistrement TXT, application des couleurs par domaine (`src/lib/tenancy.js`) | Provisionnement DNS/SSL automatique (Builder+) | — |

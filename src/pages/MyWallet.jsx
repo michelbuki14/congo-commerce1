@@ -5,7 +5,7 @@ import { base44 } from '@/api/base44Client';
 import InfoPage, { InfoSection } from '@/components/InfoPage';
 import EmptyState from '@/components/EmptyState';
 import { requestWithdrawal } from '@/lib/wallet';
-import { getProfile } from '@/lib/session';
+import { getSessionId } from '@/lib/session';
 import { useCurrency } from '@/lib/currency';
 import { formatDateTime } from '@/lib/format';
 
@@ -30,9 +30,11 @@ export default function MyWallet() {
   const [error, setError] = useState('');
 
   const load = async () => {
-    const profile = getProfile();
-    const wallets = await base44.entities.Wallet.filter({ owner_type: 'customer' }).catch(() => []);
-    const mine = wallets.find((w) => profile.name && w.owner_name === profile.name) || null;
+    // Customer wallets are keyed by device session id, never by display name:
+    // names collide and localStorage is self-asserted, either of which would
+    // show one buyer another buyer's balance.
+    const wallets = await base44.entities.Wallet.filter({ owner_type: 'customer', owner_id: getSessionId() }).catch(() => []);
+    const mine = wallets[0] || null;
     setWallet(mine);
     setTransactions(
       mine ? await base44.entities.WalletTransaction.filter({ wallet_id: mine.id }, '-created_date', 50).catch(() => []) : [],
