@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Printer, FileText } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { getProfile } from '@/lib/session';
+import { lookupOrder } from '@/lib/orderLookup';
 import StatusBadge from '@/components/StatusBadge';
 import { formatUSD, formatDateTime } from '@/lib/format';
 import { getCompanyConfig, getTaxConfig } from '@/lib/config';
@@ -16,8 +17,8 @@ export default function Invoice() {
   useEffect(() => {
     (async () => {
       try {
-        const byNumber = await base44.entities.Order.filter({ order_number: number });
-        setOrder(byNumber[0] || (await base44.entities.Order.get(number)));
+        const data = await lookupOrder(number, getProfile().phone);
+        setOrder(data.order);
       } catch {
         setNotFound(true);
       } finally {

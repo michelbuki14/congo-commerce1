@@ -35,3 +35,16 @@ dist-ssr
 .env
 .vite
 base44/.app.jsonc
+
+# Base44 local state (device auth, caches) — never commit
+.base44/
+
+# Capacitor native build outputs (platform sources ARE committed)
+android/app/build/
+android/app/release/
+ios/App/build/
+*.apk
+*.aab
+*.ipa
+*.keystore
+*.jks

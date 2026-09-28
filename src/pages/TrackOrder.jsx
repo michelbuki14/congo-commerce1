@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Package, Truck, CheckCircle2, Circle } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
 import StatusBadge from '@/components/StatusBadge';
 import { getOrderIds, getProfile } from '@/lib/session';
+import { lookupOrder } from '@/lib/orderLookup';
 import { formatUSD, formatDate } from '@/lib/format';
 import { SHIPMENT_STATUS_FLOW, SHIPMENT_STATUS_LABELS } from '@/lib/logistics';
 
@@ -27,25 +27,12 @@ export default function TrackOrder() {
     }
     setSearching(true);
     try {
-      const rows = await base44.entities.Order.filter({ order_number: number.trim().toUpperCase() });
-      const found = rows[0];
-      if (!found) {
-        setError('Aucune commande trouvée avec ce numéro.');
-        return;
-      }
-      if (phone.trim() && found.customer_phone && !found.customer_phone.includes(phone.trim().slice(-6))) {
-        setError('Le téléphone ne correspond pas à cette commande.');
-        return;
-      }
-      const [f, s] = await Promise.all([
-        base44.entities.FulfillmentOrder.filter({ order_id: found.id }, 'fulfillment_number', 50),
-        base44.entities.Shipment.filter({ order_number: found.order_number }, '-created_date', 50),
-      ]);
-      setOrder(found);
-      setFulfillments(f);
-      setShipments(s);
-    } catch {
-      setError('Impossible de récupérer la commande pour le moment.');
+      const data = await lookupOrder(number.trim().toUpperCase(), phone.trim() || getProfile().phone);
+      setOrder(data.order);
+      setFulfillments(data.fulfillments || []);
+      setShipments(data.shipments || []);
+    } catch (e) {
+      setError(e.message || 'Impossible de récupérer la commande pour le moment.');
     } finally {
       setSearching(false);
     }
@@ -56,16 +43,12 @@ export default function TrackOrder() {
     setSearching(true);
     setError('');
     try {
-      const rows = await base44.entities.Order.filter({ order_number: orderNumber });
-      const found = rows[0];
-      if (!found) return;
-      const [f, s] = await Promise.all([
-        base44.entities.FulfillmentOrder.filter({ order_id: found.id }, 'fulfillment_number', 50),
-        base44.entities.Shipment.filter({ order_number: found.order_number }, '-created_date', 50),
-      ]);
-      setOrder(found);
-      setFulfillments(f);
-      setShipments(s);
+      const data = await lookupOrder(orderNumber, phone.trim() || getProfile().phone);
+      setOrder(data.order);
+      setFulfillments(data.fulfillments || []);
+      setShipments(data.shipments || []);
+    } catch (e) {
+      setError(e.message || 'Impossible de récupérer la commande pour le moment.');
     } finally {
       setSearching(false);
     }

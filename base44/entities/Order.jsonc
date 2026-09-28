@@ -104,6 +104,10 @@
     "payment_reference": {
       "type": "string"
     },
+    "payment_verified": {
+      "type": "boolean",
+      "default": false
+    },
     "coupon_code": {
       "type": "string"
     },

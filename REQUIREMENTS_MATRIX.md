@@ -15,19 +15,19 @@ Statuts : `COMPLETE` · `PARTIAL` · `BROKEN` · `MISSING` · `MOCK` · `NEEDS_H
 | Console créateur | COMPLETE | Contenu, clics, conversions, commissions | Protection auto-parrainage | hardening |
 | Console admin | COMPLETE | 11 écrans + dashboard temps réel | Rôles fins | — |
 | Conformité & RGPD | COMPLETE | CGV, mentions, confidentialité, droits | — | — |
-| Isolation vendeur / livreur / créateur | COMPLETE | Écriture et suppression limitées au titulaire | Lecture publique vitrine | blocked |
-| Isolation stricte des données publiques | BLOCKED | Règles posées | Tunnel de commande côté serveur | blocked |
-| Avis vérifiés | COMPLETE | Achat vérifié réel, un avis par client | Modération | — |
+| Isolation vendeur / livreur / créateur | NEEDS_HARDENING | Écriture limitée dans l'interface, RLS public (revu 2026-09-28) | RLS + tunnel serveur | blocked |
+| Isolation stricte des données publiques | PARTIAL | Tunnel `place-order` + `get-order` + `request-withdrawal` + `confirm-payment` côté serveur, lookup commande vérifié par téléphone (revu 2026-09-28) | RLS écriture admin sur Order/Wallet/Coupon + tunnel vendeur/livraison | build |
+| Avis vérifiés | NEEDS_HARDENING | Contrôle d'éligibilité côté interface uniquement, RLS `Review.create` public (revu 2026-09-28) | Modération + application serveur | — |
 | Paiement mobile money réel | MOCK | Abstraction + simulacre | Adaptateurs M-Pesa / Airtel / Orange | blocked |
-| Webhooks & remboursements | MISSING | — | Intentions, signatures, réconciliation | blocked |
+| Webhooks & remboursements | PARTIAL | Webhook carte (Wix) `payments-webhook` vérifié + idempotent ; webhooks mobile-money et remboursements manquants (revu 2026-09-28) | Intentions, signatures, réconciliation | blocked |
 | Fournisseurs internationaux | MOCK | Interface + catalogue factice | Adaptateurs API + identifiants | blocked |
 | Abonnements SaaS | COMPLETE | Entités `Plan` / `Subscription` / `TenantInvoice`, moteur `src/lib/saas.js`, pages `/pricing`, `/tenant`, `/admin/tenants` | Encaissement automatique par prestataire (Builder+) | — |
 | Domaines clients / marque blanche | PARTIAL | Entité `TenantDomain`, enregistrement TXT, application des couleurs par domaine (`src/lib/tenancy.js`) | Provisionnement DNS/SSL automatique (Builder+) | — |
 | Multi-tenant par `tenantId` | PARTIAL | Modèle complet (`Tenant`, `TenantMember`, rôles et permissions), isolation par e-mail de connexion + RLS | Rattachement de `tenant_id` à toutes les entités métier (migration) | build |
 | Recherche & filtres | PARTIAL | Filtrage client | Facettes, index, tri avancé | build |
 | Recommandations | MISSING | — | Moteur à règles | build |
-| Anti-fraude | MISSING | — | Règles, score, revue | build |
-| Messagerie client ↔ vendeur | MISSING | — | Fils, pièces jointes, modération | build |
+| Anti-fraude | PARTIAL | Règles + score + console de revue côté client (`src/lib/fraud.js`, `AdminFraud`) ; application serveur manquante (revu 2026-09-28) | Règles, score, revue serveur | build |
+| Messagerie client ↔ vendeur | PARTIAL | Fils + pages acheteur/vendeur/support (`ChatThread`, `Messages`, `SupportInbox`) ; pièces jointes et modération manquantes (revu 2026-09-28) | Fils, pièces jointes, modération | build |
 | Analytics & tableaux de bord | PARTIAL | Événements plateforme | Agrégats et écrans | build |
 | Three.js / 3D produit | PARTIAL | Visualiseur `Product3DViewer.jsx` (GLB via `model_3d_url`, repli photo, `prefers-reduced-motion`), champ `Product.model_3d_url`, onglets Photo/3D sur fiche produit | Catalogue de modèles, traitement d'assets | build |
 | Traductions EN / Lingala / Swahili | MISSING | Français uniquement | i18n | build |

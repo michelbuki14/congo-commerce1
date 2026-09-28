@@ -7,7 +7,7 @@
  * the platform/administrator path is allowed, an anonymous HTTP caller is not.
  */
 
-export async function requireAdmin(base44) {
+export async function requireAdmin(base44: any) {
   const user = await base44.auth.me().catch(() => null);
   if (!user) {
     return { ok: false, status: 401, response: Response.json({ error: 'Authentification requise' }, { status: 401 }) };
