@@ -207,7 +207,7 @@ export default function Checkout() {
       clear();
       navigate(`/order/${result.order.order_number}`);
     } catch (err) {
-      setError(err.message || t('checkout.failed'));
+      setError(err.response?.data?.error || err.message || t('checkout.failed'));
     } finally {
       setSubmitting(false);
     }

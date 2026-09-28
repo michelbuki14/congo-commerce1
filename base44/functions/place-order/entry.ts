@@ -252,15 +252,18 @@ export default async function (req: Request) {
 
     // ---- 9. Payment outcome — decided here, never asserted by the browser --
     // card → PENDING, the signed Wix webhook completes it.
-    // wallet → PENDING unless the balance really covers it (checked here).
+    // wallet → PAID only after the signed-in owner's wallet is checked and debited.
     // mobile-money / COD → recorded PENDING + UNVERIFIED. Money that hasn't
     // moved must not mark downstream rows paid, so no fake transaction id.
     let paymentStatus = "PENDING";
     let paymentVerified = false;
     let paymentReference = "";
+    let customerWallet: any = null;
     if (method.kind === "wallet") {
-      const wrows = await db.entities.Wallet.filter({ owner_type: "customer", owner_name: name }).catch(() => []);
-      const customerWallet = wrows?.[0];
+      const buyer = await base44.auth.me().catch(() => null);
+      if (!buyer?.email) return err("Connectez-vous pour payer avec votre portefeuille.", 401);
+      const wrows = await db.entities.Wallet.filter({ owner_type: "customer", owner_email: buyer.email }).catch(() => []);
+      customerWallet = wrows?.find((w: any) => w.owner_email?.toLowerCase() === buyer.email.toLowerCase() && w.status !== "frozen") || null;
       const available = round2((customerWallet?.balance_usd || 0) - (customerWallet?.pending_usd || 0));
       if (!customerWallet || round2(total - available) > 0.005) {
         return err("Solde du portefeuille insuffisant pour cette commande.", 409);
@@ -382,7 +385,6 @@ export default async function (req: Request) {
 
     // Wallet payment: the debit happens here, after the server-side balance check.
     if (method.kind === "wallet") {
-      const customerWallet = await getWallet("customer", name, String(profile.email || ""), sessionId);
       await postTx(customerWallet, {
         type: "DEBIT", direction: "debit", amount: total,
         description: `Achat — commande ${orderNum}`, reference: orderNum, idempotencyKey: `wallet:${orderNum}`,

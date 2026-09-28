@@ -45,6 +45,9 @@ export default async function (req: Request) {
     const order = orders?.[0];
     if (!order) return err("Commande introuvable.", 404);
     if (order.payment_status === "REFUNDED") return err("Commande déjà remboursée.", 409);
+    if (!order.payment_verified || !["PAID", "PARTIALLY_REFUNDED"].includes(order.payment_status)) {
+      return err("Le paiement doit être confirmé avant tout remboursement.", 409);
+    }
 
     // Cap at the unrefunded remainder (partial refunds allowed).
     const prior = await db.entities.WalletTransaction
