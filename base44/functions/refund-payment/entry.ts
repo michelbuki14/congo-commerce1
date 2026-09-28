@@ -93,6 +93,7 @@ export default async function (req: Request) {
       tenant_owner_email: wallet.tenant_owner_email || "",
       owner_type: "customer",
       owner_name: wallet.owner_name,
+      owner_email: wallet.owner_email || "",
       type: "REFUND",
       direction: "credit",
       amount_usd: amount,

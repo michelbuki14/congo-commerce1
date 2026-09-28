@@ -26,7 +26,7 @@ async function creditCourier(db, fulfillment, order, courier) {
   if (!wallet) wallet = await db.entities.Wallet.create({ owner_type: 'courier', owner_id: courier.id, owner_name: courier.name, owner_email: courier.email || '', balance_usd: 0 });
   const balance = money(wallet.balance_usd + amount);
   await db.entities.Wallet.update(wallet.id, { balance_usd: balance, lifetime_credit_usd: money(Number(wallet.lifetime_credit_usd || 0) + amount) });
-  await db.entities.WalletTransaction.create({ wallet_id: wallet.id, owner_type: 'courier', owner_name: courier.name, type: 'PAYOUT', direction: 'credit', amount_usd: amount, balance_after_usd: balance, currency: 'USD', status: 'posted', order_id: order.id, order_number: order.order_number, reference: fulfillment.fulfillment_number, idempotency_key: key, description: `Course livrée — ${fulfillment.fulfillment_number}` });
+  await db.entities.WalletTransaction.create({ wallet_id: wallet.id, owner_type: 'courier', owner_name: courier.name, owner_email: wallet.owner_email || courier.email || '', type: 'PAYOUT', direction: 'credit', amount_usd: amount, balance_after_usd: balance, currency: 'USD', status: 'posted', order_id: order.id, order_number: order.order_number, reference: fulfillment.fulfillment_number, idempotency_key: key, description: `Course livrée — ${fulfillment.fulfillment_number}` });
 }
 
 export default async function(req: Request): Promise<Response> {

@@ -4,7 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { RotateCcw, ShieldCheck, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '@/components/StatusBadge';
-import { getOrderIds, getProfile, uid } from '@/lib/session';
+import { getProfile, uid } from '@/lib/session';
+import { fetchMyOrders } from '@/lib/customerAccount';
 import { formatUSD, formatDate } from '@/lib/format';
 import { RETURN_COPY } from '@/lib/returnCopy';
 
@@ -42,9 +43,7 @@ export default function ReturnsPortal() {
 
   useEffect(() => {
     (async () => {
-      const remembered = getOrderIds().slice(0, 20);
-      const loaded = await Promise.all(remembered.map((o) => base44.entities.Order.get(o.id).catch(() => null)));
-      setOrders(loaded.filter(Boolean));
+      setOrders(await fetchMyOrders({ limit: 20 }));
       const mine = await base44.entities.Return
         .filter({ customer_phone: profile.phone || '—' }, '-created_date', 30)
         .catch(() => []);

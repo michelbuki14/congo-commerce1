@@ -70,12 +70,29 @@
     "owner_name"
   ],
   "rls": {
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "data.tenant_owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
     "create": {
       "user_condition": {
         "role": "admin"
       }
     },
-    "read": null,
     "update": {
       "user_condition": {
         "role": "admin"

@@ -1,5 +1,6 @@
 import { base44 } from '@/api/base44Client';
-import { getOrderIds, getSessionId, uid } from '@/lib/session';
+import { getProfile, uid } from '@/lib/session';
+import { fetchMyOrder, fetchMyOrders } from '@/lib/customerAccount';
 
 /**
  * Customer return initiation: which orders may be returned, and how a request is
@@ -33,17 +34,15 @@ export function returnEligibility(order) {
 
 /** The orders this device can return: this session's orders plus remembered ones. */
 export async function loadMyOrders(limit = 30) {
-  const [bySession, remembered] = await Promise.all([
-    base44.entities.Order.filter({ session_id: getSessionId() }, '-created_date', limit).catch(() => []),
-    Promise.all(getOrderIds().slice(0, limit).map((o) => base44.entities.Order.get(o.id).catch(() => null))),
-  ]);
-  const merged = [...bySession, ...remembered.filter(Boolean)];
-  return merged.reduce((acc, o) => (acc.some((x) => x.id === o.id) ? acc : [...acc, o]), []);
+  return fetchMyOrders({ limit });
 }
 
 export async function findOrderByNumber(number) {
-  const rows = await base44.entities.Order.filter({ order_number: String(number || '').trim().toUpperCase() }).catch(() => []);
-  return rows[0] || null;
+  const { order } = await fetchMyOrder({
+    orderNumber: String(number || '').trim(),
+    phone: getProfile().phone,
+  }).catch(() => ({ order: null }));
+  return order;
 }
 
 export async function loadMyReturns(phone, limit = 30) {

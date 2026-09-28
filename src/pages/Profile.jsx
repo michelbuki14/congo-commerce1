@@ -4,8 +4,8 @@ import { useTranslation } from 'react-i18next';
 import {
   Wallet, Ticket, Gift, RotateCcw, Bell, Headphones, Heart, MapPin, Save, Store, ShieldCheck, Sparkles, Truck, Gavel,
 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
-import { getProfile, saveProfile, getOrderIds } from '@/lib/session';
+import { fetchMyOrders } from '@/lib/customerAccount';
+import { getProfile, saveProfile } from '@/lib/session';
 import { getCities } from '@/lib/config';
 import StatusBadge from '@/components/StatusBadge';
 import { formatUSD, formatDate } from '@/lib/format';
@@ -29,13 +29,8 @@ export default function Profile() {
   const [loadingOrders, setLoadingOrders] = useState(true);
 
   useEffect(() => {
-    const ids = getOrderIds();
-    if (!ids.length) {
-      setLoadingOrders(false);
-      return;
-    }
-    Promise.all(ids.slice(0, 10).map((o) => base44.entities.Order.get(o.id).catch(() => null)))
-      .then((rows) => setOrders(rows.filter(Boolean)))
+    fetchMyOrders({ limit: 10 })
+      .then((rows) => setOrders(rows))
       .finally(() => setLoadingOrders(false));
   }, []);
 

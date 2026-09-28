@@ -368,7 +368,7 @@ export default async function (req: Request) {
       });
       const tx = await db.entities.WalletTransaction.create({
         wallet_id: wallet.id, tenant_id: wallet.tenant_id || "", tenant_owner_email: wallet.tenant_owner_email || "",
-        owner_type: wallet.owner_type, owner_name: wallet.owner_name,
+        owner_type: wallet.owner_type, owner_name: wallet.owner_name, owner_email: wallet.owner_email || "",
         type: t.type, direction: t.direction, amount_usd: t.amount,
         amount_cdf: Math.round(t.amount * pricing.usd_to_cdf_rate),
         balance_after_usd: updated.balance_usd, currency: "USD",

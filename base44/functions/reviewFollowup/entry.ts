@@ -55,6 +55,7 @@ async function rewardSeller(base44, review, tenant) {
     wallet_id: wallet.id,
     owner_type: 'seller',
     owner_name: ownerName,
+    owner_email: wallet.owner_email || seller?.email || '',
     type: 'CREDIT',
     direction: 'credit',
     amount_usd: REVIEW_BONUS_USD,

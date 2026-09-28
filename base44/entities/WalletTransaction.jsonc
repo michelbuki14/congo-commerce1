@@ -17,6 +17,9 @@
     "owner_name": {
       "type": "string"
     },
+    "owner_email": {
+      "type": "string"
+    },
     "type": {
       "type": "string",
       "enum": [
@@ -84,12 +87,26 @@
     "amount_usd"
   ],
   "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "data.tenant_owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
     "create": {
       "user_condition": {
         "role": "admin"
       }
     },
-    "read": null,
     "update": {
       "user_condition": {
         "role": "admin"

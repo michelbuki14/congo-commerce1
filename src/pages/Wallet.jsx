@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Wallet as WalletIcon, ArrowDownLeft, ArrowUpRight } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { fetchMyWallet } from '@/lib/customerAccount';
 import EmptyState from '@/components/EmptyState';
-import { getSessionId } from '@/lib/session';
 import { useCurrency } from '@/lib/currency';
 import { formatDateTime } from '@/lib/format';
 
@@ -25,13 +24,9 @@ export default function Wallet() {
 
   useEffect(() => {
     (async () => {
-      const wallets = await base44.entities.Wallet.filter({ owner_type: 'customer', owner_id: getSessionId() }).catch(() => []);
-      const mine = wallets[0] || null;
+      const { wallet: mine, transactions: txs } = await fetchMyWallet();
       setWallet(mine);
-      if (mine) {
-        const txs = await base44.entities.WalletTransaction.filter({ wallet_id: mine.id }, '-created_date', 50).catch(() => []);
-        setTransactions(txs);
-      }
+      setTransactions(txs);
       setLoading(false);
     })();
   }, []);

@@ -2,7 +2,8 @@
 // recommendations. Everything comes from data already on this device, so no
 // extra read access to other customers' records is needed.
 import { base44 } from '@/api/base44Client';
-import { getProfile, getWishlist, getOrderIds, getFollowedIds, getSessionId } from '@/lib/session';
+import { getProfile, getWishlist, getOrderIds, getFollowedIds } from '@/lib/session';
+import { fetchMyOrders } from '@/lib/customerAccount';
 
 const BRIEF_PREFIX = 'Profil client (fourni automatiquement';
 
@@ -11,7 +12,7 @@ export async function buildCustomerBrief() {
 
   const [wishRows, orders] = await Promise.all([
     Promise.all(getWishlist().slice(0, 6).map((id) => base44.entities.Product.get(id).catch(() => null))),
-    base44.entities.Order.filter({ session_id: getSessionId() }, '-created_date', 5).catch(() => []),
+    fetchMyOrders({ limit: 5 }),
   ]);
 
   const favourites = wishRows.filter(Boolean).map((p) => p.title);

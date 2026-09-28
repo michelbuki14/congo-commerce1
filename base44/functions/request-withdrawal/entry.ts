@@ -61,6 +61,7 @@ export default async function (req: Request) {
       tenant_owner_email: wallet.tenant_owner_email || "",
       owner_type: wallet.owner_type,
       owner_name: wallet.owner_name,
+      owner_email: wallet.owner_email || "",
       type: "PAYOUT",
       direction: "debit",
       amount_usd: amount,
