@@ -10,24 +10,24 @@ import { round2 } from '@/lib/format';
  */
 
 export const DISPUTE_TYPES = {
-  not_received: 'Article non reçu',
-  wrong_product: 'Mauvais article',
-  damaged: 'Article endommagé',
-  not_as_described: 'Non conforme',
-  missing_item: 'Article manquant',
-  payment_issue: 'Problème de paiement',
+  not_received: 'disputeType.notReceived',
+  wrong_product: 'disputeType.wrongProduct',
+  damaged: 'disputeType.damaged',
+  not_as_described: 'disputeType.notAsDescribed',
+  missing_item: 'disputeType.missingItem',
+  payment_issue: 'disputeType.paymentIssue',
 };
 
 export const OPEN_STATUSES = ['open', 'investigating', 'escalated'];
 
 export const RESOLUTIONS = [
-  { id: 'refund', label: 'Remboursement du client' },
-  { id: 'replacement', label: 'Remplacement / réexpédition' },
-  { id: 'goodwill', label: 'Geste commercial partiel' },
-  { id: 'reject', label: 'Rejet de la demande' },
+  { id: 'refund', labelKey: 'resolution.refund' },
+  { id: 'replacement', labelKey: 'resolution.replacement' },
+  { id: 'goodwill', labelKey: 'resolution.goodwill' },
+  { id: 'reject', labelKey: 'resolution.reject' },
 ];
 
-export const RESOLUTION_LABELS = RESOLUTIONS.reduce((acc, r) => ({ ...acc, [r.id]: r.label }), {});
+export const RESOLUTION_LABELS = RESOLUTIONS.reduce((acc, r) => ({ ...acc, [r.id]: r.labelKey }), {});
 
 /** The mediation thread attached to a case, matched on its order number. */
 export function threadFor(tickets, dispute) {

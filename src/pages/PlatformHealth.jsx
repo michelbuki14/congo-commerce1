@@ -60,7 +60,7 @@ export default function PlatformHealth() {
 
       <div className={`flex flex-wrap items-center gap-2 rounded-xl border p-3 text-xs ${BANNER[overall] || BANNER.unknown}`}>
         <Activity className="h-4 w-4 shrink-0" />
-        <span className="font-semibold">{t('platformHealth.overall', { status: HEALTH_LABELS[overall] })}</span>
+        <span className="font-semibold">{t('platformHealth.overall', { status: t(HEALTH_LABELS[overall] || 'healthStatus.unknown') })}</span>
         <span className="opacity-80">
           {t('platformHealth.componentsLine', { total: all.length, degraded, down })}
         </span>

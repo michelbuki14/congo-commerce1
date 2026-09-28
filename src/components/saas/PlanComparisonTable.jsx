@@ -51,7 +51,7 @@ export default function PlanComparisonTable({ plans, currentCode, cycle, busy, o
             <ul className="mt-3 flex-1 space-y-1.5 text-[11px] text-muted-foreground">
               {(plan.features || []).map((f) => (
                 <li key={f} className="flex items-start gap-1.5">
-                  <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" /> {FEATURE_LABELS[f] || f}
+                  <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" /> {t(FEATURE_LABELS[f] || 'planFeature.unknown')}
                 </li>
               ))}
             </ul>

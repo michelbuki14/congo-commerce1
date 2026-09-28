@@ -10,7 +10,7 @@ const HOUR = 3600000;
 const DAY = 86400000;
 const CLOSED_SHIPMENT = ['DELIVERED', 'FAILED', 'RETURNED', 'CANCELLED'];
 
-export const HEALTH_LABELS = { ok: 'Opérationnel', degraded: 'Dégradé', down: 'Perturbé', unknown: 'Sans données' };
+export const HEALTH_LABELS = { ok: 'healthStatus.ok', degraded: 'healthStatus.degraded', down: 'healthStatus.down', unknown: 'healthStatus.unknown' };
 export const HEALTH_TONES = { ok: 'good', degraded: 'warn', down: 'bad', unknown: 'default' };
 
 const daysSince = (iso) => (Date.now() - new Date(iso).getTime()) / DAY;

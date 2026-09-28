@@ -152,7 +152,7 @@ export default function SellerOrders() {
                     className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-50"
                   >
                     <ChevronRight className="h-3.5 w-3.5" />
-                    {t('sellerOrders.advanceTo', { status: SHIPMENT_STATUS_LABELS[next(f.status)] })}
+                    {t('sellerOrders.advanceTo', { status: t(SHIPMENT_STATUS_LABELS[next(f.status)] || 'status.UNKNOWN') })}
                   </button>
                 )}
                 {f.status === 'DELIVERED' && (
@@ -181,7 +181,7 @@ export default function SellerOrders() {
       )}
 
       <p className="text-[11px] text-muted-foreground">
-        {t('sellerOrders.lifecycle', { flow: SHIPMENT_STATUS_FLOW.slice(0, 8).map((s) => SHIPMENT_STATUS_LABELS[s]).join(' → ') })}
+        {t('sellerOrders.lifecycle', { flow: SHIPMENT_STATUS_FLOW.slice(0, 8).map((s) => t(SHIPMENT_STATUS_LABELS[s] || 'status.UNKNOWN')).join(' → ') })}
       </p>
     </div>
   );

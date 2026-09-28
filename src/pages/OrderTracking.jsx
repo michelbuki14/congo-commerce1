@@ -168,7 +168,7 @@ export default function OrderTracking() {
                             <Circle className="h-4 w-4 shrink-0 text-muted-foreground/40" />
                           )}
                           <span className={`text-xs ${done ? 'font-semibold' : 'text-muted-foreground'}`}>
-                            {SHIPMENT_STATUS_LABELS[step]}
+                            {t(SHIPMENT_STATUS_LABELS[step] || 'status.UNKNOWN')}
                           </span>
                         </div>
                       );
@@ -194,7 +194,7 @@ export default function OrderTracking() {
                           <p key={i} className="flex items-start gap-1.5 text-[11px] text-muted-foreground">
                             <Clock className="mt-0.5 h-3 w-3 shrink-0" />
                             <span>
-                              {ev.label || SHIPMENT_STATUS_LABELS[ev.status] || ev.status} — {formatDateTime(ev.at)}
+                              {ev.label || t(SHIPMENT_STATUS_LABELS[ev.status] || 'status.UNKNOWN')} — {formatDateTime(ev.at)}
                             </span>
                           </p>
                         ))}

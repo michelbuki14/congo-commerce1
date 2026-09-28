@@ -131,10 +131,10 @@ export default function CustomerLoyalty() {
           {LOYALTY_TIERS.map((tier) => (
             <div key={tier.code} className={`rounded-xl border p-3 ${tier.code === summary.tier.code ? 'border-primary bg-primary/5' : 'border-border'}`}>
               <div className="flex items-center justify-between gap-2">
-                <p className="text-xs font-bold">{tier.name}</p>
+                <p className="text-xs font-bold">{t(tier.nameKey)}</p>
                 <span className="text-[11px] text-muted-foreground">{t('customerLoyalty.fromPoints', { count: tier.min_points.toLocaleString('fr-FR') })}</span>
               </div>
-              <p className="mt-0.5 text-[11px] text-muted-foreground">{tier.perks.join(' · ')}</p>
+              <p className="mt-0.5 text-[11px] text-muted-foreground">{t(tier.perksKey, { returnObjects: true }).join(' · ')}</p>
             </div>
           ))}
         </div>

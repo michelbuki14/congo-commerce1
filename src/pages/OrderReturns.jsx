@@ -207,7 +207,7 @@ export default function OrderReturns() {
                 const item = order?.items?.[Number(index)];
                 return (
                   <li key={key}>
-                    {order?.order_number} — {item?.title} : {RETURN_REASON_LABELS[value.reason]}
+                    {order?.order_number} — {item?.title} : {t(RETURN_REASON_LABELS[value.reason] || 'returnReason.unknown')}
                   </li>
                 );
               })}
@@ -250,7 +250,7 @@ export default function OrderReturns() {
                   </div>
                 </div>
                 <p className="text-[11px] text-muted-foreground">
-                  {r.order_number} · {r.product_title} · {RETURN_REASON_LABELS[r.reason] || r.reason} · {formatDate(r.created_date)}
+                  {r.order_number} · {r.product_title} · {t(RETURN_REASON_LABELS[r.reason] || 'returnReason.unknown')} · {formatDate(r.created_date)}
                 </p>
                 {r.resolution_notes ? <p className="mt-1 text-xs text-primary">{t('orderReturns.responseIs', { notes: r.resolution_notes })}</p> : null}
               </div>

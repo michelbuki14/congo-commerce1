@@ -75,10 +75,10 @@ export function marketplaceStats(metrics = []) {
 }
 
 export const RATING_SORTS = [
-  { id: 'trust', label: 'Confiance' },
-  { id: 'rating', label: 'Note' },
-  { id: 'orders', label: 'Volume' },
-  { id: 'disputes', label: 'Litiges' },
+  { id: 'trust', labelKey: 'ratingSort.trust' },
+  { id: 'rating', labelKey: 'ratingSort.rating' },
+  { id: 'orders', labelKey: 'ratingSort.orders' },
+  { id: 'disputes', labelKey: 'ratingSort.disputes' },
 ];
 
 export function sortMetrics(metrics = [], sortBy = 'trust') {

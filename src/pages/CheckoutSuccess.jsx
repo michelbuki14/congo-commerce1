@@ -155,7 +155,7 @@ export default function CheckoutSuccess() {
                 </div>
                 <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
                   <span className="inline-flex items-center gap-1">
-                    <Truck className="h-3 w-3" /> {SHIPMENT_STATUS_LABELS[f.status] || f.status}
+                    <Truck className="h-3 w-3" /> {t(SHIPMENT_STATUS_LABELS[f.status] || 'status.UNKNOWN')}
                   </span>
                   {f.estimated_delivery && (
                     <span className="inline-flex items-center gap-1">

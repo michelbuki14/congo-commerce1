@@ -53,7 +53,7 @@ export default function CourierJobCard({ shipment, fulfillment, order, busy, onR
             </span>
           )}
           <span className="rounded-full bg-secondary px-2.5 py-0.5 text-[10px] font-bold">
-            {SHIPMENT_STATUS_LABELS[shipment.status] || shipment.status}
+            {t(SHIPMENT_STATUS_LABELS[shipment.status] || 'status.UNKNOWN')}
           </span>
         </div>
       </div>

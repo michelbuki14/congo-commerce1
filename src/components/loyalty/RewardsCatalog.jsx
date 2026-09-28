@@ -22,8 +22,8 @@ export default function RewardsCatalog({ balance = 0, onRedeem, redeeming = '' }
           return (
             <div key={reward.code} className={`flex items-start justify-between gap-3 rounded-xl border p-3 ${locked ? 'border-dashed border-border opacity-70' : 'border-border'}`}>
               <div className="min-w-0">
-                <p className="text-xs font-semibold">{reward.label}</p>
-                <p className="text-[11px] text-muted-foreground">{reward.note}</p>
+                <p className="text-xs font-semibold">{t(reward.labelKey)}</p>
+                <p className="text-[11px] text-muted-foreground">{t(reward.noteKey)}</p>
                 <p className="mt-1 text-[11px] font-bold text-primary">{t('rewardsCatalog.points', { count: reward.points.toLocaleString('fr-FR') })}</p>
               </div>
               <button

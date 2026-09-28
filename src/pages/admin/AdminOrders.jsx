@@ -114,7 +114,7 @@ export default function AdminOrders() {
               statusFilter === s ? 'bg-primary text-primary-foreground' : 'bg-secondary'
             }`}
           >
-            {s === 'all' ? t('adminOrders.all') : s === 'archived' ? t('adminOrders.archived') : s === 'SHIPPED' ? t('adminOrders.shipped') : SHIPMENT_STATUS_LABELS[s] || s}
+            {s === 'all' ? t('adminOrders.all') : s === 'archived' ? t('adminOrders.archived') : s === 'SHIPPED' ? t('adminOrders.shipped') : t(SHIPMENT_STATUS_LABELS[s] || 'status.UNKNOWN')}
           </button>
         ))}
       </div>
@@ -123,7 +123,7 @@ export default function AdminOrders() {
         count={selectedOrders.length}
         allSelected={!!visible.length && selectedOrders.length === visible.length}
         onToggleAll={toggleAll}
-        onStatus={(status) => bulkUpdate({ status }, t('adminOrders.bulkStatusLabel', { status: SHIPMENT_STATUS_LABELS[status] || status }))}
+        onStatus={(status) => bulkUpdate({ status }, t('adminOrders.bulkStatusLabel', { status: t(SHIPMENT_STATUS_LABELS[status] || 'status.UNKNOWN') }))}
         onPrint={bulkPrint}
         onArchive={() => bulkUpdate(archivedView ? { archived: false, archived_at: '' } : { archived: true, archived_at: new Date().toISOString() }, archivedView ? t('adminOrders.unarchived') : t('adminOrders.archivedDone'))}
         archivedView={archivedView}
@@ -212,7 +212,7 @@ export default function AdminOrders() {
                             onClick={() => advance(f)}
                             className="rounded-full bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-50"
                           >
-                            → {SHIPMENT_STATUS_LABELS[nextStatus(f.status)]}
+                            → {t(SHIPMENT_STATUS_LABELS[nextStatus(f.status)] || 'status.UNKNOWN')}
                           </button>
                         )}
                         {f.status === 'DELIVERED' && f.payout_released && (

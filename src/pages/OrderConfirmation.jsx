@@ -104,7 +104,7 @@ export default function OrderConfirmation() {
               ))}
             </div>
             <p className="mt-2 text-[11px] text-muted-foreground">
-              {t('orderConfirmation.carrierStatus', { status: SHIPMENT_STATUS_LABELS[f.status] || f.status })}
+              {t('orderConfirmation.carrierStatus', { status: t(SHIPMENT_STATUS_LABELS[f.status] || 'status.UNKNOWN') })}
             </p>
           </div>
         ))}

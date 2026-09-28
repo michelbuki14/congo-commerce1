@@ -78,7 +78,7 @@ export default function VendorRatings() {
                 onClick={() => setSortBy(sort.id)}
                 className={`rounded-full px-3.5 py-1.5 text-xs font-semibold ${sortBy === sort.id ? 'bg-primary text-primary-foreground' : 'border border-border bg-card'}`}
               >
-                {sort.label}
+                {t(sort.labelKey)}
               </button>
             ))}
           </div>

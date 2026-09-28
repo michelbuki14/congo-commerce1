@@ -45,7 +45,7 @@ export default function CourierTrackingCard({ shipment, fulfillment, order, busy
             </span>
           )}
           <span className="rounded-full bg-secondary px-2.5 py-0.5 text-[10px] font-bold">
-            {SHIPMENT_STATUS_LABELS[shipment.status] || shipment.status}
+            {t(SHIPMENT_STATUS_LABELS[shipment.status] || 'status.UNKNOWN')}
           </span>
         </div>
       </div>
@@ -55,7 +55,7 @@ export default function CourierTrackingCard({ shipment, fulfillment, order, busy
           <div key={step} className="flex-1">
             <div className={`h-1.5 rounded-full ${i <= reached ? 'bg-primary' : 'bg-secondary'}`} />
             <p className={`mt-1 text-[10px] leading-tight ${i <= reached ? 'font-semibold text-foreground' : 'text-muted-foreground'}`}>
-              {SHIPMENT_STATUS_LABELS[step]}
+              {t(SHIPMENT_STATUS_LABELS[step] || 'status.UNKNOWN')}
             </p>
           </div>
         ))}

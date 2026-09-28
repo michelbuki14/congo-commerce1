@@ -17,7 +17,7 @@ export default function BulkActionBar({ count, allSelected, onToggleAll, onStatu
       </label>
       <div className="ml-auto flex flex-wrap items-center gap-2">
         <select value={status} onChange={(e) => setStatus(e.target.value)} className="h-8 rounded-full border border-border bg-background px-3 text-xs" disabled={!count || busy}>
-          {STATUSES.map((s) => <option key={s} value={s}>{s === 'SHIPPED' ? t('bulkActionBar.shipped') : SHIPMENT_STATUS_LABELS[s] || s}</option>)}
+          {STATUSES.map((s) => <option key={s} value={s}>{s === 'SHIPPED' ? t('bulkActionBar.shipped') : t(SHIPMENT_STATUS_LABELS[s] || 'status.UNKNOWN')}</option>)}
         </select>
         <button type="button" disabled={!count || busy} onClick={() => onStatus(status)} className={`${btn} bg-primary text-primary-foreground`}>
           <RefreshCw className="h-3.5 w-3.5" /> {t('bulkActionBar.update')}

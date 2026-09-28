@@ -50,7 +50,7 @@ export default function ReturnOrderCard({ order, eligibility, selection, onToggl
                       onChange={(e) => onReason(key, e.target.value)}
                       className="mt-1 h-9 w-full rounded-lg border border-input bg-background px-2 text-xs"
                     >
-                      {RETURN_REASONS.map((r) => <option key={r.id} value={r.id}>{r.label}</option>)}
+                      {RETURN_REASONS.map((r) => <option key={r.id} value={r.id}>{t(r.labelKey)}</option>)}
                     </select>
                   </label>
                 </div>

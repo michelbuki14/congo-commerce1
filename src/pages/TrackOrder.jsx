@@ -164,7 +164,7 @@ export default function TrackOrder() {
                           <Circle className="h-4 w-4 shrink-0 text-muted-foreground/40" />
                         )}
                         <span className={`text-xs ${done ? 'font-semibold' : 'text-muted-foreground'}`}>
-                          {SHIPMENT_STATUS_LABELS[step]}
+                          {t(SHIPMENT_STATUS_LABELS[step] || 'status.UNKNOWN')}
                         </span>
                       </div>
                     );

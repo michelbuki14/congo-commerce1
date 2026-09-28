@@ -215,7 +215,7 @@ export default function BulkOrders() {
                 <StatusBadge status={f.status} />
                 {!CLOSED.includes(String(f.status || '')) ? (
                   <span className="text-[11px] text-muted-foreground">
-                    {t('bulkOrders.nextStep', { step: SHIPMENT_STATUS_LABELS[SHIPMENT_STATUS_FLOW[SHIPMENT_STATUS_FLOW.indexOf(String(f.status || '')) + 1]] || '—' })}
+                    {t('bulkOrders.nextStep', { step: t(SHIPMENT_STATUS_LABELS[SHIPMENT_STATUS_FLOW[SHIPMENT_STATUS_FLOW.indexOf(String(f.status || '')) + 1]] || 'status.UNKNOWN') })}
                   </span>
                 ) : null}
               </div>

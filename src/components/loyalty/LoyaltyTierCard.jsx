@@ -12,7 +12,7 @@ export default function LoyaltyTierCard({ summary }) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="flex items-center gap-2 text-sm font-bold">
-            <Trophy className="h-4 w-4 text-primary" /> {t('loyaltyTierCard.status', { tier: tier.name })}
+            <Trophy className="h-4 w-4 text-primary" /> {t('loyaltyTierCard.status', { tier: t(tier.nameKey) })}
           </p>
           <p className="text-[11px] text-muted-foreground">
             {tier.multiplier > 1 ? t('loyaltyTierCard.multiplier', { multi: tier.multiplier }) : t('loyaltyTierCard.starter')}
@@ -52,7 +52,7 @@ export default function LoyaltyTierCard({ summary }) {
       )}
 
       <ul className="space-y-1 text-[11px] text-muted-foreground">
-        {tier.perks.map((perk) => (
+        {t(tier.perksKey, { returnObjects: true }).map((perk) => (
           <li key={perk}>• {perk}</li>
         ))}
       </ul>
