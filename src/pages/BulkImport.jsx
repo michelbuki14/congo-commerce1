@@ -97,7 +97,7 @@ export default function BulkImport() {
 
       {!seller ? (
         <p className="rounded-2xl border border-dashed border-border bg-card p-6 text-center text-xs text-muted-foreground">
-          Aucune boutique n'est rattachée à votre compte. <Link to="/seller-onboarding" className="font-semibold text-primary">Ouvrez votre boutique</Link> pour importer un catalogue.
+          Aucune boutique n'est rattachée à votre compte. <Link to="/seller-application" className="font-semibold text-primary">Ouvrez votre boutique</Link> pour importer un catalogue.
         </p>
       ) : null}
 

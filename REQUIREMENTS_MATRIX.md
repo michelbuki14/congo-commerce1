@@ -30,7 +30,7 @@ Statuts : `COMPLETE` · `PARTIAL` · `BROKEN` · `MISSING` · `MOCK` · `NEEDS_H
 | Messagerie client ↔ vendeur | PARTIAL | Fils + pages acheteur/vendeur/support (`ChatThread`, `Messages`, `SupportInbox`) ; pièces jointes et modération manquantes (revu 2026-09-28) | Fils, pièces jointes, modération | build |
 | Analytics & tableaux de bord | PARTIAL | Événements plateforme | Agrégats et écrans | build |
 | Three.js / 3D produit | PARTIAL | Visualiseur `Product3DViewer.jsx` (GLB via `model_3d_url`, repli photo, `prefers-reduced-motion`), champ `Product.model_3d_url`, onglets Photo/3D sur fiche produit | Catalogue de modèles, traitement d'assets | build |
-| Traductions EN / Lingala / Swahili | MISSING | Français uniquement | i18n | build |
+| Traductions EN / Lingala / Swahili | PARTIAL | i18next FR/EN complet sur chrome + auth, LN/SW partiel (relecture native requise), repli FR (revu 2026-09-28) | Migration page par page | build |
 | Notifications SMS / push | MISSING | E-mail + in-app | Abstraction fournisseur | blocked |
 | API publique & clés | MISSING | — | Clés, quotas, documentation | blocked |
 | Argent en centimes entiers | NEEDS_HARDENING | Nombres flottants arrondis | Arithmétique entière | hardening |
