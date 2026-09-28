@@ -24,6 +24,9 @@
     "courier_name": {
       "type": "string"
     },
+    "courier_email": {
+      "type": "string"
+    },
     "tracking_number": {
       "type": "string"
     },
@@ -60,12 +63,29 @@
     "order_number"
   ],
   "rls": {
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "data.courier_email": "{{user.email}}"
+        },
+        {
+          "data.tenant_owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
     "create": {
       "user_condition": {
         "role": "admin"
       }
     },
-    "read": null,
     "update": {
       "user_condition": {
         "role": "admin"
