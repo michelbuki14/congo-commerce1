@@ -7,7 +7,7 @@ import useUserPrefs from '@/lib/useUserPrefs';
 
 const DEFAULTS = { subscribed: false, weekly_deals: true, flash_sales: false, new_sellers: false, creator_picks: false };
 
-export default function NewsletterSignup() {
+export default function NewsletterPreferences() {
   const { t } = useTranslation();
   const TYPES = [
     { id: 'weekly_deals', label: t('newsletterSignup.typeWeeklyDeals'), hint: t('newsletterSignup.typeWeeklyDealsHint') },

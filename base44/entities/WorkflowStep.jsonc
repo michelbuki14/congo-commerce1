@@ -2,6 +2,10 @@
   "name": "WorkflowStep",
   "type": "object",
   "properties": {
+    "description": {
+      "type": "string",
+      "maxLength": 1000
+    },
     "execution_id": {
       "type": "string"
     },

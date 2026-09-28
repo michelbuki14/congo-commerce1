@@ -82,7 +82,7 @@ import CustomerLoyalty from '@/pages/CustomerLoyalty';
 import VendorRatings from '@/pages/VendorRatings';
 import BulkImport from '@/pages/BulkImport';
 import NotificationSettings from '@/pages/NotificationSettings';
-import NewsletterSignup from '@/pages/NewsletterSignup';
+import NewsletterPreferences from '@/pages/NewsletterPreferences';
 import SavedAddresses from '@/pages/SavedAddresses';
 import ProductComparison from '@/pages/ProductComparison';
 import PartnerDirectory from '@/pages/PartnerDirectory';
@@ -251,7 +251,7 @@ const AuthenticatedApp = () => {
           <Route path="/tax-compliance" element={<Navigate to="/tax-reports" replace />} />
           <Route path="/bulk-import" element={<BulkImport />} />
           <Route path="/notification-settings" element={<NotificationSettings />} />
-          <Route path="/newsletter-signup" element={<NewsletterSignup />} />
+          <Route path="/newsletter-signup" element={<NewsletterPreferences />} />
           <Route path="/saved-addresses" element={<SavedAddresses />} />
           <Route path="/user-profile" element={<UserProfile />} />
           <Route path="/payment-methods" element={<PaymentMethods />} />
