@@ -17,6 +17,7 @@ import { CartProvider } from '@/lib/cart';
 import { CurrencyProvider } from '@/lib/currency';
 import AppLayout from '@/components/layout/AppLayout';
 import Backoffice from '@/pages/Backoffice';
+import SalesIntelligence from '@/pages/admin/SalesIntelligence';
 
 // Customer
 import Home from '@/pages/Home';
@@ -332,6 +333,7 @@ const AuthenticatedApp = () => {
       <Route element={<RequireLogin />}>
         <Route element={<AdminOnly />}>
           <Route path="/backoffice" element={<Backoffice />} />
+          <Route path="/backoffice/sales" element={<SalesIntelligence />} />
         </Route>
       </Route>
       <Route path="/login" element={<Login />} />

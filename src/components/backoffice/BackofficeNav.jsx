@@ -6,7 +6,7 @@ const groups = [
   ['Clients', [['Utilisateurs', '/admin/users'], ['Enseignes', '/admin/tenants']]],
   ['Commerce', [['Commandes', '/admin/orders'], ['Produits', '/admin/products']]],
   ['Opérations', [['Support', '/support-inbox'], ['Workflows', '/admin/workflows']]],
-  ['Pilotage', [['Analytique', '/platform-analytics'], ['Journal', '/admin/events'], ['Paramètres', '/admin/settings']]],
+  ['Pilotage', [['Performance commerciale', '/backoffice/sales'], ['Analytique', '/platform-analytics'], ['Journal', '/admin/events'], ['Paramètres', '/admin/settings']]],
 ];
 
 export default function BackofficeNav() {
