@@ -1,0 +1,27 @@
+{
+  "name": "Congo Commerce — Marketplace RDC",
+  "short_name": "Congo Commerce",
+  "description": "La marketplace de la RDC. Vendeurs locaux vérifiés, import maîtrisé, paiement mobile money et livraison partout au Congo.",
+  "lang": "fr",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#07110D",
+  "theme_color": "#07110D",
+  "icons": [
+    {
+      "src": "/brand/social-avatar.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/brand/logo-icon.svg",
+      "sizes": "64x64",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
