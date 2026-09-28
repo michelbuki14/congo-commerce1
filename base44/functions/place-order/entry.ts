@@ -319,8 +319,20 @@ export default async function (req: Request) {
     ]);
     const sellerEmailOf = (id: string) =>
       String((deliverySellers || []).find((s: any) => s.id === id)?.email || "").toLowerCase();
-    const courierEmailOf = (id: string) =>
-      String((deliveryCouriers || []).find((c: any) => c.id === id)?.email || "").toLowerCase();
+    // A picked courier may be carried as a record id, a slug or a display name
+    // depending on the rate source, so all three are matched.
+    const courierEmailOf = (courier: any) => {
+      if (!courier) return "";
+      const id = String(courier.id || "").toLowerCase();
+      const name = String(courier.name || "");
+      const match = (deliveryCouriers || []).find(
+        (c: any) =>
+          c.id === courier.id ||
+          String(c.name || "") === name ||
+          String(c.code || "").toLowerCase() === id,
+      );
+      return String(match?.email || "").toLowerCase();
+    };
 
     const fulfillmentPayloads = plan.map((p) => {
       const isLocal = p.source_type === "local_seller";
@@ -347,7 +359,7 @@ export default async function (req: Request) {
         status: "PENDING",
         courier_id: isLocal ? p.pick.courier.id : "",
         courier_name: isLocal ? p.pick.courier.name : "",
-        courier_email: isLocal ? courierEmailOf(p.pick.courier.id) : "",
+        courier_email: isLocal ? courierEmailOf(p.pick.courier) : "",
         tracking_number: tracking,
         estimated_delivery: isLocal ? p.pick?.courier.eta || "2-4 jours" : (p.lines[0]?.product?.estimated_delivery || "18 jours"),
         payout_released: false,
