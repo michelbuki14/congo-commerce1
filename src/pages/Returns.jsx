@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { RotateCcw, ShieldCheck, AlertCircle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '@/components/StatusBadge';
@@ -7,16 +8,16 @@ import { getProfile, uid } from '@/lib/session';
 import { formatDate } from '@/lib/format';
 import { emitEvent } from '@/lib/events';
 
-const REASONS = [
-  { id: 'not_received', label: 'Article non reçu' },
-  { id: 'wrong_product', label: 'Mauvais article reçu' },
-  { id: 'damaged', label: 'Article endommagé' },
-  { id: 'not_as_described', label: 'Article très différent de la description' },
-  { id: 'missing_item', label: 'Article manquant dans le colis' },
-  { id: 'changed_mind', label: "Changement d'avis" },
-];
-
 export default function Returns() {
+  const { t } = useTranslation();
+  const REASONS = [
+    { id: 'not_received', label: t('returns.reasonNotReceived') },
+    { id: 'wrong_product', label: t('returns.reasonWrongProduct') },
+    { id: 'damaged', label: t('returns.reasonDamaged') },
+    { id: 'not_as_described', label: t('returns.reasonNotAsDescribed') },
+    { id: 'missing_item', label: t('returns.reasonMissingItem') },
+    { id: 'changed_mind', label: t('returns.reasonChangedMind') },
+  ];
   const profile = getProfile();
   const [returns, setReturns] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -41,7 +42,7 @@ export default function Returns() {
     setError('');
     setSuccess('');
     if (!form.order_number.trim()) {
-      setError('Indiquez le numéro de commande concerné.');
+      setError(t('returns.orderNumberRequired'));
       return;
     }
     setSubmitting(true);
@@ -79,11 +80,11 @@ export default function Returns() {
         }`,
         payload: { reason: form.reason, product_title: form.product_title || order?.items?.[0]?.title || '' },
       });
-      setSuccess('Votre demande a été transmise. Un agent vous contactera sous 48 h.');
+      setSuccess(t('returns.requestSent'));
       setForm({ ...form, order_number: '', product_title: '', description: '' });
       await load();
     } catch {
-      setError("La demande n'a pas pu être envoyée. Réessayez.");
+      setError(t('returns.submitFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -91,47 +92,46 @@ export default function Returns() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-5 pb-8">
-      <h1 className="text-lg font-bold md:text-xl">Retours & remboursements</h1>
+      <h1 className="text-lg font-bold md:text-xl">{t('returns.title')}</h1>
 
       <Link
         to="/returns-portal"
         className="flex items-center justify-between rounded-xl border border-border bg-card p-3.5 text-sm font-semibold"
       >
-        Portail des retours — sélectionnez vos articles
-        <span className="text-xs text-primary">Ouvrir</span>
+        {t('returns.portalTitle')}
+        <span className="text-xs text-primary">{t('returns.portalOpen')}</span>
       </Link>
 
       <div className="flex items-start gap-2 rounded-xl border border-primary/30 bg-primary/5 p-3 text-xs">
         <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
         <p>
-          Protection acheteur : vous pouvez ouvrir un retour jusqu'à 7 jours après réception. Joignez des photos si l'article
-          est endommagé ou non conforme. Les remboursements partiels sont possibles.
+          {t('returns.buyerProtection')}
         </p>
       </div>
 
       <section className="space-y-3 rounded-2xl border border-border bg-card p-4">
         <h2 className="flex items-center gap-2 text-sm font-bold">
-          <RotateCcw className="h-4 w-4 text-primary" /> Nouvelle demande
+          <RotateCcw className="h-4 w-4 text-primary" /> {t('returns.newRequest')}
         </h2>
         <form onSubmit={submit} className="space-y-3">
           <div className="grid gap-3 md:grid-cols-2">
             <input
               value={form.order_number}
               onChange={(e) => setForm({ ...form, order_number: e.target.value.toUpperCase() })}
-              placeholder="Numéro de commande (CC-…)"
+              placeholder={t('returns.orderNumberPh')}
               className="h-11 rounded-lg border border-border bg-background px-3 text-sm"
             />
             <input
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              placeholder="Téléphone"
+              placeholder={t('returns.phonePh')}
               className="h-11 rounded-lg border border-border bg-background px-3 text-sm"
             />
           </div>
           <input
             value={form.product_title}
             onChange={(e) => setForm({ ...form, product_title: e.target.value })}
-            placeholder="Article concerné (optionnel)"
+            placeholder={t('returns.itemPh')}
             className="h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"
           />
           <select
@@ -147,7 +147,7 @@ export default function Returns() {
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
             rows={3}
-            placeholder="Décrivez le problème rencontré"
+            placeholder={t('returns.descPh')}
             className="w-full rounded-lg border border-border bg-background p-3 text-sm"
           />
           {error && (
@@ -161,13 +161,13 @@ export default function Returns() {
             disabled={submitting}
             className="rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50"
           >
-            {submitting ? 'Envoi…' : 'Envoyer la demande'}
+            {submitting ? t('returns.sending') : t('returns.submit')}
           </button>
         </form>
       </section>
 
       <section className="rounded-2xl border border-border bg-card p-4">
-        <h2 className="mb-3 text-sm font-bold">Mes demandes</h2>
+        <h2 className="mb-3 text-sm font-bold">{t('returns.myRequests')}</h2>
         {loading ? (
           <div className="h-16 animate-pulse rounded-lg bg-secondary" />
         ) : returns.length ? (
@@ -181,12 +181,12 @@ export default function Returns() {
                 <p className="text-[11px] text-muted-foreground">
                   {r.order_number} · {REASONS.find((x) => x.id === r.reason)?.label} · {formatDate(r.created_date)}
                 </p>
-                {r.resolution_notes && <p className="mt-1 text-xs text-muted-foreground">Réponse : {r.resolution_notes}</p>}
+                {r.resolution_notes && <p className="mt-1 text-xs text-muted-foreground">{t('returns.responseIs', { notes: r.resolution_notes })}</p>}
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-xs text-muted-foreground">Aucune demande enregistrée sur ce numéro.</p>
+          <p className="text-xs text-muted-foreground">{t('returns.noRequests')}</p>
         )}
       </section>
     </div>

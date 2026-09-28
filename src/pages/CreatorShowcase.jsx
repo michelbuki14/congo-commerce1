@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Sparkles, BadgeCheck, Coins, ShoppingBag } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Image } from '@/components/ui/image';
@@ -9,6 +10,7 @@ import { useCurrency } from '@/lib/currency';
 import { compactNumber } from '@/lib/format';
 
 export default function CreatorShowcase() {
+  const { t } = useTranslation();
   const { format } = useCurrency();
   const [creators, setCreators] = useState([]);
   const [content, setContent] = useState([]);
@@ -31,16 +33,16 @@ export default function CreatorShowcase() {
   return (
     <InfoPage
       icon={Sparkles}
-      title="Créateurs à l’honneur"
-      subtitle="Les créateurs congolais qui font vivre la marketplace, et les produits qu’ils mettent en avant en ce moment."
+      title={t('creatorShowcase.title')}
+      subtitle={t('creatorShowcase.subtitle')}
     >
       {!creators.length ? (
         <EmptyState
           icon={Sparkles}
-          title="Aucun créateur publié"
-          description="Les créateurs actifs apparaîtront ici dès leur première publication."
+          title={t('creatorShowcase.emptyTitle')}
+          description={t('creatorShowcase.emptyDesc')}
           actionTo="/referral-program"
-          actionLabel="Rejoindre le programme"
+          actionLabel={t('creatorShowcase.joinProgram')}
         />
       ) : (
         <div className="space-y-3">
@@ -59,7 +61,7 @@ export default function CreatorShowcase() {
                     </p>
                     <p className="text-[11px] text-muted-foreground">
                       @{c.handle} · {c.city}
-                      {c.referral_code ? ` · code ${c.referral_code}` : ''}
+                      {c.referral_code ? t('creatorShowcase.refCode', { code: c.referral_code }) : ''}
                     </p>
                     {c.bio && <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{c.bio}</p>}
                   </div>
@@ -69,17 +71,17 @@ export default function CreatorShowcase() {
                   <div className="rounded-xl bg-secondary/60 p-2.5">
                     <Coins className="h-3.5 w-3.5 text-primary" />
                     <p className="mt-1 text-sm font-bold text-foreground">{format(c.total_earnings_usd || 0)}</p>
-                    <p className="text-muted-foreground">Commissions</p>
+                    <p className="text-muted-foreground">{t('creatorShowcase.commissions')}</p>
                   </div>
                   <div className="rounded-xl bg-secondary/60 p-2.5">
                     <ShoppingBag className="h-3.5 w-3.5 text-primary" />
                     <p className="mt-1 text-sm font-bold text-foreground">{compactNumber(c.total_conversions || 0)}</p>
-                    <p className="text-muted-foreground">Ventes générées</p>
+                    <p className="text-muted-foreground">{t('creatorShowcase.salesGenerated')}</p>
                   </div>
                   <div className="rounded-xl bg-secondary/60 p-2.5">
                     <Sparkles className="h-3.5 w-3.5 text-primary" />
                     <p className="mt-1 text-sm font-bold text-foreground">{compactNumber(c.followers_count || 0)}</p>
-                    <p className="text-muted-foreground">Abonnés</p>
+                    <p className="text-muted-foreground">{t('creatorShowcase.followers')}</p>
                   </div>
                 </div>
 
@@ -100,7 +102,7 @@ export default function CreatorShowcase() {
                     ))}
                   </div>
                 ) : (
-                  <p className="mt-3 text-[11px] text-muted-foreground">Aucun contenu publié pour le moment.</p>
+                  <p className="mt-3 text-[11px] text-muted-foreground">{t('creatorShowcase.noContent')}</p>
                 )}
               </section>
             );
@@ -108,17 +110,16 @@ export default function CreatorShowcase() {
         </div>
       )}
 
-      <InfoSection title="Vous voulez apparaître ici ?">
+      <InfoSection title={t('creatorShowcase.wantFeatured')}>
         <p>
-          Publiez des vidéos produits depuis votre espace créateur : les contenus les plus appréciés sont mis en avant
-          sur la page Découvrir et dans cette vitrine.
+          {t('creatorShowcase.wantFeaturedDesc')}
         </p>
         <div className="flex flex-wrap gap-2 pt-1">
           <Link to="/creator" className="rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground">
-            Publier un contenu
+            {t('creatorShowcase.publishContent')}
           </Link>
           <Link to="/discover" className="rounded-full border border-border px-4 py-2 text-xs font-semibold text-foreground">
-            Voir le fil Découvrir
+            {t('creatorShowcase.viewDiscover')}
           </Link>
         </div>
       </InfoSection>

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +9,7 @@ import { Lock, Loader2, AlertTriangle } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 
 export default function ResetPassword() {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const resetToken = searchParams.get("token");
 
@@ -20,7 +22,7 @@ export default function ResetPassword() {
     e.preventDefault();
     setError("");
     if (newPassword !== confirmPassword) {
-      setError("Les mots de passe ne correspondent pas");
+      setError(t('auth.passwordsMismatch'));
       return;
     }
     setLoading(true);
@@ -28,7 +30,7 @@ export default function ResetPassword() {
       await base44.auth.resetPassword({ resetToken, newPassword });
       window.location.href = "/login";
     } catch (err) {
-      setError(err.message || "La réinitialisation a échoué");
+      setError(err.message || t('auth.resetError'));
     } finally {
       setLoading(false);
     }
@@ -38,16 +40,16 @@ export default function ResetPassword() {
     return (
       <AuthLayout
         icon={AlertTriangle}
-        title="Lien de réinitialisation invalide"
-        subtitle="Ce lien de réinitialisation est manquant ou invalide"
+        title={t('auth.invalidLinkTitle')}
+        subtitle={t('auth.invalidLinkSubtitle')}
         footer={
           <Link to="/forgot-password" className="text-primary font-medium hover:underline">
-            Demander un nouveau lien
+            {t('auth.requestNewLink')}
           </Link>
         }
       >
         <p className="text-sm text-foreground text-center">
-          Le lien utilisé semble incomplet. Demandez un nouvel e-mail de réinitialisation.
+          {t('auth.incompleteLink')}
         </p>
       </AuthLayout>
     );
@@ -56,8 +58,8 @@ export default function ResetPassword() {
   return (
     <AuthLayout
       icon={Lock}
-      title="Nouveau mot de passe"
-      subtitle="Saisissez votre nouveau mot de passe ci-dessous"
+      title={t('auth.resetTitle')}
+      subtitle={t('auth.resetSubtitle')}
     >
       {error && (
         <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
@@ -66,7 +68,7 @@ export default function ResetPassword() {
       )}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="password">Nouveau mot de passe</Label>
+          <Label htmlFor="password">{t('auth.newPassword')}</Label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
             <Input
@@ -83,7 +85,7 @@ export default function ResetPassword() {
           </div>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="confirm">Confirmer le mot de passe</Label>
+          <Label htmlFor="confirm">{t('auth.confirmPassword')}</Label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
             <Input
@@ -102,10 +104,10 @@ export default function ResetPassword() {
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Réinitialisation…
+              {t('auth.resetting')}
             </>
           ) : (
-            "Réinitialiser le mot de passe"
+            t('auth.resetSubmit')
           )}
         </Button>
       </form>

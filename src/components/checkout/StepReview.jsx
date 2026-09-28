@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Image } from '@/components/ui/image';
 import { formatUSD } from '@/lib/format';
 import { splitVat } from '@/lib/tax';
@@ -6,10 +7,11 @@ import CheckoutConsent from '@/components/CheckoutConsent';
 
 /** Step 3 — final summary, tax breakdown, consent, then pay. */
 export default function StepReview({ quote, loadingQuote, coupon, vatRate, currency, consent, setConsent }) {
+  const { t } = useTranslation();
   return (
     <>
       <section className="space-y-2 rounded-xl border border-border bg-card p-4">
-        <h2 className="text-sm font-bold">Récapitulatif</h2>
+        <h2 className="text-sm font-bold">{t('checkout.summary')}</h2>
         {loadingQuote || !quote ? (
           <div className="h-24 animate-pulse rounded-lg bg-secondary" />
         ) : (
@@ -30,31 +32,31 @@ export default function StepReview({ quote, loadingQuote, coupon, vatRate, curre
             </div>
             <div className="space-y-1.5 border-t border-border pt-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Sous-total</span>
+                <span className="text-muted-foreground">{t('checkout.subtotal')}</span>
                 <span className="font-semibold">{formatUSD(quote.subtotal)}</span>
               </div>
               {quote.discount > 0 && (
                 <div className="flex justify-between text-emerald-600">
-                  <span>Remise {coupon?.code}</span>
+                  <span>{t('checkout.discount', { code: coupon?.code })}</span>
                   <span className="font-semibold">-{formatUSD(quote.discount)}</span>
                 </div>
               )}
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Livraison</span>
-                <span className="font-semibold">{quote.shipping === 0 ? 'Offerte' : formatUSD(quote.shipping)}</span>
+                <span className="text-muted-foreground">{t('checkout.shipping')}</span>
+                <span className="font-semibold">{quote.shipping === 0 ? t('checkout.freeShipping') : formatUSD(quote.shipping)}</span>
               </div>
               {vatRate > 0 && (
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">dont TVA ({vatRate} %)</span>
+                  <span className="text-muted-foreground">{t('checkout.vatIncl', { rate: vatRate })}</span>
                   <span className="font-semibold">{formatUSD(splitVat(quote.total, vatRate).vat)}</span>
                 </div>
               )}
               <div className="flex justify-between border-t border-border pt-2 text-base font-bold">
-                <span>Total</span>
+                <span>{t('checkout.total')}</span>
                 <span className="text-primary">{formatUSD(quote.total)}</span>
               </div>
               <p className="text-[11px] text-muted-foreground">
-                Payable en {currency} · calculé côté plateforme au moment de la commande
+                {t('checkout.serverPriced', { currency })}
               </p>
             </div>
           </>

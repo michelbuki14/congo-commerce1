@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Mail } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { base44 } from '@/api/base44Client';
 
 /**
@@ -8,6 +9,7 @@ import { base44 } from '@/api/base44Client';
  * moment after typing stops, so leaving the page never loses the binding.
  */
 export default function TenantEmailField({ entity, record, onChange }) {
+  const { t } = useTranslation();
   const [value, setValue] = useState(record.email || '');
   const [status, setStatus] = useState('');
 
@@ -37,12 +39,12 @@ export default function TenantEmailField({ entity, record, onChange }) {
         type="email"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        placeholder="e-mail de connexion du partenaire"
+        placeholder={t('tenantEmailField.placeholder')}
         className="h-9 w-56 rounded-lg border border-border bg-background px-2 text-xs text-foreground"
       />
-      {status === 'saving' && <span>Enregistrement…</span>}
-      {status === 'saved' && <span className="font-semibold text-emerald-700">Enregistré</span>}
-      {status === 'error' && <span className="font-semibold text-destructive">Échec</span>}
+      {status === 'saving' && <span>{t('tenantEmailField.saving')}</span>}
+      {status === 'saved' && <span className="font-semibold text-emerald-700">{t('tenantEmailField.saved')}</span>}
+      {status === 'error' && <span className="font-semibold text-destructive">{t('tenantEmailField.failed')}</span>}
     </label>
   );
 }

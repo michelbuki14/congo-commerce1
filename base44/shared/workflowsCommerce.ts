@@ -529,18 +529,26 @@ const fraudReview = {
         const disputes = ctx.data.disputes || [];
         const events = ctx.data.fraudEvents || [];
         const disputeSeverity = disputes.some((d) => ['open', 'investigating', 'escalated'].includes(String(d.status)));
-        const eventScore = events.reduce((max, e) => Math.max(max, Number(e.score || 0)), 0);
+        // FraudEvent stores the score in `risk_score` (written by src/lib/fraud.js);
+        // `score`/`rule_code` are legacy fallbacks for rows written before the schema settled.
+        const eventScore = events.reduce((max, e) => Math.max(max, Number(e.risk_score ?? e.score ?? 0)), 0);
         const score = Math.min(100, (disputeSeverity ? 60 : 0) + eventScore);
         const level = score >= 70 ? 'critical' : score >= 30 ? 'suspicious' : 'normal';
         const action = level === 'critical' ? 'hold_payout' : level === 'suspicious' ? 'monitor' : 'allow';
         ctx.data.level = level;
         ctx.data.score = score;
         ctx.data.action = action;
+        const eventSignals = events.flatMap((e) => {
+          if (Array.isArray(e.signals) && e.signals.length) {
+            return e.signals.map((s) => `fraud:${s?.code || s?.signal || s}`);
+          }
+          return [`fraud:${e.rule_code || e.risk_score || e.score || 'unknown'}`];
+        });
         return {
           score,
           level,
           action,
-          signals: [...disputes.map((d) => `dispute:${d.type}`), ...events.map((e) => `fraud:${e.rule_code || e.score}`)],
+          signals: [...disputes.map((d) => `dispute:${d.type}`), ...eventSignals],
         };
       },
     },

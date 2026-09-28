@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Loader2, Check, AlertTriangle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const RUNNING = ['pending', 'running', 'in_progress'];
 const FAILED = ['failed', 'error'];
@@ -15,6 +16,7 @@ function pretty(value) {
 }
 
 export default function AssistantToolCall({ toolCall }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const status = String(toolCall.status || '').toLowerCase();
   const running = RUNNING.includes(status);
@@ -26,10 +28,10 @@ export default function AssistantToolCall({ toolCall }) {
 
   const projection = toolCall.display_projection || {};
   const label = failed
-    ? projection.error_label || 'Échec'
+    ? projection.error_label || t('assistantToolCall.failed')
     : running
-      ? projection.active_label || 'En cours…'
-      : projection.label || 'Terminé';
+      ? projection.active_label || t('assistantToolCall.running')
+      : projection.label || t('assistantToolCall.done');
   const detailsHidden = projection.hide_details && projection.details_redacted;
   const Icon = running ? Loader2 : failed ? AlertTriangle : Check;
 
@@ -41,20 +43,20 @@ export default function AssistantToolCall({ toolCall }) {
         className="flex w-full items-center gap-1.5 text-left"
       >
         <Icon className={`h-3 w-3 shrink-0 ${running ? 'animate-spin' : ''} ${failed ? 'text-destructive' : ''}`} />
-        <span className="font-semibold">{String(toolCall.name || 'outil').replace(/_/g, ' ')}</span>
+        <span className="font-semibold">{String(toolCall.name || t('assistantToolCall.tool')).replace(/_/g, ' ')}</span>
         <span className="text-muted-foreground">{label}</span>
       </button>
       {open && !detailsHidden && (
         <div className="mt-1.5 space-y-1.5">
           {toolCall.arguments_string && (
             <div>
-              <p className="font-semibold text-muted-foreground">Paramètres</p>
+              <p className="font-semibold text-muted-foreground">{t('assistantToolCall.params')}</p>
               <pre className="overflow-x-auto whitespace-pre-wrap break-words">{pretty(toolCall.arguments_string)}</pre>
             </div>
           )}
           {rawResults !== undefined && rawResults !== null && (
             <div>
-              <p className="font-semibold text-muted-foreground">Résultat</p>
+              <p className="font-semibold text-muted-foreground">{t('assistantToolCall.result')}</p>
               <pre className="max-h-40 overflow-auto whitespace-pre-wrap break-words">{pretty(rawResults)}</pre>
             </div>
           )}

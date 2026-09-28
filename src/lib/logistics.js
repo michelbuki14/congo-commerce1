@@ -127,15 +127,15 @@ export const SHIPMENT_STATUS_FLOW = [
 ];
 
 export const SHIPMENT_STATUS_LABELS = {
-  PENDING: 'En attente',
-  CONFIRMED: 'Confirmée',
-  PROCESSING: 'En préparation',
-  READY_FOR_PICKUP: 'Prêt au retrait',
-  PICKED_UP: 'Pris en charge',
-  IN_TRANSIT: 'En transit',
-  OUT_FOR_DELIVERY: 'En livraison',
-  DELIVERED: 'Livré',
-  FAILED: 'Échec',
-  RETURNED: 'Retourné',
-  CANCELLED: 'Annulé',
+  PENDING: 'status.PENDING',
+  CONFIRMED: 'status.CONFIRMED',
+  PROCESSING: 'status.PROCESSING',
+  READY_FOR_PICKUP: 'status.READY_FOR_PICKUP',
+  PICKED_UP: 'status.PICKED_UP',
+  IN_TRANSIT: 'status.IN_TRANSIT',
+  OUT_FOR_DELIVERY: 'status.OUT_FOR_DELIVERY',
+  DELIVERED: 'status.DELIVERED',
+  FAILED: 'status.FAILED',
+  RETURNED: 'status.RETURNED',
+  CANCELLED: 'status.CANCELLED',
 };

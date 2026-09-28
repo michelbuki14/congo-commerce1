@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Code2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { DEV_SECTIONS } from '@/lib/devDocs';
 
 export default function DeveloperPortal() {
+  const { t } = useTranslation();
   const [tab, setTab] = useState(DEV_SECTIONS[0].id);
   const section = DEV_SECTIONS.find((s) => s.id === tab);
   return (
@@ -10,8 +12,8 @@ export default function DeveloperPortal() {
       <div className="flex items-center gap-3">
         <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground"><Code2 className="h-5 w-5" /></div>
         <div>
-          <h1 className="text-xl font-bold">Portail développeurs</h1>
-          <p className="text-sm text-muted-foreground">API, événements et documentation de la plateforme</p>
+          <h1 className="text-xl font-bold">{t('developerPortal.title')}</h1>
+          <p className="text-sm text-muted-foreground">{t('developerPortal.subtitle')}</p>
         </div>
       </div>
       <nav className="-mx-3 flex gap-2 overflow-x-auto px-3">

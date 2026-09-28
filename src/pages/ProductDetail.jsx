@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ShoppingBag, Heart, Truck, ShieldCheck, Store as StoreIcon, ChevronRight, PackageCheck, Zap, Share2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Image } from '@/components/ui/image';
@@ -20,6 +21,7 @@ import { compactNumber } from '@/lib/format';
 import { inTenantScope, resolveStorefrontScope, scopeRecords } from '@/lib/tenancy';
 
 export default function ProductDetail() {
+  const { t } = useTranslation();
   const { slug } = useParams();
   const navigate = useNavigate();
   const { addItem } = useCart();
@@ -114,7 +116,7 @@ export default function ProductDetail() {
       trackEvent('order_checkout_started', { product_id: product.id, value_usd: product.price_usd });
       navigate('/checkout');
     } else {
-      flash('Ajouté au panier');
+      flash(t('productDetail.addedToCart'));
     }
   };
 
@@ -135,10 +137,10 @@ export default function ProductDetail() {
   if (notFound || !product) {
     return (
       <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
-        <p className="font-semibold">Article introuvable</p>
-        <p className="mt-1 text-sm text-muted-foreground">Il a peut-être été retiré de la vente.</p>
+        <p className="font-semibold">{t('productDetail.notFound')}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{t('productDetail.notFoundDesc')}</p>
         <Link to="/" className="mt-4 inline-block rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground">
-          Retour à l'accueil
+          {t('productDetail.backHome')}
         </Link>
       </div>
     );
@@ -165,14 +167,14 @@ export default function ProductDetail() {
                 onClick={() => setView3d(false)}
                 className={`rounded-full px-3 py-1 text-xs font-semibold ${!view3d ? 'bg-primary text-primary-foreground' : 'border border-border'}`}
               >
-                Photo
+                {t('productDetail.photo')}
               </button>
               <button
                 type="button"
                 onClick={() => setView3d(true)}
                 className={`rounded-full px-3 py-1 text-xs font-semibold ${view3d ? 'bg-primary text-primary-foreground' : 'border border-border'}`}
               >
-                Vue 3D
+                {t('productDetail.view3d')}
               </button>
             </div>
           )}
@@ -186,13 +188,13 @@ export default function ProductDetail() {
               type="button"
               onClick={() => setLiked(toggleWishlist(product.id).includes(product.id))}
               className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-card/90"
-              aria-label="Favori"
+              aria-label={t('productDetail.favorite')}
             >
               <Heart className={`h-5 w-5 ${liked ? 'fill-primary text-primary' : ''}`} />
             </button>
             {product.is_flash_sale && (
               <span className="absolute left-3 top-3 flex items-center gap-1 rounded-full bg-amber-400 px-2.5 py-1 text-[11px] font-bold text-amber-950">
-                <Zap className="h-3 w-3" /> Vente flash
+                <Zap className="h-3 w-3" /> {t('productDetail.flashSale')}
               </span>
             )}
           </div>
@@ -217,7 +219,7 @@ export default function ProductDetail() {
           <div>
             <div className="mb-1.5 flex flex-wrap items-center gap-2">
               <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${isIntl ? 'bg-sky-100 text-sky-900' : 'bg-emerald-100 text-emerald-900'}`}>
-                {isIntl ? 'Import international' : 'Vendeur local RDC'}
+                {isIntl ? t('productDetail.intlBadge') : t('productDetail.localBadge')}
               </span>
               {product.category_name && categorySlug && (
                 <Link to={`/search?category=${categorySlug}`} className="text-[11px] text-muted-foreground underline">
@@ -228,7 +230,7 @@ export default function ProductDetail() {
             <h1 className="text-lg font-bold leading-snug md:text-2xl">{product.title}</h1>
             <div className="mt-1.5 flex flex-wrap items-center gap-3">
               <RatingStars rating={product.rating || 0} count={product.reviews_count || 0} size="md" />
-              <span className="text-xs text-muted-foreground">{compactNumber(product.sold_count || 0)} vendus</span>
+              <span className="text-xs text-muted-foreground">{t('product.soldCount', { count: compactNumber(product.sold_count || 0) })}</span>
               <a
                 href={whatsAppHref}
                 target="_blank"
@@ -248,7 +250,7 @@ export default function ProductDetail() {
               )}
             </div>
             <p className="mt-1 text-[11px] text-muted-foreground">
-              Prix final, transport et frais d'importation inclus. Aucun frais caché.
+              {t('productDetail.finalPriceNote')}
             </p>
           </div>
 
@@ -275,7 +277,7 @@ export default function ProductDetail() {
           <div className="flex items-center gap-3">
             <QuantityStepper value={qty} onChange={setQty} max={Math.max(1, Number(product.stock) || 1)} />
             <span className="text-xs text-muted-foreground">
-              {outOfStock ? 'Rupture de stock' : `${product.stock} disponible(s)`}
+              {outOfStock ? t('product.outOfStock') : t('productDetail.inStock', { count: product.stock })}
             </span>
           </div>
 
@@ -286,7 +288,7 @@ export default function ProductDetail() {
               onClick={() => add(false)}
               className="flex flex-1 items-center justify-center gap-2 rounded-full border border-primary py-3 text-sm font-semibold text-primary disabled:opacity-40"
             >
-              <ShoppingBag className="h-4 w-4" /> Ajouter au panier
+              <ShoppingBag className="h-4 w-4" /> {t('productDetail.addToCart')}
             </button>
             <button
               type="button"
@@ -294,7 +296,7 @@ export default function ProductDetail() {
               onClick={() => add(true)}
               className="flex-1 rounded-full bg-primary py-3 text-sm font-semibold text-primary-foreground disabled:opacity-40"
             >
-              Acheter maintenant
+              {t('productDetail.buyNow')}
             </button>
           </div>
 
@@ -304,25 +306,27 @@ export default function ProductDetail() {
               <Truck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
               <div>
                 <p className="font-semibold">
-                  {isIntl ? `Import — ${product.estimated_delivery || '18 jours'}` : `Livraison ${product.estimated_delivery || '2-4 jours'}`}
+                  {isIntl
+                    ? t('productDetail.importEta', { eta: product.estimated_delivery || t('productDetail.defaultIntlEta') })
+                    : t('productDetail.deliveryEta', { eta: product.estimated_delivery || t('productDetail.defaultLocalEta') })}
                 </p>
                 <p className="text-muted-foreground">
                   {zone
-                    ? `${zone.name} · ${zone.fee_usd} USD · ${zone.eta_days} jours`
-                    : 'Frais de livraison calculés au paiement selon votre ville.'}
+                    ? t('productDetail.zoneEta', { name: zone.name, fee: zone.fee_usd, days: zone.eta_days })
+                    : t('productDetail.shippingCalc')}
                 </p>
               </div>
             </div>
             <div className="flex items-start gap-2">
               <PackageCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
               <p className="text-muted-foreground">
-                Retrait possible en point relais · Paiement mobile money ou à la livraison
+                {t('productDetail.pickupNote')}
               </p>
             </div>
             <div className="flex items-start gap-2">
               <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
               <p className="text-muted-foreground">
-                Protection acheteur : litige ouvrable jusqu'à 7 jours après réception
+                {t('productDetail.buyerProtection')}
               </p>
             </div>
           </div>
@@ -337,7 +341,7 @@ export default function ProductDetail() {
               <StoreIcon className="h-5 w-5 text-primary" />
               <div className="flex-1">
                 <p className="text-sm font-semibold">{product.seller_name}</p>
-                <p className="text-[11px] text-muted-foreground">Voir la boutique</p>
+                <p className="text-[11px] text-muted-foreground">{t('productDetail.viewStore')}</p>
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </Link>
@@ -345,9 +349,9 @@ export default function ProductDetail() {
 
           {isIntl && (
             <div className="rounded-xl border border-border bg-card p-3 text-xs">
-              <p className="font-semibold">Fournisseur : {product.supplier_name || 'Partenaire international'}</p>
+              <p className="font-semibold">{t('productDetail.supplier', { name: product.supplier_name || t('productDetail.intlPartner') })}</p>
               <p className="text-muted-foreground">
-                Référence fournisseur conservée : {product.external_product_id || '—'} · Origine {product.origin_country || '—'}
+                {t('productDetail.supplierRef', { ref: product.external_product_id || '—', origin: product.origin_country || '—' })}
               </p>
             </div>
           )}
@@ -356,7 +360,7 @@ export default function ProductDetail() {
 
       {/* Description */}
       <section className="space-y-2">
-        <h2 className="text-base font-bold">Description</h2>
+        <h2 className="text-base font-bold">{t('productDetail.description')}</h2>
         <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">{product.description}</p>
         {product.attributes && Object.keys(product.attributes).length > 0 && (
           <div className="mt-2 grid gap-2 rounded-xl border border-border bg-card p-3 md:grid-cols-2">
@@ -374,7 +378,7 @@ export default function ProductDetail() {
 
       {!!related.length && (
         <section>
-          <SectionHeader title="Articles similaires" to={`/search?category=${categorySlug}`} />
+          <SectionHeader title={t('productDetail.similar')} to={`/search?category=${categorySlug}`} />
           <ProductRow products={related} />
         </section>
       )}
@@ -387,7 +391,7 @@ export default function ProductDetail() {
           onClick={() => add(false)}
           className="flex-1 rounded-full border border-primary py-2.5 text-sm font-semibold text-primary disabled:opacity-40"
         >
-          Ajouter
+          {t('productDetail.add')}
         </button>
         <button
           type="button"
@@ -395,7 +399,7 @@ export default function ProductDetail() {
           onClick={() => add(true)}
           className="flex-1 rounded-full bg-primary py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-40"
         >
-          Acheter
+          {t('productDetail.buy')}
         </button>
       </MobileActionBar>
     </div>

@@ -4,14 +4,13 @@ import { base44 } from '@/api/base44Client';
 import DashboardNav from '@/components/DashboardNav';
 import { ADMIN_LINKS } from '@/lib/navLinks';
 import { formatUSD, formatDateTime, round2 } from '@/lib/format';
+import { useTranslation } from 'react-i18next';
 
-const TABS = [
-  { id: 'pending', label: 'À payer' },
-  { id: 'posted', label: 'Payés' },
-  { id: 'reversed', label: 'Refusés' },
-];
+const TAB_IDS = ['pending', 'posted', 'reversed'];
 
 export default function AdminPayouts() {
+  const { t } = useTranslation();
+  const TABS = TAB_IDS.map((id) => ({ id, label: t(`adminPayouts.tab_${id}`) }));
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('pending');
@@ -70,8 +69,8 @@ export default function AdminPayouts() {
 
     setMessage(
       approve
-        ? `Retrait de ${formatUSD(tx.amount_usd)} payé à ${tx.owner_name}.`
-        : `Retrait de ${formatUSD(tx.amount_usd)} refusé — montant recrédité sur le portefeuille.`,
+        ? t('adminPayouts.paidMsg', { amount: formatUSD(tx.amount_usd), owner: tx.owner_name })
+        : t('adminPayouts.rejectedMsg', { amount: formatUSD(tx.amount_usd) }),
     );
     await load();
   };
@@ -85,30 +84,29 @@ export default function AdminPayouts() {
 
   return (
     <div className="space-y-5 pb-8">
-      <DashboardNav title="Retraits" links={ADMIN_LINKS} />
+      <DashboardNav title={t('adminPayouts.title')} links={ADMIN_LINKS} />
 
       <section className="rounded-2xl border border-border bg-card p-4">
         <p className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-          <Banknote className="h-4 w-4 text-primary" /> En attente de paiement
+          <Banknote className="h-4 w-4 text-primary" /> {t('adminPayouts.pendingTitle')}
         </p>
         <p className="mt-1 text-2xl font-black">{formatUSD(pendingTotal)}</p>
         <p className="mt-1 text-[11px] text-muted-foreground">
-          Vendeurs, créateurs et livreurs demandent un retrait depuis leur portefeuille. Validez après le transfert
-          mobile money ; un refus recrédite automatiquement le montant.
+          {t('adminPayouts.description')}
         </p>
       </section>
 
       <div className="flex flex-wrap gap-2">
-        {TABS.map((t) => (
+        {TABS.map((tx) => (
           <button
-            key={t.id}
+            key={tx.id}
             type="button"
-            onClick={() => setTab(t.id)}
+            onClick={() => setTab(tx.id)}
             className={`rounded-full px-3.5 py-1.5 text-xs font-semibold ${
-              tab === t.id ? 'bg-primary text-primary-foreground' : 'bg-secondary'
+              tab === tx.id ? 'bg-primary text-primary-foreground' : 'bg-secondary'
             }`}
           >
-            {t.label} ({requests.filter((r) => r.status === t.id).length})
+            {tx.label} ({requests.filter((r) => r.status === tx.id).length})
           </button>
         ))}
       </div>
@@ -136,14 +134,14 @@ export default function AdminPayouts() {
                   onClick={() => settle(r, true)}
                   className="flex items-center gap-1 rounded-full bg-emerald-100 px-3.5 py-1.5 text-xs font-semibold text-emerald-900"
                 >
-                  <Check className="h-3.5 w-3.5" /> Marquer payé
+                  <Check className="h-3.5 w-3.5" /> {t('adminPayouts.markPaid')}
                 </button>
                 <button
                   type="button"
                   onClick={() => settle(r, false)}
                   className="flex items-center gap-1 rounded-full bg-red-100 px-3.5 py-1.5 text-xs font-semibold text-red-900"
                 >
-                  <X className="h-3.5 w-3.5" /> Refuser et recréditer
+                  <X className="h-3.5 w-3.5" /> {t('adminPayouts.reject')}
                 </button>
               </div>
             )}
@@ -151,7 +149,7 @@ export default function AdminPayouts() {
         ))}
         {!visible.length && (
           <p className="rounded-xl border border-dashed border-border bg-card p-6 text-center text-xs text-muted-foreground">
-            Aucun retrait dans cette catégorie.
+            {t('adminPayouts.empty')}
           </p>
         )}
       </div>

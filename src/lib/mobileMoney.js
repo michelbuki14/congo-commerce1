@@ -6,6 +6,7 @@
  * must be the customer's own wallet number — not necessarily the delivery phone —
  * so it is captured and validated on its own.
  */
+import i18n from '@/i18n';
 export const DRC_NETWORKS = [
   { providerId: 'mpesa', name: 'M-Pesa (Vodacom)', prefixes: ['81', '82', '83'] },
   { providerId: 'airtel', name: 'Airtel Money', prefixes: ['96', '97', '98', '99'] },
@@ -38,14 +39,15 @@ export function networkForPhone(phone) {
  * never sent to a wallet the gateway cannot debit.
  */
 export function validateMobileMoneyNumber(providerId, raw) {
+  const t = i18n.t.bind(i18n);
   const network = DRC_NETWORKS.find((n) => n.providerId === providerId);
   const hint = network
-    ? `Numéro ${network.name} : ${network.prefixes.map((p) => `0${p}`).join(', ')}`
-    : 'Numéro mobile congolais, par exemple 081 234 5678.';
+    ? t('momo.hint', { network: network.name, prefixes: network.prefixes.map((p) => `0${p}`).join(', ') })
+    : t('momo.hintDefault');
   const phone = normalizeDrcPhone(raw);
 
   if (!phone) {
-    return { ok: false, phone: '', hint, error: 'Saisissez un numéro mobile congolais valide, par exemple 081 234 5678.' };
+    return { ok: false, phone: '', hint, error: t('momo.invalid') };
   }
 
   const detected = networkForPhone(phone);
@@ -54,7 +56,7 @@ export function validateMobileMoneyNumber(providerId, raw) {
       ok: false,
       phone,
       hint,
-      error: `Ce numéro est un numéro ${detected.name}. Choisissez ${detected.name}, ou saisissez un numéro ${network.name}.`,
+      error: t('momo.mismatch', { detected: detected.name, network: network.name }),
     };
   }
 

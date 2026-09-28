@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ShieldCheck, Save, Landmark, Smartphone } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useActiveSeller } from '@/lib/seller';
@@ -6,20 +7,20 @@ import DashboardNav from '@/components/DashboardNav';
 import { formatDateTime } from '@/lib/format';
 
 const LINKS = [
-  { to: '/seller', label: 'Tableau de bord', end: true },
-  { to: '/seller/products', label: 'Produits' },
-  { to: '/seller/orders', label: 'Commandes' },
-  { to: '/seller/wallet', label: 'Portefeuille' },
-  { to: '/payout-history', label: 'Retraits' },
-  { to: '/payout-settings', label: 'Paiement', end: true },
-  { to: '/data-export', label: 'Export' },
+  { to: '/seller', key: 'sellerNav.dashboard', end: true },
+  { to: '/seller/products', key: 'sellerNav.products' },
+  { to: '/seller/orders', key: 'sellerNav.orders' },
+  { to: '/seller/wallet', key: 'sellerNav.wallet' },
+  { to: '/payout-history', key: 'sellerNav.payouts' },
+  { to: '/payout-settings', key: 'sellerNav.payment', end: true },
+  { to: '/data-export', key: 'sellerNav.export' },
 ];
 
 const METHODS = [
-  { id: 'mpesa', label: 'M-Pesa', kind: 'mobile_money', hint: 'Numéro M-Pesa (ex. +243 8…)' },
-  { id: 'airtel', label: 'Airtel Money', kind: 'mobile_money', hint: 'Numéro Airtel Money' },
-  { id: 'orange', label: 'Orange Money', kind: 'mobile_money', hint: 'Numéro Orange Money' },
-  { id: 'bank', label: 'Virement bancaire', kind: 'bank', hint: 'Numéro de compte / IBAN' },
+  { id: 'mpesa', labelKey: 'pay.mpesaName', kind: 'mobile_money', hintKey: 'payout.mpesaHint' },
+  { id: 'airtel', labelKey: 'pay.airtelName', kind: 'mobile_money', hintKey: 'payout.airtelHint' },
+  { id: 'orange', labelKey: 'pay.orangeName', kind: 'mobile_money', hintKey: 'payout.orangeHint' },
+  { id: 'bank', labelKey: 'payout.bankName', kind: 'bank', hintKey: 'payout.bankHint' },
 ];
 
 function mask(value) {
@@ -29,6 +30,7 @@ function mask(value) {
 }
 
 export default function PayoutSettings() {
+  const { t } = useTranslation();
   const { seller, loading: loadingSeller } = useActiveSeller();
   const [form, setForm] = useState({ payout_method: 'mpesa', payout_holder: '', payout_account: '', payout_bank_name: '' });
   const [loading, setLoading] = useState(true);
@@ -58,7 +60,7 @@ export default function PayoutSettings() {
     e.preventDefault();
     setMessage('');
     if (!form.payout_holder.trim() || !form.payout_account.trim()) {
-      setMessage('Indiquez le titulaire et le numéro de compte.');
+      setMessage(t('payout.needDetails'));
       return;
     }
     setSaving(true);
@@ -77,7 +79,7 @@ export default function PayoutSettings() {
         details: { method: form.payout_method },
       });
       setSaved({ ...form, payout_updated_at: new Date().toISOString() });
-      setMessage('Coordonnées enregistrées. Elles seront utilisées pour vos prochains retraits.');
+      setMessage(t('payout.saved'));
     } finally {
       setSaving(false);
     }
@@ -89,44 +91,43 @@ export default function PayoutSettings() {
     return (
       <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
         <Landmark className="mx-auto h-8 w-8 text-muted-foreground" />
-        <p className="mt-2 font-semibold">Aucune boutique associée à votre compte</p>
+        <p className="mt-2 font-semibold">{t('wallet.noShop')}</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-5 pb-8">
-      <DashboardNav title="Coordonnées de paiement" links={LINKS} />
+      <DashboardNav title={t('payout.settingsTitle')} links={LINKS} />
 
       <div className="flex items-start gap-2 rounded-xl border border-primary/30 bg-primary/5 p-3 text-xs">
         <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
         <p>
-          Ces coordonnées servent uniquement au versement de vos gains. Elles ne sont visibles que par vous et par l'équipe
-          financière de la plateforme.
+          {t('payout.privacyNote')}
         </p>
       </div>
 
       <section className="rounded-2xl border border-border bg-card p-4">
-        <h2 className="text-sm font-bold">Coordonnées actuelles</h2>
+        <h2 className="text-sm font-bold">{t('payout.current')}</h2>
         {current.payout_account ? (
           <div className="mt-2 space-y-1 text-xs text-muted-foreground">
             <p>
-              <span className="font-semibold text-foreground">{METHODS.find((m) => m.id === current.payout_method)?.label || '—'}</span>
+              <span className="font-semibold text-foreground">{METHODS.find((m) => m.id === current.payout_method) ? t(METHODS.find((m) => m.id === current.payout_method).labelKey) : '—'}</span>
               {' · '}
               {mask(current.payout_account)}
             </p>
-            <p>Titulaire : {current.payout_holder || '—'}</p>
-            {current.payout_bank_name && <p>Banque : {current.payout_bank_name}</p>}
-            <p>Dernière mise à jour : {formatDateTime(current.payout_updated_at)}</p>
+            <p>{t('payout.holder')} : {current.payout_holder || '—'}</p>
+            {current.payout_bank_name && <p>{t('payout.bank')} : {current.payout_bank_name}</p>}
+            <p>{t('payout.lastUpdate')} : {formatDateTime(current.payout_updated_at)}</p>
           </div>
         ) : (
-          <p className="mt-2 text-xs text-muted-foreground">Aucune coordonnée enregistrée pour le moment.</p>
+          <p className="mt-2 text-xs text-muted-foreground">{t('payout.none')}</p>
         )}
       </section>
 
       <form onSubmit={save} className="space-y-3 rounded-2xl border border-border bg-card p-4">
         <h2 className="flex items-center gap-2 text-sm font-bold">
-          <Smartphone className="h-4 w-4 text-primary" /> Méthode de versement
+          <Smartphone className="h-4 w-4 text-primary" /> {t('payout.methodTitle')}
         </h2>
 
         <div className="grid gap-2 md:grid-cols-2">
@@ -139,41 +140,41 @@ export default function PayoutSettings() {
                 form.payout_method === m.id ? 'border-primary bg-primary/5' : 'border-border'
               }`}
             >
-              {m.label}
+              {t(m.labelKey)}
               <span className="mt-0.5 block text-[11px] font-normal text-muted-foreground">
-                {m.kind === 'bank' ? 'Compte bancaire' : 'Mobile money'}
+                {m.kind === 'bank' ? t('payout.bankAccount') : t('payout.mobileMoney')}
               </span>
             </button>
           ))}
         </div>
 
         <label className="block text-[11px] font-semibold">
-          Titulaire du compte
+          {t('payout.holder')}
           <input
             value={form.payout_holder}
             onChange={(e) => setForm({ ...form, payout_holder: e.target.value })}
-            placeholder="Nom complet"
+            placeholder={t('checkout.fullName')}
             className="mt-0.5 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"
           />
         </label>
 
         <label className="block text-[11px] font-semibold">
-          {method.kind === 'bank' ? 'Numéro de compte / IBAN' : 'Numéro de téléphone'}
+          {method.kind === 'bank' ? t('payout.bankHint') : t('payout.phoneNumber')}
           <input
             value={form.payout_account}
             onChange={(e) => setForm({ ...form, payout_account: e.target.value })}
-            placeholder={method.hint}
+            placeholder={t(method.hintKey)}
             className="mt-0.5 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"
           />
         </label>
 
         {method.kind === 'bank' && (
           <label className="block text-[11px] font-semibold">
-            Banque
+            {t('payout.bank')}
             <input
               value={form.payout_bank_name}
               onChange={(e) => setForm({ ...form, payout_bank_name: e.target.value })}
-              placeholder="Nom de la banque"
+              placeholder={t('payout.bankNamePlaceholder')}
               className="mt-0.5 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"
             />
           </label>
@@ -186,10 +187,10 @@ export default function PayoutSettings() {
           disabled={saving}
           className="flex items-center gap-1.5 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50"
         >
-          <Save className="h-4 w-4" /> {saving ? 'Enregistrement…' : 'Enregistrer'}
+          <Save className="h-4 w-4" /> {saving ? t('payout.saving') : t('common.save')}
         </button>
         <p className="text-[11px] text-muted-foreground">
-          Les versements sont exécutés par l'équipe financière après validation de vos demandes de retrait.
+          {t('payout.financeNote')}
         </p>
       </form>
     </div>

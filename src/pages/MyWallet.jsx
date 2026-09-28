@@ -1,25 +1,27 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Wallet as WalletIcon, ArrowDownLeft, ArrowUpRight, Banknote, ShieldCheck } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import InfoPage, { InfoSection } from '@/components/InfoPage';
 import EmptyState from '@/components/EmptyState';
 import { requestWithdrawal } from '@/lib/wallet';
-import { getProfile } from '@/lib/session';
+import { getSessionId } from '@/lib/session';
 import { useCurrency } from '@/lib/currency';
 import { formatDateTime } from '@/lib/format';
 
 const METHODS = ['M-Pesa', 'Airtel Money', 'Orange Money', 'Virement bancaire'];
-const TYPE_LABELS = {
-  CREDIT: 'Crédit',
-  DEBIT: 'Débit',
-  REFUND: 'Remboursement',
-  COMMISSION: 'Commission',
-  PAYOUT: 'Versement',
-  ADJUSTMENT: 'Ajustement',
+const TYPE_KEYS = {
+  CREDIT: 'wallet.typeCredit',
+  DEBIT: 'wallet.typeDebit',
+  REFUND: 'wallet.typeRefund',
+  COMMISSION: 'wallet.typeCommission',
+  PAYOUT: 'wallet.typePayout',
+  ADJUSTMENT: 'wallet.typeAdjust',
 };
 
 export default function MyWallet() {
+  const { t } = useTranslation();
   const { format } = useCurrency();
   const [wallet, setWallet] = useState(null);
   const [transactions, setTransactions] = useState([]);
@@ -30,9 +32,11 @@ export default function MyWallet() {
   const [error, setError] = useState('');
 
   const load = async () => {
-    const profile = getProfile();
-    const wallets = await base44.entities.Wallet.filter({ owner_type: 'customer' }).catch(() => []);
-    const mine = wallets.find((w) => profile.name && w.owner_name === profile.name) || null;
+    // Customer wallets are keyed by device session id, never by display name:
+    // names collide and localStorage is self-asserted, either of which would
+    // show one buyer another buyer's balance.
+    const wallets = await base44.entities.Wallet.filter({ owner_type: 'customer', owner_id: getSessionId() }).catch(() => []);
+    const mine = wallets[0] || null;
     setWallet(mine);
     setTransactions(
       mine ? await base44.entities.WalletTransaction.filter({ wallet_id: mine.id }, '-created_date', 50).catch(() => []) : [],
@@ -51,15 +55,15 @@ export default function MyWallet() {
     setError('');
     const value = Number(amount);
     if (!wallet) {
-      setError("Aucun portefeuille actif : votre premier remboursement le créera.");
+      setError(t('sellerWallet.noWalletShort'));
       return;
     }
     if (!value || value <= 0) {
-      setError('Saisissez un montant valide.');
+      setError(t('sellerWallet.badAmount'));
       return;
     }
     if (value > (wallet.balance_usd || 0)) {
-      setError('Montant supérieur au solde disponible.');
+      setError(t('sellerWallet.overBalance'));
       return;
     }
     try {
@@ -71,10 +75,10 @@ export default function MyWallet() {
         ownerName: wallet.owner_name,
       });
       setAmount('');
-      setMessage(`Demande de retrait de ${format(value)} envoyée via ${method}.`);
+      setMessage(t('sellerWallet.sentShort', { amount: format(value), method }));
       await load();
     } catch {
-      setError("La demande n'a pas pu être envoyée. Réessayez.");
+      setError(t('sellerWallet.requestFailed'));
     }
   };
 
@@ -85,24 +89,23 @@ export default function MyWallet() {
   return (
     <InfoPage
       icon={WalletIcon}
-      title="Mon portefeuille"
-      subtitle="Votre solde Congo Commerce, le détail des écritures et vos demandes de retrait par mobile money."
+      title={t('myWallet.title')}
+      subtitle={t('myWallet.subtitle')}
     >
       <section className="rounded-2xl bg-gradient-to-br from-primary to-primary/70 p-5 text-primary-foreground">
         <p className="flex items-center gap-2 text-xs font-semibold opacity-90">
-          <WalletIcon className="h-4 w-4" /> Solde disponible
+          <WalletIcon className="h-4 w-4" /> {t('wallet.balance')}
         </p>
         <p className="mt-2 text-3xl font-black">{format(wallet?.balance_usd || 0)}</p>
         {Number(wallet?.pending_usd) > 0 && (
-          <p className="mt-1 text-xs opacity-90">En attente : {format(wallet.pending_usd)}</p>
+          <p className="mt-1 text-xs opacity-90">{t('wallet.pending', { amount: format(wallet.pending_usd) })}</p>
         )}
         <p className="mt-3 text-[11px] opacity-80">
-          Crédits de remboursement et bons d’achat. Le portefeuille est tenu en partie double : chaque mouvement crée
-          une écriture.
+          {t('myWallet.note')}
         </p>
       </section>
 
-      <InfoSection title="Demander un retrait">
+      <InfoSection title={t('myWallet.requestTitle')}>
         <form onSubmit={submit} className="space-y-3">
           <div className="grid gap-3 md:grid-cols-2">
             <input
@@ -110,7 +113,7 @@ export default function MyWallet() {
               step="0.01"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              placeholder="Montant en USD"
+              placeholder={t('sellerWallet.amountUsd')}
               className="h-11 rounded-lg border border-border bg-background px-3 text-sm"
             />
             <select
@@ -126,50 +129,49 @@ export default function MyWallet() {
           {error && <p className="text-xs text-destructive">{error}</p>}
           {message && <p className="text-xs text-primary">{message}</p>}
           <button type="submit" className="inline-flex items-center gap-1.5 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground">
-            <Banknote className="h-4 w-4" /> Envoyer la demande
+            <Banknote className="h-4 w-4" /> {t('sellerWallet.sendRequest')}
           </button>
           <p className="flex items-start gap-1.5 text-[11px]">
             <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-            Le montant est bloqué sur votre solde dès la demande, puis versé après validation par notre équipe. Un
-            refus recrédite automatiquement le portefeuille.
+            {t('myWallet.heldNote')}
           </p>
         </form>
       </InfoSection>
 
       {!!pending.length && (
-        <InfoSection title={`Retraits en attente (${pending.length})`}>
-          {pending.map((t) => (
-            <div key={t.id} className="flex items-center justify-between rounded-xl border border-border px-3 py-2.5">
+        <InfoSection title={t('myWallet.pendingTitle', { count: pending.length })}>
+          {pending.map((tx) => (
+            <div key={tx.id} className="flex items-center justify-between rounded-xl border border-border px-3 py-2.5">
               <div>
-                <p className="text-xs font-semibold text-foreground">{t.description}</p>
-                <p className="text-[11px]">{t.reference} · {formatDateTime(t.created_date)}</p>
+                <p className="text-xs font-semibold text-foreground">{tx.description}</p>
+                <p className="text-[11px]">{tx.reference} · {formatDateTime(tx.created_date)}</p>
               </div>
-              <span className="text-sm font-bold">{format(t.amount_usd)}</span>
+              <span className="text-sm font-bold">{format(tx.amount_usd)}</span>
             </div>
           ))}
         </InfoSection>
       )}
 
-      <InfoSection title="Historique des mouvements">
+      <InfoSection title={t('wallet.history')}>
         {transactions.length ? (
           <div className="space-y-2">
-            {transactions.map((t) => (
-              <div key={t.id} className="flex items-center gap-3 rounded-xl border border-border px-3 py-2.5">
-                {t.direction === 'credit' ? (
+            {transactions.map((tx) => (
+              <div key={tx.id} className="flex items-center gap-3 rounded-xl border border-border px-3 py-2.5">
+                {tx.direction === 'credit' ? (
                   <ArrowDownLeft className="h-4 w-4 shrink-0 text-emerald-600" />
                 ) : (
                   <ArrowUpRight className="h-4 w-4 shrink-0 text-primary" />
                 )}
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-xs font-semibold text-foreground">
-                    {t.description || TYPE_LABELS[t.type] || t.type}
+                    {tx.description || (TYPE_KEYS[tx.type] ? t(TYPE_KEYS[tx.type]) : tx.type)}
                   </p>
                   <p className="text-[11px]">
-                    {formatDateTime(t.created_date)} · {t.reference || '—'} · {t.status === 'pending' ? 'en attente' : 'comptabilisé'}
+                    {formatDateTime(tx.created_date)} · {tx.reference || '—'} · {tx.status === 'pending' ? t('wallet.pendingStatus') : t('wallet.postedStatus')}
                   </p>
                 </div>
-                <span className={`text-sm font-bold ${t.direction === 'credit' ? 'text-emerald-600' : ''}`}>
-                  {t.direction === 'credit' ? '+' : '−'}{format(t.amount_usd)}
+                <span className={`text-sm font-bold ${tx.direction === 'credit' ? 'text-emerald-600' : ''}`}>
+                  {tx.direction === 'credit' ? '+' : '−'}{format(tx.amount_usd)}
                 </span>
               </div>
             ))}
@@ -177,8 +179,8 @@ export default function MyWallet() {
         ) : (
           <EmptyState
             icon={WalletIcon}
-            title="Aucun mouvement"
-            description="Les remboursements et crédits promotionnels apparaîtront ici."
+            title={t('wallet.noMovements')}
+            description={t('wallet.noMovementsDesc')}
           />
         )}
       </InfoSection>

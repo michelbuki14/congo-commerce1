@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Search, Package, Truck, CheckCircle2, Circle } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
 import StatusBadge from '@/components/StatusBadge';
 import { getOrderIds, getProfile } from '@/lib/session';
+import { lookupOrder } from '@/lib/orderLookup';
 import { formatUSD, formatDate } from '@/lib/format';
 import { SHIPMENT_STATUS_FLOW, SHIPMENT_STATUS_LABELS } from '@/lib/logistics';
 
 export default function TrackOrder() {
+  const { t } = useTranslation();
   const [number, setNumber] = useState('');
   const [phone, setPhone] = useState(getProfile().phone || '');
   const [order, setOrder] = useState(null);
@@ -22,30 +24,17 @@ export default function TrackOrder() {
     setError('');
     setOrder(null);
     if (!number.trim()) {
-      setError('Entrez votre numéro de commande.');
+      setError(t('trackOrder.orderNumberRequired'));
       return;
     }
     setSearching(true);
     try {
-      const rows = await base44.entities.Order.filter({ order_number: number.trim().toUpperCase() });
-      const found = rows[0];
-      if (!found) {
-        setError('Aucune commande trouvée avec ce numéro.');
-        return;
-      }
-      if (phone.trim() && found.customer_phone && !found.customer_phone.includes(phone.trim().slice(-6))) {
-        setError('Le téléphone ne correspond pas à cette commande.');
-        return;
-      }
-      const [f, s] = await Promise.all([
-        base44.entities.FulfillmentOrder.filter({ order_id: found.id }, 'fulfillment_number', 50),
-        base44.entities.Shipment.filter({ order_number: found.order_number }, '-created_date', 50),
-      ]);
-      setOrder(found);
-      setFulfillments(f);
-      setShipments(s);
-    } catch {
-      setError('Impossible de récupérer la commande pour le moment.');
+      const data = await lookupOrder(number.trim().toUpperCase(), phone.trim() || getProfile().phone);
+      setOrder(data.order);
+      setFulfillments(data.fulfillments || []);
+      setShipments(data.shipments || []);
+    } catch (e) {
+      setError(e.message || t('trackOrder.lookupFailed'));
     } finally {
       setSearching(false);
     }
@@ -56,16 +45,12 @@ export default function TrackOrder() {
     setSearching(true);
     setError('');
     try {
-      const rows = await base44.entities.Order.filter({ order_number: orderNumber });
-      const found = rows[0];
-      if (!found) return;
-      const [f, s] = await Promise.all([
-        base44.entities.FulfillmentOrder.filter({ order_id: found.id }, 'fulfillment_number', 50),
-        base44.entities.Shipment.filter({ order_number: found.order_number }, '-created_date', 50),
-      ]);
-      setOrder(found);
-      setFulfillments(f);
-      setShipments(s);
+      const data = await lookupOrder(orderNumber, phone.trim() || getProfile().phone);
+      setOrder(data.order);
+      setFulfillments(data.fulfillments || []);
+      setShipments(data.shipments || []);
+    } catch (e) {
+      setError(e.message || t('trackOrder.lookupFailed'));
     } finally {
       setSearching(false);
     }
@@ -73,20 +58,20 @@ export default function TrackOrder() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-5 pb-8">
-      <h1 className="text-lg font-bold md:text-xl">Suivre ma commande</h1>
+      <h1 className="text-lg font-bold md:text-xl">{t('trackOrder.title')}</h1>
 
       <form onSubmit={lookup} className="space-y-3 rounded-2xl border border-border bg-card p-4">
         <div className="grid gap-3 md:grid-cols-2">
           <input
             value={number}
             onChange={(e) => setNumber(e.target.value.toUpperCase())}
-            placeholder="Numéro de commande (CC-…)"
+            placeholder={t('trackOrder.orderNumberPh')}
             className="h-11 rounded-lg border border-border bg-background px-3 text-sm"
           />
           <input
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            placeholder="Téléphone (optionnel)"
+            placeholder={t('trackOrder.phonePh')}
             className="h-11 rounded-lg border border-border bg-background px-3 text-sm"
           />
         </div>
@@ -96,13 +81,13 @@ export default function TrackOrder() {
           disabled={searching}
           className="flex w-full items-center justify-center gap-2 rounded-full bg-primary py-3 text-sm font-bold text-primary-foreground disabled:opacity-50"
         >
-          <Search className="h-4 w-4" /> {searching ? 'Recherche…' : 'Rechercher'}
+          <Search className="h-4 w-4" /> {searching ? t('trackOrder.searching') : t('trackOrder.search')}
         </button>
       </form>
 
       {!!history.length && !order && (
         <section className="rounded-2xl border border-border bg-card p-4">
-          <h2 className="mb-2 text-sm font-bold">Commandes de cet appareil</h2>
+          <h2 className="mb-2 text-sm font-bold">{t('trackOrder.deviceOrders')}</h2>
           <div className="space-y-2">
             {history.map((h) => (
               <button
@@ -138,7 +123,7 @@ export default function TrackOrder() {
               </div>
             </div>
             <p className="mt-3 text-sm">
-              Total : <span className="font-bold text-primary">{formatUSD(order.total_usd)}</span> · {order.payment_method}
+              {t('trackOrder.totalLabel')} <span className="font-bold text-primary">{formatUSD(order.total_usd)}</span> · {order.payment_method}
             </p>
           </section>
 
@@ -152,7 +137,7 @@ export default function TrackOrder() {
                   <div>
                     <p className="text-sm font-bold">{f.seller_name || f.supplier_name || 'Congo Commerce'}</p>
                     <p className="text-[11px] text-muted-foreground">
-                      {f.fulfillment_number} · {f.source_type === 'international_supplier' ? 'Import international' : 'Local RDC'}
+                      {f.fulfillment_number} · {f.source_type === 'international_supplier' ? t('trackOrder.importIntl') : t('trackOrder.localDrc')}
                     </p>
                   </div>
                   <StatusBadge status={f.status} />
@@ -179,7 +164,7 @@ export default function TrackOrder() {
                           <Circle className="h-4 w-4 shrink-0 text-muted-foreground/40" />
                         )}
                         <span className={`text-xs ${done ? 'font-semibold' : 'text-muted-foreground'}`}>
-                          {SHIPMENT_STATUS_LABELS[step]}
+                          {t(SHIPMENT_STATUS_LABELS[step] || 'status.UNKNOWN')}
                         </span>
                       </div>
                     );
@@ -201,7 +186,7 @@ export default function TrackOrder() {
           })}
 
           <Link to={`/order/${order.order_number}`} className="block rounded-full border border-border bg-card py-3 text-center text-sm font-semibold">
-            Voir le détail complet
+            {t('trackOrder.viewDetails')}
           </Link>
         </>
       )}

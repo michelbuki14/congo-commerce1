@@ -2,21 +2,24 @@ import React, { useEffect, useState } from 'react';
 import { Wallet as WalletIcon, ArrowDownLeft, ArrowUpRight, Banknote } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useActiveSeller } from '@/lib/seller';
+import { requestWithdrawal, WITHDRAWAL_METHOD_IDS } from '@/lib/wallet';
+import { useTranslation } from 'react-i18next';
 import DashboardNav from '@/components/DashboardNav';
 import { formatUSD, formatDateTime } from '@/lib/format';
 
 const LINKS = [
-  { to: '/seller', label: 'Tableau de bord', end: true },
-  { to: '/seller/products', label: 'Produits' },
-  { to: '/seller/orders', label: 'Commandes' },
-  { to: '/seller/import', label: 'Import fournisseur' },
-  { to: '/seller/wallet', label: 'Portefeuille' },
-  { to: '/seller/settings', label: 'Boutique' },
+  { to: '/seller', key: 'sellerNav.dashboard', end: true },
+  { to: '/seller/products', key: 'sellerNav.products' },
+  { to: '/seller/orders', key: 'sellerNav.orders' },
+  { to: '/seller/import', key: 'seller.import' },
+  { to: '/seller/wallet', key: 'sellerNav.wallet' },
+  { to: '/seller/settings', key: 'sellerNav.shop' },
 ];
 
 const METHODS = ['M-Pesa', 'Airtel Money', 'Orange Money', 'Virement bancaire'];
 
 export default function SellerWallet() {
+  const { t } = useTranslation();
   const { seller, loading: loadingSeller } = useActiveSeller();
   const [wallet, setWallet] = useState(null);
   const [transactions, setTransactions] = useState([]);
@@ -27,7 +30,7 @@ export default function SellerWallet() {
 
   const load = async () => {
     if (!seller) return;
-    const wallets = await base44.entities.Wallet.filter({ owner_type: 'seller', owner_name: seller.name }).catch(() => []);
+    const wallets = await base44.entities.Wallet.filter({ owner_type: 'seller', owner_id: seller.id }).catch(() => []);
     const mine = wallets[0] || null;
     setWallet(mine);
     if (mine) {
@@ -43,51 +46,30 @@ export default function SellerWallet() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [seller, loadingSeller]);
 
-  const requestWithdrawal = async (e) => {
+  const submitWithdrawal = async (e) => {
     e.preventDefault();
     setMessage('');
     const value = Number(amount);
     if (!wallet) {
-      setMessage('Aucun portefeuille actif : votre premier versement le créera.');
+      setMessage(t('sellerWallet.noWallet'));
       return;
     }
     if (!value || value <= 0) {
-      setMessage('Saisissez un montant valide.');
+      setMessage(t('sellerWallet.badAmount'));
       return;
     }
     if (value > (wallet.balance_usd || 0)) {
-      setMessage('Montant supérieur au solde disponible.');
+      setMessage(t('sellerWallet.overBalance'));
       return;
     }
-    const updated = await base44.entities.Wallet.update(wallet.id, {
-      balance_usd: Math.round(((wallet.balance_usd || 0) - value) * 100) / 100,
-      lifetime_debit_usd: Math.round(((wallet.lifetime_debit_usd || 0) + value) * 100) / 100,
-    });
-    await base44.entities.WalletTransaction.create({
-      wallet_id: wallet.id,
-      owner_type: 'seller',
-      owner_name: seller.name,
-      type: 'PAYOUT',
-      direction: 'debit',
-      amount_usd: value,
-      balance_after_usd: updated.balance_usd,
-      currency: 'USD',
-      description: `Retrait vers ${method}`,
-      reference: `WD-${Date.now().toString(36).toUpperCase()}`,
-      status: 'pending',
-    });
-    await base44.entities.AuditLog.create({
-      action: 'wallet.withdrawal_requested',
-      actor: 'seller',
-      entity: 'Wallet',
-      entity_id: wallet.id,
-      reference: seller.name,
-      severity: 'info',
-      details: { amount_usd: value, method },
-    });
-    setWallet(updated);
-    setAmount('');
-    setMessage(`Demande de retrait de ${formatUSD(value)} envoyée via ${method}.`);
+    try {
+      const updated = await requestWithdrawal({ wallet, amount: value, method: WITHDRAWAL_METHOD_IDS[method] || 'mpesa' });
+      setWallet(updated);
+      setAmount('');
+      setMessage(t('sellerWallet.sent', { amount: formatUSD(value), method }));
+    } catch (err) {
+      setMessage(err?.message || t('sellerWallet.failed'));
+    }
     await load();
   };
 
@@ -95,22 +77,22 @@ export default function SellerWallet() {
 
   return (
     <div className="space-y-5 pb-8">
-      <DashboardNav title="Portefeuille vendeur" links={LINKS} />
+      <DashboardNav title={t('sellerWallet.title')} links={LINKS} />
 
       <section className="rounded-2xl bg-gradient-to-br from-primary to-primary/70 p-5 text-primary-foreground">
         <p className="flex items-center gap-2 text-xs font-semibold opacity-90">
-          <WalletIcon className="h-4 w-4" /> Solde disponible
+          <WalletIcon className="h-4 w-4" /> {t('wallet.balance')}
         </p>
         <p className="mt-2 text-3xl font-black">{formatUSD(wallet?.balance_usd || 0)}</p>
         <div className="mt-2 flex gap-4 text-[11px] opacity-90">
-          <span>En attente de livraison : {formatUSD(wallet?.pending_usd || 0)}</span>
-          <span>Total encaissé : {formatUSD(wallet?.lifetime_credit_usd || 0)}</span>
+          <span>{t('wallet.awaitingDelivery')} : {formatUSD(wallet?.pending_usd || 0)}</span>
+          <span>{t('wallet.totalEarned')} : {formatUSD(wallet?.lifetime_credit_usd || 0)}</span>
         </div>
       </section>
 
-      <form onSubmit={requestWithdrawal} className="space-y-3 rounded-2xl border border-border bg-card p-4">
+      <form onSubmit={submitWithdrawal} className="space-y-3 rounded-2xl border border-border bg-card p-4">
         <h2 className="flex items-center gap-2 text-sm font-bold">
-          <Banknote className="h-4 w-4 text-primary" /> Demander un retrait
+          <Banknote className="h-4 w-4 text-primary" /> {t('sellerWallet.requestTitle')}
         </h2>
         <div className="grid gap-3 md:grid-cols-2">
           <input
@@ -118,7 +100,7 @@ export default function SellerWallet() {
             step="0.01"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            placeholder="Montant en USD"
+            placeholder={t('sellerWallet.amountUsd')}
             className="h-11 rounded-lg border border-border bg-background px-3 text-sm"
           />
           <select value={method} onChange={(e) => setMethod(e.target.value)} className="h-11 rounded-lg border border-border bg-background px-3 text-sm">
@@ -129,38 +111,38 @@ export default function SellerWallet() {
         </div>
         {message && <p className="text-xs text-primary">{message}</p>}
         <button type="submit" className="rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground">
-          Envoyer la demande
+          {t('sellerWallet.sendRequest')}
         </button>
         <p className="text-[11px] text-muted-foreground">
-          Les ventes locales sont créditées en attente puis libérées à la livraison confirmée. Chaque mouvement crée une écriture.
+          {t('sellerWallet.localSalesNote')}
         </p>
       </form>
 
       <section className="rounded-2xl border border-border bg-card p-4">
-        <h2 className="mb-3 text-sm font-bold">Écritures</h2>
+        <h2 className="mb-3 text-sm font-bold">{t('sellerWallet.entries')}</h2>
         {transactions.length ? (
           <div className="space-y-2">
-            {transactions.map((t) => (
-              <div key={t.id} className="flex items-center gap-3 rounded-xl border border-border px-3 py-2.5">
-                {t.direction === 'credit' ? (
+            {transactions.map((tx) => (
+              <div key={tx.id} className="flex items-center gap-3 rounded-xl border border-border px-3 py-2.5">
+                {tx.direction === 'credit' ? (
                   <ArrowDownLeft className="h-4 w-4 shrink-0 text-emerald-600" />
                 ) : (
                   <ArrowUpRight className="h-4 w-4 shrink-0 text-primary" />
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{t.description}</p>
+                  <p className="truncate text-sm font-medium">{tx.description}</p>
                   <p className="text-[11px] text-muted-foreground">
-                    {formatDateTime(t.created_date)} · {t.reference} · {t.status === 'pending' ? 'en attente' : 'comptabilisé'}
+                    {formatDateTime(tx.created_date)} · {tx.reference} · {tx.status === 'pending' ? t('wallet.pendingStatus') : t('wallet.postedStatus')}
                   </p>
                 </div>
-                <span className={`text-sm font-bold ${t.direction === 'credit' ? 'text-emerald-600' : ''}`}>
-                  {t.direction === 'credit' ? '+' : '−'}{formatUSD(t.amount_usd)}
+                <span className={`text-sm font-bold ${tx.direction === 'credit' ? 'text-emerald-600' : ''}`}>
+                  {tx.direction === 'credit' ? '+' : '−'}{formatUSD(tx.amount_usd)}
                 </span>
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-xs text-muted-foreground">Aucune écriture pour le moment.</p>
+          <p className="text-xs text-muted-foreground">{t('sellerWallet.noEntries')}</p>
         )}
       </section>
     </div>

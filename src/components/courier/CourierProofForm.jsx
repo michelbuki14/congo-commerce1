@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Image as ImageIcon } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
@@ -8,6 +9,7 @@ import { base44 } from '@/api/base44Client';
  * and the tracking view so both enforce the same requirements.
  */
 export default function CourierProofForm({ order, shipment, busy, onConfirm }) {
+  const { t } = useTranslation();
   const [recipient, setRecipient] = useState(order?.customer_name || '');
   const [proofUri, setProofUri] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -25,7 +27,7 @@ export default function CourierProofForm({ order, shipment, busy, onConfirm }) {
       const res = await base44.integrations.Core.UploadPrivateFile({ file });
       setProofUri(res.file_uri);
     } catch {
-      setUploadError("La photo n'a pas pu être envoyée. Réessayez.");
+      setUploadError(t('courierProofForm.uploadFailed'));
     } finally {
       setUploading(false);
     }
@@ -34,7 +36,7 @@ export default function CourierProofForm({ order, shipment, busy, onConfirm }) {
   const submit = async () => {
     setCodeError('');
     if (needsCode && code.trim() !== String(order.pickup_code)) {
-      setCodeError('Code de retrait incorrect. Demandez-le au client avant de valider.');
+      setCodeError(t('courierProofForm.badCode'));
       return;
     }
     await onConfirm({
@@ -49,7 +51,7 @@ export default function CourierProofForm({ order, shipment, busy, onConfirm }) {
       <input
         value={recipient}
         onChange={(e) => setRecipient(e.target.value)}
-        placeholder="Nom de la personne qui réceptionne"
+        placeholder={t('courierProofForm.phRecipient')}
         className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
       />
       {needsCode && (
@@ -58,7 +60,7 @@ export default function CourierProofForm({ order, shipment, busy, onConfirm }) {
             value={code}
             onChange={(e) => setCode(e.target.value)}
             inputMode="numeric"
-            placeholder="Code de retrait à 4 chiffres"
+            placeholder={t('courierProofForm.phCode')}
             className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
           />
           {codeError && <p className="text-[11px] text-destructive">{codeError}</p>}
@@ -66,7 +68,7 @@ export default function CourierProofForm({ order, shipment, busy, onConfirm }) {
       )}
       <label className="flex items-center gap-2 text-[11px] text-muted-foreground">
         <ImageIcon className="h-3.5 w-3.5" />
-        Preuve de livraison (photo)
+        {t('courierProofForm.proofLabel')}
         <input
           type="file"
           accept="image/*"
@@ -77,17 +79,17 @@ export default function CourierProofForm({ order, shipment, busy, onConfirm }) {
           className="text-[11px]"
         />
       </label>
-      {uploading && <p className="text-[11px] text-muted-foreground">Envoi de la photo…</p>}
+      {uploading && <p className="text-[11px] text-muted-foreground">{t('courierProofForm.uploading')}</p>}
       {uploadError && <p className="text-[11px] text-destructive">{uploadError}</p>}
       {proofUri && (
         <p className="flex items-center gap-2 text-[11px] font-medium text-primary">
-          Photo ajoutée
+          {t('courierProofForm.photoAdded')}
           <button
             type="button"
             onClick={() => setProofUri('')}
             className="font-semibold text-muted-foreground underline"
           >
-            Retirer
+            {t('courierProofForm.remove')}
           </button>
         </p>
       )}
@@ -97,7 +99,7 @@ export default function CourierProofForm({ order, shipment, busy, onConfirm }) {
         onClick={submit}
         className="w-full rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-60"
       >
-        Marquer comme livré
+        {t('courierProofForm.markDelivered')}
       </button>
     </div>
   );

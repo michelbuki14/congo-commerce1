@@ -8,18 +8,18 @@ import { round2 } from './format';
  */
 
 export const PLAN_FEATURES = [
-  { key: 'storefront', label: 'Vitrine en ligne' },
-  { key: 'multi_store', label: 'Plusieurs boutiques' },
-  { key: 'custom_domain', label: 'Nom de domaine personnalisé' },
-  { key: 'team_roles', label: 'Équipe & rôles' },
-  { key: 'supplier_import', label: 'Import fournisseurs internationaux' },
-  { key: 'creator_program', label: 'Programme créateurs & affiliation' },
-  { key: 'advanced_analytics', label: 'Analytique avancée' },
-  { key: 'api_access', label: 'API & webhooks' },
-  { key: 'priority_support', label: 'Support prioritaire' },
+  { key: 'storefront', labelKey: 'planFeature.storefront' },
+  { key: 'multi_store', labelKey: 'planFeature.multiStore' },
+  { key: 'custom_domain', labelKey: 'planFeature.customDomain' },
+  { key: 'team_roles', labelKey: 'planFeature.teamRoles' },
+  { key: 'supplier_import', labelKey: 'planFeature.supplierImport' },
+  { key: 'creator_program', labelKey: 'planFeature.creatorProgram' },
+  { key: 'advanced_analytics', labelKey: 'planFeature.advancedAnalytics' },
+  { key: 'api_access', labelKey: 'planFeature.apiAccess' },
+  { key: 'priority_support', labelKey: 'planFeature.prioritySupport' },
 ];
 
-export const FEATURE_LABELS = PLAN_FEATURES.reduce((acc, f) => ({ ...acc, [f.key]: f.label }), {});
+export const FEATURE_LABELS = PLAN_FEATURES.reduce((acc, f) => ({ ...acc, [f.key]: f.labelKey }), {});
 
 export const DEFAULT_PLANS = [
   {

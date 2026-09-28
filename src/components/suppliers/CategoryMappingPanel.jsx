@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Check, Info, Layers } from 'lucide-react';
 import { getSupplierAdapter, SUPPLIER_REGISTRY } from '@/lib/suppliers';
 
@@ -8,6 +9,7 @@ import { getSupplierAdapter, SUPPLIER_REGISTRY } from '@/lib/suppliers';
  * supplier adapter itself; a manual supplier can be mapped by typing the label.
  */
 export default function CategoryMappingPanel({ supplier, categories, onSave }) {
+  const { t } = useTranslation();
   const [external, setExternal] = useState([]);
   const [draft, setDraft] = useState(supplier.category_map || {});
   const [manual, setManual] = useState('');
@@ -37,7 +39,7 @@ export default function CategoryMappingPanel({ supplier, categories, onSave }) {
     setMessage('');
     try {
       await onSave(next);
-      setMessage('Correspondances enregistrées.');
+      setMessage(t('categoryMappingPanel.saved'));
     } finally {
       setBusy(false);
     }
@@ -49,8 +51,7 @@ export default function CategoryMappingPanel({ supplier, categories, onSave }) {
     <div className="mt-3 space-y-2.5 rounded-xl bg-secondary/50 p-3">
       <p className="flex items-start gap-1.5 text-[11px] text-muted-foreground">
         <Layers className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-        Chaque catégorie du fournisseur est rattachée à une catégorie de la plateforme : les produits importés
-        arrivent dans le bon rayon sans retouche manuelle. {mapped} correspondance(s) sur {external.length || 0}.
+{t('categoryMappingPanel.intro', { mapped, total: external.length || 0 })}
       </p>
 
       {external.length ? (
@@ -63,7 +64,7 @@ export default function CategoryMappingPanel({ supplier, categories, onSave }) {
                 onChange={(e) => setDraft({ ...draft, [label]: e.target.value })}
                 className="h-9 w-56 rounded-lg border border-border bg-card px-2 text-xs"
               >
-                <option value="">Non mappé</option>
+                <option value="">{t('categoryMappingPanel.unmapped')}</option>
                 {categories.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
               </select>
             </div>
@@ -71,7 +72,7 @@ export default function CategoryMappingPanel({ supplier, categories, onSave }) {
         </div>
       ) : (
         <p className="text-[11px] text-muted-foreground">
-          Aucune catégorie externe détectée : ce fournisseur est en saisie manuelle. Ajoutez les libellés à mapper ci-dessous.
+          {t('categoryMappingPanel.noExternal')}
         </p>
       )}
 
@@ -79,7 +80,7 @@ export default function CategoryMappingPanel({ supplier, categories, onSave }) {
         <input
           value={manual}
           onChange={(e) => setManual(e.target.value)}
-          placeholder="Catégorie fournisseur à ajouter (ex : Women)"
+          placeholder={t('categoryMappingPanel.addPh')}
           className="h-9 min-w-0 flex-1 rounded-lg border border-border bg-card px-3 text-xs"
         />
         <button
@@ -91,7 +92,7 @@ export default function CategoryMappingPanel({ supplier, categories, onSave }) {
           }}
           className="rounded-full border border-border px-3.5 py-1.5 text-[11px] font-semibold"
         >
-          Ajouter
+          {t('categoryMappingPanel.add')}
         </button>
         <button
           type="button"
@@ -99,7 +100,7 @@ export default function CategoryMappingPanel({ supplier, categories, onSave }) {
           onClick={() => save(draft)}
           className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-[11px] font-semibold text-primary-foreground disabled:opacity-50"
         >
-          <Check className="h-3.5 w-3.5" /> Enregistrer les correspondances
+          <Check className="h-3.5 w-3.5" /> {t('categoryMappingPanel.save')}
         </button>
       </div>
 

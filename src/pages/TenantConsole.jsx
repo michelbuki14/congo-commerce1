@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Store } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,6 +13,7 @@ import { useActiveTenant } from '@/lib/tenancy';
 import { loadPlans } from '@/lib/plans';
 
 export default function TenantConsole() {
+  const { t } = useTranslation();
   const { tenant, tenants, isAdmin, loading, selectTenant, reload } = useActiveTenant();
   const [plans, setPlans] = useState([]);
   const [subscription, setSubscription] = useState(null);
@@ -64,9 +66,9 @@ export default function TenantConsole() {
     return (
       <EmptyState
         icon={Store}
-        title="Aucune enseigne rattachée à ce compte"
-        description="Créez votre enseigne pour gérer votre vitrine, vos vendeurs et votre abonnement."
-        actionLabel="Créer mon enseigne"
+        title={t('tenantConsole.emptyTitle')}
+        description={t('tenantConsole.emptyDesc')}
+        actionLabel={t('tenantConsole.emptyAction')}
         actionTo="/tenant-onboarding"
       />
     );
@@ -78,7 +80,7 @@ export default function TenantConsole() {
         <div>
           <h1 className="font-heading text-xl font-bold md:text-2xl">{tenant.name}</h1>
           <p className="text-sm text-muted-foreground">
-            Console enseigne · {tenant.owner_email || 'sans responsable'} · statut {tenant.status}
+            {t('tenantConsole.meta', { email: tenant.owner_email || t('tenantConsole.noOwner'), status: tenant.status })}
           </p>
         </div>
         {tenants.length > 1 && (
@@ -92,7 +94,7 @@ export default function TenantConsole() {
         )}
         {isAdmin && (
           <Button variant="outline" size="sm" onClick={() => { window.location.href = '/admin/tenants'; }}>
-            Console plateforme
+            {t('tenantConsole.platformConsole')}
           </Button>
         )}
       </div>
@@ -113,10 +115,10 @@ export default function TenantConsole() {
       <Card>
         <CardContent className="space-y-4 p-5">
           <div>
-            <h2 className="font-heading text-base font-bold">Identité & marque blanche</h2>
-            <p className="text-sm text-muted-foreground">Couleurs, logo et coordonnées appliqués à votre vitrine et à vos factures.</p>
+            <h2 className="font-heading text-base font-bold">{t('tenantConsole.brandTitle')}</h2>
+            <p className="text-sm text-muted-foreground">{t('tenantConsole.brandDesc')}</p>
           </div>
-          <TenantForm initial={tenant} onSubmit={saveTenant} submitting={busy} submitLabel="Enregistrer l’identité" />
+          <TenantForm initial={tenant} onSubmit={saveTenant} submitting={busy} submitLabel={t('tenantConsole.saveIdentity')} />
         </CardContent>
       </Card>
     </div>

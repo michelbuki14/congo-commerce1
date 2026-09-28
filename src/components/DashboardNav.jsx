@@ -1,7 +1,9 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 export default function DashboardNav({ title, links }) {
+  const { t } = useTranslation();
   return (
     <div className="space-y-3">
       <h1 className="text-lg font-bold md:text-xl">{title}</h1>
@@ -17,7 +19,7 @@ export default function DashboardNav({ title, links }) {
               }`
             }
           >
-            {l.label}
+            {l.key ? t(l.key) : l.label}
           </NavLink>
         ))}
       </nav>

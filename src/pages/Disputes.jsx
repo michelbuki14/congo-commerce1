@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Gavel, ShieldCheck, AlertCircle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '@/components/StatusBadge';
@@ -7,16 +8,16 @@ import { getProfile } from '@/lib/session';
 import { formatUSD, formatDate } from '@/lib/format';
 import { emitEvent } from '@/lib/events';
 
-const TYPES = [
-  { id: 'not_received', label: 'Article non reçu' },
-  { id: 'wrong_product', label: 'Mauvais article reçu' },
-  { id: 'damaged', label: 'Article endommagé' },
-  { id: 'not_as_described', label: 'Article très différent de la description' },
-  { id: 'missing_item', label: 'Article manquant dans le colis' },
-  { id: 'payment_issue', label: 'Problème de paiement' },
-];
-
 export default function Disputes() {
+  const { t } = useTranslation();
+  const TYPES = [
+    { id: 'not_received', label: t('disputes.typeNotReceived') },
+    { id: 'wrong_product', label: t('disputes.typeWrongProduct') },
+    { id: 'damaged', label: t('disputes.typeDamaged') },
+    { id: 'not_as_described', label: t('disputes.typeNotAsDescribed') },
+    { id: 'missing_item', label: t('disputes.typeMissingItem') },
+    { id: 'payment_issue', label: t('disputes.typePaymentIssue') },
+  ];
   const profile = getProfile();
   const [disputes, setDisputes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -46,7 +47,7 @@ export default function Disputes() {
     setError('');
     setSuccess('');
     if (!form.order_number.trim()) {
-      setError('Indiquez le numéro de commande concerné.');
+      setError(t('disputes.orderNumberRequired'));
       return;
     }
     setSubmitting(true);
@@ -79,16 +80,16 @@ export default function Disputes() {
         reference: number,
         actorName: profile.name || '',
         actorEmail: profile.email || '',
-        description: `${TYPES.find((t) => t.id === form.type)?.label || 'Litige'} sur ${number} — ${profile.name || 'client'}${
+        description: `${TYPES.find((tx) => tx.id === form.type)?.label || 'Litige'} sur ${number} — ${profile.name || 'client'}${
           form.description ? ` : ${form.description}` : ''
         }`,
         payload: { type: form.type, amount_usd: order?.total_usd || 0, phone: form.phone || profile.phone || '' },
       });
-      setSuccess('Votre litige a été ouvert. Un arbitre examine votre dossier sous 48 h.');
+      setSuccess(t('disputes.disputeOpened'));
       setForm({ ...form, order_number: '', description: '' });
       await load(form.phone || profile.phone);
     } catch {
-      setError("Le litige n'a pas pu être ouvert. Réessayez.");
+      setError(t('disputes.openFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -96,32 +97,31 @@ export default function Disputes() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-5 pb-8">
-      <h1 className="text-lg font-bold md:text-xl">Litiges & protection acheteur</h1>
+      <h1 className="text-lg font-bold md:text-xl">{t('disputes.title')}</h1>
 
       <div className="flex items-start gap-2 rounded-xl border border-primary/30 bg-primary/5 p-3 text-xs">
         <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
         <p>
-          Si un article n'arrive pas, arrive abîmé ou ne correspond pas à la description, ouvrez un litige. Notre équipe
-          arbitre le dossier entre vous et le vendeur, et un remboursement peut être crédité sur votre portefeuille.
+          {t('disputes.buyerProtection')}
         </p>
       </div>
 
       <section className="space-y-3 rounded-2xl border border-border bg-card p-4">
         <h2 className="flex items-center gap-2 text-sm font-bold">
-          <Gavel className="h-4 w-4 text-primary" /> Ouvrir un litige
+          <Gavel className="h-4 w-4 text-primary" /> {t('disputes.openDispute')}
         </h2>
         <form onSubmit={submit} className="space-y-3">
           <div className="grid gap-3 md:grid-cols-2">
             <input
               value={form.order_number}
               onChange={(e) => setForm({ ...form, order_number: e.target.value.toUpperCase() })}
-              placeholder="Numéro de commande (CC-…)"
+              placeholder={t('disputes.orderNumberPh')}
               className="h-11 rounded-lg border border-border bg-background px-3 text-sm"
             />
             <input
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              placeholder="Téléphone"
+              placeholder={t('disputes.phonePh')}
               className="h-11 rounded-lg border border-border bg-background px-3 text-sm"
             />
           </div>
@@ -130,15 +130,15 @@ export default function Disputes() {
             onChange={(e) => setForm({ ...form, type: e.target.value })}
             className="h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"
           >
-            {TYPES.map((t) => (
-              <option key={t.id} value={t.id}>{t.label}</option>
+            {TYPES.map((tx) => (
+              <option key={tx.id} value={tx.id}>{tx.label}</option>
             ))}
           </select>
           <textarea
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
             rows={3}
-            placeholder="Expliquez ce qui s'est passé (dates, échanges avec le vendeur, photos disponibles…)"
+            placeholder={t('disputes.descPh')}
             className="w-full rounded-lg border border-border bg-background p-3 text-sm"
           />
           {error && (
@@ -152,16 +152,16 @@ export default function Disputes() {
             disabled={submitting}
             className="rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50"
           >
-            {submitting ? 'Envoi…' : 'Ouvrir le litige'}
+            {submitting ? t('disputes.sending') : t('disputes.openDispute')}
           </button>
           <p className="text-[11px] text-muted-foreground">
-            Vous pouvez aussi demander un simple retour depuis <Link to="/returns" className="font-semibold text-primary">Retours & remboursements</Link>.
+            {t('disputes.alsoReturnPre')} <Link to="/returns" className="font-semibold text-primary">{t('disputes.alsoReturnLink')}</Link>.
           </p>
         </form>
       </section>
 
       <section className="rounded-2xl border border-border bg-card p-4">
-        <h2 className="mb-3 text-sm font-bold">Mes litiges</h2>
+        <h2 className="mb-3 text-sm font-bold">{t('disputes.myDisputes')}</h2>
         {loading ? (
           <div className="h-16 animate-pulse rounded-lg bg-secondary" />
         ) : disputes.length ? (
@@ -179,12 +179,12 @@ export default function Disputes() {
                   {TYPES.find((x) => x.id === d.type)?.label} · {d.seller_name || 'Congo Commerce'} · {formatDate(d.created_date)}
                 </p>
                 {d.description && <p className="mt-1 text-xs text-muted-foreground">{d.description}</p>}
-                {d.admin_notes && <p className="mt-1 text-xs font-medium text-primary">Décision : {d.admin_notes}</p>}
+                {d.admin_notes && <p className="mt-1 text-xs font-medium text-primary">{t('disputes.decisionIs', { notes: d.admin_notes })}</p>}
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-xs text-muted-foreground">Aucun litige enregistré sur ce numéro.</p>
+          <p className="text-xs text-muted-foreground">{t('disputes.noDisputes')}</p>
         )}
       </section>
     </div>

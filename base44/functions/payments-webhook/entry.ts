@@ -176,6 +176,16 @@ async function handleOrderApproved(db: any, eventData: any): Promise<Response> {
       status: mkOrder.status === "PENDING" ? "CONFIRMED" : mkOrder.status,
       payment_reference: orderId ?? checkoutId,
     });
+    // Card orders are created as PENDING *before* the buyer pays on Wix. The
+    // fulfillments must follow the order into CONFIRMED, otherwise they strand
+    // in PENDING until someone advances them by hand. Only PENDING rows move,
+    // so retries and concurrent deliveries are no-ops.
+    const fulfillments = await db.entities.FulfillmentOrder.filter({ order_number: mkOrder.order_number });
+    for (const fo of fulfillments) {
+      if (fo.status === "PENDING") {
+        await db.entities.FulfillmentOrder.update(fo.id, { status: "CONFIRMED" });
+      }
+    }
     const logged = await db.entities.AuditLog.filter({ action: "payment.succeeded", entity_id: mkOrder.id });
     if (!logged.length) {
       await db.entities.AuditLog.create({

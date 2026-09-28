@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +13,7 @@ import { toast } from "@/components/ui/use-toast";
 import { safeReturnTo } from "@/lib/authReturnTo";
 
 export default function Register() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -24,7 +26,7 @@ export default function Register() {
     e.preventDefault();
     setError("");
     if (password !== confirmPassword) {
-      setError("Les mots de passe ne correspondent pas");
+      setError(t('auth.passwordsMismatch'));
       return;
     }
     setLoading(true);
@@ -32,7 +34,7 @@ export default function Register() {
       await base44.auth.register({ email, password });
       setShowOtp(true);
     } catch (err) {
-      setError(err.message || "L'inscription a échoué");
+      setError(err.message || t('auth.registerError'));
     } finally {
       setLoading(false);
     }
@@ -48,7 +50,7 @@ export default function Register() {
       }
       window.location.href = safeReturnTo();
     } catch (err) {
-      setError(err.message || "Code de vérification invalide");
+      setError(err.message || t('auth.codeInvalid'));
     } finally {
       setLoading(false);
     }
@@ -59,11 +61,11 @@ export default function Register() {
     try {
       await base44.auth.resendOtp(email);
       toast({
-        title: "Code envoyé",
-        description: "Consultez votre e-mail pour le nouveau code.",
+        title: t('auth.codeSent'),
+        description: t('auth.codeSentDesc'),
       });
     } catch (err) {
-      setError(err.message || "Impossible d'envoyer un nouveau code");
+      setError(err.message || t('auth.resendFailed'));
     }
   };
 
@@ -75,8 +77,8 @@ export default function Register() {
     return (
       <AuthLayout
         icon={Mail}
-        title="Vérifiez votre e-mail"
-        subtitle={`Nous avons envoyé un code à ${email}`}
+        title={t('auth.otpTitle')}
+        subtitle={t('auth.otpSubtitle', { email })}
       >
         {error && (
           <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
@@ -109,16 +111,16 @@ export default function Register() {
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Vérification…
+              {t('auth.verifying')}
             </>
           ) : (
-            "Vérifier"
+            t('auth.verify')
           )}
         </Button>
         <p className="text-center text-sm text-muted-foreground mt-4">
-          Vous n'avez pas reçu le code ?{" "}
+          {t('auth.noCode')}{" "}
           <button onClick={handleResend} className="text-primary font-medium hover:underline">
-            Renvoyer
+            {t('auth.resend')}
           </button>
         </p>
       </AuthLayout>
@@ -128,16 +130,16 @@ export default function Register() {
   return (
     <AuthLayout
       icon={UserPlus}
-      title="Créer votre compte"
-      subtitle="Inscrivez-vous pour commencer"
+      title={t('auth.registerTitle')}
+      subtitle={t('auth.registerSubtitle')}
       footer={
         <>
-          Vous avez déjà un compte ?{" "}
+          {t('auth.hasAccount')}{" "}
           <Link
             to={"/login" + (safeReturnTo() !== "/" ? "?returnTo=" + encodeURIComponent(safeReturnTo()) : "")}
             className="text-primary font-medium hover:underline"
           >
-            Se connecter
+            {t('auth.loginLink')}
           </Link>
         </>
       }
@@ -148,7 +150,7 @@ export default function Register() {
         onClick={handleGoogle}
       >
         <GoogleIcon className="w-5 h-5 mr-2" />
-        Continuer avec Google
+        {t('auth.continueGoogle')}
       </Button>
 
       <div className="relative mb-6">
@@ -156,7 +158,7 @@ export default function Register() {
           <div className="w-full border-t border-border" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-card px-3 text-muted-foreground">ou</span>
+          <span className="bg-card px-3 text-muted-foreground">{t('common.or')}</span>
         </div>
       </div>
 
@@ -168,7 +170,7 @@ export default function Register() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="email">E-mail</Label>
+          <Label htmlFor="email">{t('common.email')}</Label>
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
             <Input
@@ -185,7 +187,7 @@ export default function Register() {
           </div>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="password">Mot de passe</Label>
+          <Label htmlFor="password">{t('common.password')}</Label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
             <Input
@@ -201,7 +203,7 @@ export default function Register() {
           </div>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="confirm">Confirmer le mot de passe</Label>
+          <Label htmlFor="confirm">{t('auth.confirmPassword')}</Label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
             <Input
@@ -220,10 +222,10 @@ export default function Register() {
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Création du compte…
+              {t('auth.registerSubmitting')}
             </>
           ) : (
-            "Créer un compte"
+            t('auth.registerSubmit')
           )}
         </Button>
       </form>

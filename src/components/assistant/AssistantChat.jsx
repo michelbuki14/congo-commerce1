@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { base44 } from '@/api/base44Client';
 import AssistantMessage from '@/components/assistant/AssistantMessage';
 import AssistantComposer from '@/components/assistant/AssistantComposer';
@@ -37,6 +38,7 @@ async function findExistingConversation() {
 }
 
 export default function AssistantChat() {
+  const { t } = useTranslation();
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
@@ -115,7 +117,7 @@ export default function AssistantChat() {
 
       await base44.agents.addMessage(conversation, { role: 'user', content });
     } catch {
-      setError("Le message n'a pas pu être envoyé. Vérifiez votre connexion et réessayez.");
+      setError(t('assistantChat.sendError'));
     } finally {
       setSending(false);
     }
@@ -133,16 +135,15 @@ export default function AssistantChat() {
           </div>
         ) : messages.length === 0 ? (
           <div className="space-y-2 py-6 text-center">
-            <p className="text-sm font-semibold">Bonjour, que cherchez-vous ?</p>
+            <p className="text-sm font-semibold">{t('assistantChat.greeting')}</p>
             <p className="mx-auto max-w-md text-xs text-muted-foreground">
-              Exemples : « une robe pour un mariage à Kinshasa sous 40 USD », « un cadeau pour un enfant de 5 ans »,
-              « un téléphone avec une bonne autonomie ».
+              {t('assistantChat.examples')}
             </p>
           </div>
         ) : (
           messages.map((message, index) => <AssistantMessage key={index} message={message} />)
         )}
-        {waiting && <p className="text-xs text-muted-foreground">L'assistant réfléchit…</p>}
+        {waiting && <p className="text-xs text-muted-foreground">{t('assistantChat.thinking')}</p>}
         <div ref={endRef} />
       </div>
 

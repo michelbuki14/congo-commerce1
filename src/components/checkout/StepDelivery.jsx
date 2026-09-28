@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { MapPin, Store, Truck, Split } from 'lucide-react';
 import { getCities } from '@/lib/config';
 import { formatUSD } from '@/lib/format';
@@ -18,17 +19,18 @@ export default function StepDelivery({
   setNotes,
   groups,
 }) {
+  const { t } = useTranslation();
   return (
     <section className="space-y-3 rounded-xl border border-border bg-card p-4">
       <h2 className="flex items-center gap-2 text-sm font-bold">
-        <MapPin className="h-4 w-4 text-primary" /> Coordonnées & livraison
+        <MapPin className="h-4 w-4 text-primary" /> {t('checkout.deliveryTitle')}
       </h2>
 
       <div className="grid gap-3 md:grid-cols-2">
         <input
           value={profile.name}
           onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-          placeholder="Nom complet"
+          placeholder={t('checkout.fullName')}
           autoComplete="name"
           className={FIELD}
         />
@@ -38,7 +40,7 @@ export default function StepDelivery({
           autoComplete="tel"
           value={profile.phone}
           onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-          placeholder="Téléphone (+243…)"
+          placeholder={t('checkout.phonePlaceholder')}
           className={FIELD}
         />
         <input
@@ -47,7 +49,7 @@ export default function StepDelivery({
           autoComplete="email"
           value={profile.email || ''}
           onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-          placeholder="Email (optionnel)"
+          placeholder={t('checkout.emailOptional')}
           className={FIELD}
         />
         <select
@@ -63,8 +65,8 @@ export default function StepDelivery({
 
       <div className="flex gap-2">
         {[
-          { id: 'home_delivery', label: 'À domicile', icon: Truck },
-          { id: 'pickup_point', label: 'Point de retrait', icon: Store },
+          { id: 'home_delivery', key: 'checkout.homeDelivery', icon: Truck },
+          { id: 'pickup_point', key: 'checkout.pickupPoint', icon: Store },
         ].map((m) => (
           <button
             key={m.id}
@@ -74,7 +76,7 @@ export default function StepDelivery({
               deliveryMethod === m.id ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-background'
             }`}
           >
-            <m.icon className="h-4 w-4" /> {m.label}
+            <m.icon className="h-4 w-4" /> {t(m.key)}
           </button>
         ))}
       </div>
@@ -84,7 +86,7 @@ export default function StepDelivery({
           value={profile.address}
           onChange={(e) => setProfile({ ...profile, address: e.target.value })}
           rows={2}
-          placeholder="Adresse complète : commune, quartier, avenue, numéro"
+          placeholder={t('checkout.addressPlaceholder')}
           autoComplete="street-address"
           className="w-full rounded-lg border border-border bg-background p-3 text-sm"
         />
@@ -109,7 +111,7 @@ export default function StepDelivery({
               </button>
             ))
           ) : (
-            <p className="text-xs text-muted-foreground">Aucun point de retrait disponible pour le moment.</p>
+            <p className="text-xs text-muted-foreground">{t('checkout.noPickup')}</p>
           )}
         </div>
       )}
@@ -117,22 +119,22 @@ export default function StepDelivery({
       <input
         value={notes}
         onChange={(e) => setNotes(e.target.value)}
-        placeholder="Instructions pour le livreur (optionnel)"
+        placeholder={t('checkout.notesPlaceholder')}
         className={FIELD}
       />
 
       {!!groups.length && (
         <div className="space-y-2 rounded-xl bg-secondary/50 p-3">
           <h3 className="flex items-center gap-2 text-xs font-bold">
-            <Split className="h-3.5 w-3.5 text-primary" /> {groups.length} expédition{groups.length > 1 ? 's' : ''} pour une seule commande
+            <Split className="h-3.5 w-3.5 text-primary" /> {t('checkout.splitTitle', { count: groups.length })}
           </h3>
           <p className="text-[11px] text-muted-foreground">
-            Congo Commerce regroupe automatiquement vos articles par vendeur ou fournisseur. Vous suivez une seule commande.
+            {t('checkout.splitDesc')}
           </p>
           {groups.map((g) => (
             <div key={g.label} className="flex items-center justify-between gap-2 rounded-lg bg-card px-3 py-2 text-xs">
               <span className="min-w-0 truncate font-medium">{g.label}</span>
-              <span className="shrink-0 text-muted-foreground">{g.intl ? 'International' : 'Local RDC'} · {g.count} article(s)</span>
+              <span className="shrink-0 text-muted-foreground">{g.intl ? t('checkout.intl') : t('checkout.localDrc')} · {t('checkout.itemCount', { count: g.count })}</span>
             </div>
           ))}
         </div>
