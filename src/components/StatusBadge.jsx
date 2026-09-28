@@ -69,13 +69,17 @@ const LABELS = {
   ARCHIVED: 'Archivé',
 };
 
-export default function StatusBadge({ status, className = '' }) {
+export default function StatusBadge({ status, className = '', variant = 'default' }) {
   const { t } = useTranslation();
   if (!status) return null;
   const key = String(status).toUpperCase();
+  const label = t(`status.${key}`, { defaultValue: LABELS[key] || status });
+  if (variant === 'paper') {
+    return <span className={`paper-badge ${className}`}>{label}</span>;
+  }
   return (
     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${STYLES[key] || 'bg-secondary text-foreground'} ${className}`}>
-      {t(`status.${key}`, { defaultValue: LABELS[key] || status })}
+      {label}
     </span>
   );
 }
