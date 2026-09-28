@@ -133,7 +133,12 @@ export async function notifyOrderStatus({ order, fulfillment = null, status = ''
 /** Same, but resolves the order from a fulfillment record. */
 export async function notifyFulfillmentStatus(fulfillment, status) {
   if (!fulfillment?.order_id) return null;
-  const order = await base44.entities.Order.get(fulfillment.order_id).catch(() => null);
+  // The courier and the seller both reach this point without read access to the
+  // order, so the delivery desk resolves it after checking their own binding.
+  const response = await base44.functions
+    .invoke('deliveryDesk', { action: 'order', fulfillment_id: fulfillment.id })
+    .catch(() => null);
+  const order = response?.data?.order || null;
   if (!order) return null;
   return notifyOrderStatus({ order, fulfillment, status });
 }

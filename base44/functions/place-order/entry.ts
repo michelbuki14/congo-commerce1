@@ -311,6 +311,17 @@ export default async function (req: Request) {
       consent_at: new Date().toISOString(),
     });
 
+    // Seller and courier identity is copied onto each delivery record: it is the
+    // anchor the partner consoles are scoped by under row-level security.
+    const [deliverySellers, deliveryCouriers] = await Promise.all([
+      db.entities.Seller.list("-created_date", 500).catch(() => []),
+      db.entities.Courier.list("-created_date", 500).catch(() => []),
+    ]);
+    const sellerEmailOf = (id: string) =>
+      String((deliverySellers || []).find((s: any) => s.id === id)?.email || "").toLowerCase();
+    const courierEmailOf = (id: string) =>
+      String((deliveryCouriers || []).find((c: any) => c.id === id)?.email || "").toLowerCase();
+
     const fulfillmentPayloads = plan.map((p) => {
       const isLocal = p.source_type === "local_seller";
       const tracking = isLocal
@@ -322,6 +333,7 @@ export default async function (req: Request) {
         tenant_owner_email: ownerOf(p.lines) || orderTenantOwner,
         fulfillment_number: `${orderNum}-F${p.index + 1}`,
         source_type: p.source_type, seller_id: p.seller_id || "", seller_name: p.seller_name || "",
+        seller_email: sellerEmailOf(p.seller_id || ""),
         supplier_id: p.supplier_id || "", supplier_name: p.supplier_name || "",
         items: p.lines.map((l: any) => ({
           product_id: l.product.id, title: l.product.title, image: l.product.images?.[0] || "",
@@ -335,6 +347,7 @@ export default async function (req: Request) {
         status: "PENDING",
         courier_id: isLocal ? p.pick.courier.id : "",
         courier_name: isLocal ? p.pick.courier.name : "",
+        courier_email: isLocal ? courierEmailOf(p.pick.courier.id) : "",
         tracking_number: tracking,
         estimated_delivery: isLocal ? p.pick?.courier.eta || "2-4 jours" : (p.lines[0]?.product?.estimated_delivery || "18 jours"),
         payout_released: false,
@@ -352,6 +365,7 @@ export default async function (req: Request) {
         fulfillment_order_id: f.id, order_number: orderNum,
         tenant_id: details.tenant_id || "", tenant_owner_email: details.tenant_owner_email || "",
         courier_id: details.courier_id, courier_name: details.courier_name,
+        courier_email: details.courier_email || "",
         tracking_number: details.tracking_number, status: details.status,
         events: [{ status: details.status, label: "Étiquette créée", at: new Date().toISOString() }],
       });
