@@ -1,5 +1,6 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.49";
 import { requireAdmin } from "../../shared/security.ts";
+import { postWalletEntry, releasePending } from "../../shared/walletLedger.ts";
 
 /**
  * refund-payment — base44/functions/refund-payment/entry.ts
@@ -82,29 +83,47 @@ export default async function (req: Request) {
       });
     }
 
-    const updatedWallet = await db.entities.Wallet.update(wallet.id, {
-      balance_usd: round2((wallet.balance_usd || 0) + amount),
-      lifetime_credit_usd: round2((wallet.lifetime_credit_usd || 0) + amount),
-    });
     const reference = String(body.return_number || body.dispute_id || orderNumber);
-    const tx = await db.entities.WalletTransaction.create({
-      wallet_id: wallet.id,
-      tenant_id: wallet.tenant_id || "",
-      tenant_owner_email: wallet.tenant_owner_email || "",
+    const posted = await postWalletEntry(db, wallet, {
+      type: "REFUND",
+      direction: "credit",
+      amount,
       owner_type: "customer",
       owner_name: wallet.owner_name,
       owner_email: wallet.owner_email || "",
-      type: "REFUND",
-      direction: "credit",
-      amount_usd: amount,
-      balance_after_usd: updatedWallet.balance_usd,
-      currency: "USD",
       description: `Remboursement ${orderNumber}${body.reason ? ` — ${String(body.reason).slice(0, 120)}` : ""}`,
       reference,
       order_id: order.id,
       order_number: orderNumber,
       status: "posted",
     });
+    if (!posted.ok) return err("Remboursement impossible — réessayez.", 409);
+    const tx = posted.transaction;
+
+    // Two refunds racing on the same order both passed the remainder check
+    // above. The ledger is the truth: if our credit tipped the order past its
+    // total, undo it rather than leave the buyer over-refunded.
+    const ledger = await db.entities.WalletTransaction
+      .filter({ order_number: orderNumber, type: "REFUND", direction: "credit" })
+      .catch(() => []);
+    const refundedTotal = round2((ledger || []).reduce((s: number, t: any) => s + (Number(t.amount_usd) || 0), 0));
+    if (refundedTotal > round2(Number(order.total_usd) || 0) + 0.005) {
+      const reversal = await postWalletEntry(db, posted.wallet, {
+        type: "ADJUSTMENT",
+        direction: "debit",
+        amount,
+        owner_type: "customer",
+        owner_name: wallet.owner_name,
+        owner_email: wallet.owner_email || "",
+        description: `Annulation — remboursement concurrent sur ${orderNumber}`,
+        reference: `reversal:${orderNumber}`,
+        order_id: order.id,
+        order_number: orderNumber,
+      });
+      if (!reversal.ok) console.error("refund-payment: reversal failed", orderNumber, reversal.reason);
+      await db.entities.WalletTransaction.update(tx.id, { status: "reversed" });
+      return err("Un remboursement concurrent a déjà été enregistré sur cette commande.", 409);
+    }
 
     // Claw back unreleased shares: a refunded order must never still pay out.
     let reversed = 0;
@@ -116,11 +135,8 @@ export default async function (req: Request) {
         .catch(() => []);
       for (const p of pending || []) {
         await db.entities.WalletTransaction.update(p.id, { status: "reversed" });
-        const wrows = await db.entities.Wallet.filter({ id: p.wallet_id }).catch(() => []);
-        const w = wrows?.[0];
-        if (w) {
-          await db.entities.Wallet.update(w.id, { pending_usd: Math.max(0, round2((w.pending_usd || 0) - Number(p.amount_usd || 0))) });
-        }
+        const w = await db.entities.Wallet.get(p.wallet_id).catch(() => null);
+        if (w) await releasePending(db, w, Number(p.amount_usd || 0));
         reversed += 1;
       }
       await db.entities.FulfillmentOrder.update(f.id, { payout_released: true });

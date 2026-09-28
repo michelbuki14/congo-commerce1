@@ -1,4 +1,5 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.49";
+import { postWalletEntry } from "../../shared/walletLedger.ts";
 
 /**
  * place-order — base44/functions/place-order/entry.ts
@@ -385,24 +386,18 @@ export default async function (req: Request) {
 
     // ---- 11. Ledger ----------------------------------------------------------
     async function postTx(wallet: any, t: any) {
-      const updated = await db.entities.Wallet.update(wallet.id, {
-        balance_usd: round2((wallet.balance_usd || 0) + (t.direction === "debit" ? -t.amount : t.amount)),
-        lifetime_credit_usd: t.direction === "debit" ? wallet.lifetime_credit_usd || 0 : round2((wallet.lifetime_credit_usd || 0) + t.amount),
-        lifetime_debit_usd: t.direction === "debit" ? round2((wallet.lifetime_debit_usd || 0) + t.amount) : wallet.lifetime_debit_usd || 0,
-        pending_usd: t.status === "pending" && t.direction !== "debit"
-          ? round2((wallet.pending_usd || 0) + t.amount) : wallet.pending_usd || 0,
-      });
-      const tx = await db.entities.WalletTransaction.create({
-        wallet_id: wallet.id, tenant_id: wallet.tenant_id || "", tenant_owner_email: wallet.tenant_owner_email || "",
-        owner_type: wallet.owner_type, owner_name: wallet.owner_name, owner_email: wallet.owner_email || "",
-        type: t.type, direction: t.direction, amount_usd: t.amount,
+      return postWalletEntry(db, wallet, {
+        type: t.type,
+        direction: t.direction,
+        amount: t.amount,
+        description: t.description,
+        reference: t.reference || "",
         amount_cdf: Math.round(t.amount * pricing.usd_to_cdf_rate),
-        balance_after_usd: updated.balance_usd, currency: "USD",
-        description: t.description, reference: t.reference || "",
-        order_id: order.id, order_number: orderNum,
-        idempotency_key: t.idempotencyKey || "", status: t.status || "posted",
+        order_id: order.id,
+        order_number: orderNum,
+        idempotencyKey: t.idempotencyKey || "",
+        status: t.status || "posted",
       });
-      return { updated, tx };
     }
     async function getWallet(ownerType: string, ownerName: string, ownerEmail: string, ownerId: string, tenant: any = {}) {
       const rows = await db.entities.Wallet.filter({ owner_type: ownerType, owner_name: ownerName }).catch(() => []);
@@ -416,10 +411,13 @@ export default async function (req: Request) {
 
     // Wallet payment: the debit happens here, after the server-side balance check.
     if (method.kind === "wallet") {
-      await postTx(customerWallet, {
+      const debit = await postTx(customerWallet, {
         type: "DEBIT", direction: "debit", amount: total,
         description: `Achat — commande ${orderNum}`, reference: orderNum, idempotencyKey: `wallet:${orderNum}`,
       });
+      // The balance was checked before the order was written; if a concurrent
+      // debit won the race the ledger refused this movement — never call it PAID.
+      if (!debit.ok) return err("Solde du portefeuille insuffisant pour cette commande.", 409);
       paymentStatus = "PAID";
       paymentReference = `WALLET-${orderNum}`;
       paymentVerified = true;

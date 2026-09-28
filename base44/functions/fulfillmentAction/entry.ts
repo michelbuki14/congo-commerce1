@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { sellerMayAct, courierMayAct, validAdvance, validCourierAdvance, TERMINAL } from '../../shared/fulfillmentAccess.js';
+import { postWalletEntry, releasePending } from '../../shared/walletLedger.ts';
 
 const money = (value) => Math.round(Number(value || 0) * 100) / 100;
 const fail = (error, status = 400) => Response.json({ error }, { status });
@@ -11,7 +12,7 @@ async function releasePayout(db, fulfillment, order) {
     const wallet = await db.entities.Wallet.get(tx.wallet_id).catch(() => null);
     if (!wallet || tx.direction !== 'credit' || tx.order_id !== order.id) continue;
     await db.entities.WalletTransaction.update(tx.id, { status: 'posted' });
-    await db.entities.Wallet.update(wallet.id, { pending_usd: Math.max(0, money(Number(wallet.pending_usd || 0) - Number(tx.amount_usd || 0))) });
+    await releasePending(db, wallet, tx.amount_usd);
   }
   return db.entities.FulfillmentOrder.update(fulfillment.id, { payout_released: true });
 }
@@ -24,9 +25,19 @@ async function creditCourier(db, fulfillment, order, courier) {
   if ((await db.entities.WalletTransaction.filter({ idempotency_key: key })).length) return;
   let wallet = (await db.entities.Wallet.filter({ owner_type: 'courier', owner_name: fulfillment.courier_name }))[0];
   if (!wallet) wallet = await db.entities.Wallet.create({ owner_type: 'courier', owner_id: courier.id, owner_name: courier.name, owner_email: courier.email || '', balance_usd: 0 });
-  const balance = money(wallet.balance_usd + amount);
-  await db.entities.Wallet.update(wallet.id, { balance_usd: balance, lifetime_credit_usd: money(Number(wallet.lifetime_credit_usd || 0) + amount) });
-  await db.entities.WalletTransaction.create({ wallet_id: wallet.id, owner_type: 'courier', owner_name: courier.name, owner_email: wallet.owner_email || courier.email || '', type: 'PAYOUT', direction: 'credit', amount_usd: amount, balance_after_usd: balance, currency: 'USD', status: 'posted', order_id: order.id, order_number: order.order_number, reference: fulfillment.fulfillment_number, idempotency_key: key, description: `Course livrée — ${fulfillment.fulfillment_number}` });
+  await postWalletEntry(db, wallet, {
+    type: 'PAYOUT',
+    direction: 'credit',
+    amount,
+    owner_type: 'courier',
+    owner_name: courier.name,
+    owner_email: wallet.owner_email || courier.email || '',
+    order_id: order.id,
+    order_number: order.order_number,
+    reference: fulfillment.fulfillment_number,
+    idempotencyKey: key,
+    description: `Course livrée — ${fulfillment.fulfillment_number}`,
+  });
 }
 
 export default async function(req: Request): Promise<Response> {
