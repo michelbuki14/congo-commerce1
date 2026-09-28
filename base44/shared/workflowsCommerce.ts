@@ -352,6 +352,16 @@ const creatorCommission = {
           (await ctx.base44.asServiceRole.entities.Order.filter({ order_number: orderNumber }).catch(() => []))[0] || null;
         if (!order) throw new Error(`Commande ${orderNumber} introuvable`);
 
+        // A commission only ever rides on a payout that was really released for
+        // this order. The event alone never authorises the credit, whoever
+        // reported it and whatever it claims.
+        const released = await ctx.base44.asServiceRole.entities.FulfillmentOrder
+          .filter({ order_number: orderNumber, payout_released: true }, '-created_date', 1)
+          .catch(() => []);
+        if (!released.length) {
+          return { skipped: true, reason: 'Versement non libéré sur cette commande' };
+        }
+
         const creatorId = String(ctx.input.creator_id || order.creator_id || '');
         const code = String(ctx.input.affiliate_code || order.affiliate_code || '');
         let creator = creatorId ? await ctx.base44.asServiceRole.entities.Creator.get(creatorId).catch(() => null) : null;

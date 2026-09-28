@@ -33,6 +33,29 @@ const GUEST_EVENTS = {
   return_requested: { entity: 'Return', field: 'order_number' },
 };
 
+const GUEST_DESCRIPTION_MAX = 300;
+
+/** Plain text only — a notification never carries markup or control characters. */
+function plainText(value, max) {
+  return String(value ?? '')
+    .replace(/[\u0000-\u001f\u007f<>]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, max);
+}
+
+/**
+ * The record an anonymous caller's event must reference. A guest may report
+ * that something happened — never what it says: every value a notification
+ * displays is read from that record, and the caller's own are discarded.
+ */
+async function findGuestRecord(base44, guest, reference) {
+  const rows = await base44.asServiceRole.entities[guest.entity]
+    .filter({ [guest.field]: reference }, '-created_date', 1)
+    .catch(() => []);
+  return rows[0] || null;
+}
+
 /** Notification.type is a closed list — map the event category onto it. */
 function notificationType(category) {
   if (category === 'order') return 'order';
@@ -112,17 +135,16 @@ export default async function (req) {
     // Anyone can reach this endpoint. An anonymous caller may only report the
     // guest-facing commerce events, and only for a record that really exists —
     // so a fabricated event can neither be recorded, notified, audited, nor
-    // used to start a business workflow. A signed-in caller's identity always
-    // comes from the session; only an administrator (which is what the
-    // platform's own workflows are) may state one.
+    // used to start a business workflow. A guest's event is then rebuilt from
+    // that record: it may say that something happened, never what a
+    // notification shows. A signed-in caller's identity always comes from the
+    // session; only an administrator (which is what the platform's own
+    // workflows are) may state one.
+    let guestRecord = null;
     if (!user) {
       const guest = GUEST_EVENTS[name];
-      const exists = guest && reference
-        ? (await base44.asServiceRole.entities[guest.entity]
-            .filter({ [guest.field]: reference }, '-created_date', 1)
-            .catch(() => [])).length > 0
-        : false;
-      if (!exists) return Response.json({ error: 'Événement non autorisé' }, { status: 401 });
+      guestRecord = guest && reference ? await findGuestRecord(base44, guest, reference) : null;
+      if (!guestRecord) return Response.json({ error: 'Événement non autorisé' }, { status: 401 });
     }
 
     const ctx = {
@@ -132,10 +154,20 @@ export default async function (req) {
       reference,
       actorEmail: isAdmin && body.actor_email ? String(body.actor_email) : user?.email || '',
       actorName: isAdmin && body.actor_name ? String(body.actor_name) : user?.full_name || '',
-      tenantId: String(body.tenant_id || ''),
-      tenantOwnerEmail: String(body.tenant_owner_email || ''),
-      description: String(body.description || '').slice(0, MAX_DESCRIPTION),
-      payload,
+      tenantId: String((guestRecord ? guestRecord.tenant_id : body.tenant_id) || ''),
+      tenantOwnerEmail: String((guestRecord ? guestRecord.tenant_owner_email : body.tenant_owner_email) || ''),
+      description: guestRecord
+        ? plainText(body.description, GUEST_DESCRIPTION_MAX)
+        : String(body.description || '').slice(0, MAX_DESCRIPTION),
+      payload: guestRecord
+        ? {
+            order_number: reference,
+            total_usd: Number(guestRecord.total_usd) || 0,
+            fulfillments: Number(guestRecord.fulfillment_count) || 0,
+            city: guestRecord.city || '',
+            status: guestRecord.status || '',
+          }
+        : payload,
     };
 
     const severity = SEVERITIES.includes(body.severity) ? body.severity : '';
@@ -155,7 +187,7 @@ export default async function (req) {
       tenant_id: ctx.tenantId,
       tenant_owner_email: ctx.tenantOwnerEmail,
       description: ctx.description,
-      payload,
+      payload: ctx.payload,
       status: 'received',
       actions: [{ type: 'record', label: 'Événement enregistré', status: 'done', at: new Date().toISOString() }],
     });
