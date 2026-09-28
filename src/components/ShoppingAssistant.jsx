@@ -9,6 +9,7 @@ export default function ShoppingAssistant() {
   const { t } = useTranslation();
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState('');
+  const [loginRequired, setLoginRequired] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const ask = async (e) => {
@@ -17,9 +18,13 @@ export default function ShoppingAssistant() {
     if (!q || loading) return;
     setLoading(true);
     setAnswer('');
+    setLoginRequired(false);
     try {
-      const catalog = await base44.entities.Product.filter({ status: 'published' }, '-sold_count', 25);
-      const result = await shoppingAssistant({ question: q, catalog });
+      if (!(await base44.auth.isAuthenticated())) {
+        setLoginRequired(true);
+        return;
+      }
+      const result = await shoppingAssistant({ question: q });
       setAnswer(result);
     } catch {
       setAnswer(t('shoppingAssistant.unavailable'));
@@ -55,6 +60,7 @@ export default function ShoppingAssistant() {
       </form>
       {loading && <p className="mt-3 text-xs text-muted-foreground">{t('shoppingAssistant.searching')}</p>}
       {answer && <p className="mt-3 rounded-xl bg-card p-3 text-xs leading-relaxed">{answer}</p>}
+      {loginRequired && <Link to="/login" className="mt-3 block text-xs font-semibold text-primary underline">{t('auth.loginLink')}</Link>}
       <Link to="/assistant" className="mt-3 inline-block text-xs font-semibold underline">
         {t('shoppingAssistant.openAssistant')}
       </Link>

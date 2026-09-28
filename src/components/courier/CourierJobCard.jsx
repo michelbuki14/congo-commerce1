@@ -30,10 +30,7 @@ export default function CourierJobCard({ shipment, fulfillment, order, busy, onR
   const disabled = busy === shipment.id;
 
   const viewProof = async () => {
-    const { signed_url } = await base44.integrations.Core.CreateFileSignedUrl({
-      file_uri: shipment.proof_of_delivery,
-      expires_in: 300,
-    });
+    const { data: { signed_url } } = await base44.functions.invoke('viewDeliveryProof', { kind: 'shipment', id: shipment.id });
     window.open(signed_url, '_blank', 'noopener');
   };
 

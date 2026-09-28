@@ -59,9 +59,7 @@ export default function SellerDashboard() {
       setWallet(wallets[0] || null);
       setLoading(false);
 
-      const revenue = f.reduce((s, x) => s + (x.subtotal_usd || 0), 0);
-      const top = [...p].sort((a, b) => (b.sold_count || 0) - (a.sold_count || 0)).slice(0, 5).map((x) => x.title);
-      const tips = await sellerInsights({ storeName: seller.name, topProducts: top, revenue: Math.round(revenue), orders: f.length });
+      const tips = await sellerInsights({ sellerId: seller.id });
       if (alive && tips.length) setInsights(tips);
     })();
     return () => {

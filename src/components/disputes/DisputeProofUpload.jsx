@@ -28,10 +28,7 @@ export default function DisputeProofUpload({ dispute, onUploaded }) {
   const view = async () => {
     setBusy(true);
     try {
-      const { signed_url } = await base44.integrations.Core.CreateFileSignedUrl({
-        file_uri: dispute.proof_of_delivery,
-        expires_in: 300,
-      });
+      const { data: { signed_url } } = await base44.functions.invoke('viewDeliveryProof', { kind: 'dispute', id: dispute.id });
       window.open(signed_url, '_blank', 'noopener');
     } finally {
       setBusy(false);
