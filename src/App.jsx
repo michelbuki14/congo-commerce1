@@ -16,6 +16,7 @@ import AdminOnly from '@/components/AdminOnly';
 import { CartProvider } from '@/lib/cart';
 import { CurrencyProvider } from '@/lib/currency';
 import AppLayout from '@/components/layout/AppLayout';
+import Backoffice from '@/pages/Backoffice';
 
 // Customer
 import Home from '@/pages/Home';
@@ -326,6 +327,11 @@ const AuthenticatedApp = () => {
             <Route path="/logistics-hub" element={<LogisticsHub />} />
             <Route path="/workflow-monitor" element={<WorkflowMonitor />} />
           </Route>
+        </Route>
+      </Route>
+      <Route element={<RequireLogin />}>
+        <Route element={<AdminOnly />}>
+          <Route path="/backoffice" element={<Backoffice />} />
         </Route>
       </Route>
       <Route path="/login" element={<Login />} />

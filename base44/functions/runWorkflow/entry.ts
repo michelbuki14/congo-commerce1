@@ -24,6 +24,9 @@ export default async function (req) {
     const isAdmin = String(user?.role || '') === 'admin';
 
     if (!user) return Response.json({ error: 'Authentification requise' }, { status: 401 });
+    // Until tenant-scoped input and payment assertions are verified server-side,
+    // no end user may start a service-role workflow by naming a tenant or record.
+    if (!isAdmin) return Response.json({ error: 'Réservé aux administrateurs' }, { status: 403 });
 
     if (action === 'list') {
       if (!isAdmin) return Response.json({ error: 'Réservé aux administrateurs' }, { status: 403 });
