@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { base44 } from '@/api/base44Client';
 import { useActiveSeller } from '@/lib/seller';
 import { SELLER_LINKS } from '@/lib/navLinks';
@@ -23,6 +24,7 @@ function weekly(fulfillments) {
 }
 
 export default function SellerReports() {
+  const { t } = useTranslation();
   const { sellers, seller, isAdmin, loading, selectSeller } = useActiveSeller();
   const [data, setData] = useState(null);
 
@@ -36,7 +38,7 @@ export default function SellerReports() {
   }, [seller]);
 
   if (loading) return <div className="mx-auto mt-6 h-40 max-w-5xl animate-pulse rounded-2xl bg-secondary" />;
-  if (!seller) return <p className="mx-auto max-w-5xl px-4 py-10 text-sm text-muted-foreground">Aucune boutique n'est associée à votre compte.</p>;
+  if (!seller) return <p className="mx-auto max-w-5xl px-4 py-10 text-sm text-muted-foreground">{t('sellerReports.noShop')}</p>;
 
   const valid = (data?.fulfillments || []).filter((f) => !['CANCELLED', 'RETURNED'].includes(f.status));
   const gross = valid.reduce((s, f) => s + (f.subtotal_usd || 0), 0);
@@ -46,7 +48,7 @@ export default function SellerReports() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-5 px-4 py-5 pb-24">
-      <DashboardNav title="Rapports vendeur" links={SELLER_LINKS} />
+      <DashboardNav title={t('sellerReports.title')} links={SELLER_LINKS} />
       {isAdmin && (
         <select value={seller.id} onChange={(e) => selectSeller(e.target.value)} className="h-9 rounded-lg border border-border bg-card px-2 text-sm">
           {sellers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -55,18 +57,18 @@ export default function SellerReports() {
       {!data ? <div className="h-60 animate-pulse rounded-2xl bg-secondary" /> : (
         <>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            <StatCard label="Ventes brutes" value={formatUSD(gross)} />
-            <StatCard label={`Commission (${seller.commission_rate || 10} %)`} value={formatUSD(commission)} />
-            <StatCard label="Gains nets" value={formatUSD(gross - commission)} tone="good" />
-            <StatCard label="Note moyenne" value={reviews.length ? `${avg.toFixed(1)}/5` : '–'} hint={`${reviews.length} avis`} />
+            <StatCard label={t('sellerReports.gross')} value={formatUSD(gross)} />
+            <StatCard label={t('sellerReports.commission', { rate: seller.commission_rate || 10 })} value={formatUSD(commission)} />
+            <StatCard label={t('sellerReports.net')} value={formatUSD(gross - commission)} tone="good" />
+            <StatCard label={t('sellerReports.avgRating')} value={reviews.length ? `${avg.toFixed(1)}/5` : '–'} hint={t('sellerReports.reviewCount', { count: reviews.length })} />
           </div>
           <section className="rounded-2xl border border-border bg-card p-4">
-            <p className="mb-3 text-sm font-bold">Ventes des {WEEKS} dernières semaines</p>
+            <p className="mb-3 text-sm font-bold">{t('sellerReports.trendTitle', { weeks: WEEKS })}</p>
             <SalesTrendChart data={weekly(valid)} />
           </section>
           <section className="rounded-2xl border border-border bg-card p-4">
-            <p className="mb-3 text-sm font-bold">Avis clients récents</p>
-            {reviews.length === 0 ? <p className="text-xs text-muted-foreground">Aucun avis pour l'instant.</p> : (
+            <p className="mb-3 text-sm font-bold">{t('sellerReports.reviewsTitle')}</p>
+            {reviews.length === 0 ? <p className="text-xs text-muted-foreground">{t('sellerReports.noReviews')}</p> : (
               <div className="divide-y divide-border">
                 {reviews.slice(0, 10).map((r) => (
                   <div key={r.id} className="py-2.5 text-xs">

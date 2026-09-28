@@ -1,18 +1,20 @@
 import React from 'react';
 import { formatUSD } from '@/lib/format';
+import { useTranslation } from 'react-i18next';
 
 /** Per payment-method totals: collected vs still awaiting payment. */
 export default function ReconciliationTable({ rows }) {
+  const { t } = useTranslation();
   return (
     <div className="overflow-x-auto rounded-2xl border border-border bg-card">
       <table className="w-full text-sm">
         <thead className="text-left text-[11px] uppercase tracking-wide text-muted-foreground">
           <tr>
-            <th className="p-3">Moyen de paiement</th>
-            <th className="p-3">Commandes</th>
-            <th className="p-3">Encaissé</th>
-            <th className="p-3">En attente</th>
-            <th className="p-3">Échoué / annulé</th>
+            <th className="p-3">{t('reconciliationTable.method')}</th>
+            <th className="p-3">{t('reconciliationTable.orders')}</th>
+            <th className="p-3">{t('reconciliationTable.collected')}</th>
+            <th className="p-3">{t('reconciliationTable.pending')}</th>
+            <th className="p-3">{t('reconciliationTable.failed')}</th>
           </tr>
         </thead>
         <tbody>
@@ -26,7 +28,7 @@ export default function ReconciliationTable({ rows }) {
             </tr>
           ))}
           {!rows.length && (
-            <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">Aucune commande sur la période.</td></tr>
+            <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">{t('reconciliationTable.empty')}</td></tr>
           )}
         </tbody>
       </table>

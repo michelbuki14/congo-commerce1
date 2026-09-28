@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AlertCircle, CheckCircle2, RotateCcw, Search, ShieldCheck } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '@/components/StatusBadge';
@@ -18,6 +19,7 @@ import {
 } from '@/lib/returns';
 
 export default function OrderReturns() {
+  const { t } = useTranslation();
   const profile = getProfile();
   const [orders, setOrders] = useState([]);
   const [returns, setReturns] = useState([]);
@@ -60,12 +62,12 @@ export default function OrderReturns() {
     setMessage('');
     const found = await findOrderByNumber(lookup);
     if (!found) {
-      setError("Aucune commande ne correspond à ce numéro.");
+      setError(t('orderReturns.noMatch'));
       return;
     }
     setOrders((prev) => (prev.some((o) => o.id === found.id) ? prev : [found, ...prev]));
     setLookup('');
-    setMessage(`Commande ${found.order_number} ajoutée à la liste.`);
+    setMessage(t('orderReturns.orderAdded', { number: found.order_number }));
   };
 
   const submit = async () => {
@@ -73,7 +75,7 @@ export default function OrderReturns() {
     setError('');
     setMessage('');
     if (!picked.length) {
-      setError('Sélectionnez au moins un article à retourner.');
+      setError(t('orderReturns.selectItems'));
       return;
     }
     setSubmitting(true);
@@ -99,12 +101,12 @@ export default function OrderReturns() {
         description: `Retour demandé sur ${created.length} article(s)`,
         payload: { reasons: created.map((r) => r.reason) },
       });
-      setMessage(`Votre demande porte sur ${created.length} article(s). Un agent vous répond sous 48 h.`);
+      setMessage(t('orderReturns.requestSent', { count: created.length }));
       setSelection({});
       setDescription('');
       setReturns(await loadMyReturns(phone));
     } catch {
-      setError("La demande n'a pas pu être envoyée. Réessayez.");
+      setError(t('orderReturns.submitFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -119,26 +121,24 @@ export default function OrderReturns() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-5 pb-8">
-      <h1 className="text-lg font-bold md:text-xl">Initier un retour</h1>
+      <h1 className="text-lg font-bold md:text-xl">{t('orderReturns.title')}</h1>
 
       <div className="flex items-start gap-2 rounded-xl border border-primary/30 bg-primary/5 p-3 text-xs">
         <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
         <p>
-          Protection acheteur : vous disposez de {RETURN_WINDOW_DAYS} jours après réception pour demander un retour.
-          Choisissez les articles concernés et indiquez un motif pour chacun. Les articles endommagés ou non conformes
-          sont remboursés intégralement ; les remboursements partiels sont possibles.
+          {t('orderReturns.protection', { days: RETURN_WINDOW_DAYS })}
         </p>
       </div>
 
       <section className="space-y-3 rounded-2xl border border-border bg-card p-4">
         <h2 className="flex items-center gap-2 text-sm font-bold">
-          <Search className="h-4 w-4 text-primary" /> Retrouver une commande
+          <Search className="h-4 w-4 text-primary" /> {t('orderReturns.findOrder')}
         </h2>
         <div className="flex flex-wrap gap-2">
           <input
             value={lookup}
             onChange={(e) => setLookup(e.target.value.toUpperCase())}
-            placeholder="Numéro de commande (CC-…)"
+            placeholder={t('orderReturns.orderNumberPh')}
             className="h-11 min-w-0 flex-1 rounded-lg border border-border bg-background px-3 text-sm"
           />
           <button
@@ -146,16 +146,16 @@ export default function OrderReturns() {
             onClick={addByNumber}
             className="rounded-full border border-border px-4 py-2 text-xs font-semibold"
           >
-            Ajouter
+            {t('orderReturns.add')}
           </button>
         </div>
         <p className="text-[11px] text-muted-foreground">
-          Commandé depuis un autre appareil ? Saisissez le numéro reçu par SMS pour rattacher la commande.
+          {t('orderReturns.lookupHint')}
         </p>
       </section>
 
       <section className="space-y-3 rounded-2xl border border-border bg-card p-4">
-        <h2 className="text-sm font-bold">1. Sélectionnez les articles et leur motif</h2>
+        <h2 className="text-sm font-bold">{t('orderReturns.step1')}</h2>
         {loading ? (
           <div className="h-24 animate-pulse rounded-xl bg-secondary" />
         ) : orders.length ? (
@@ -174,32 +174,32 @@ export default function OrderReturns() {
         ) : (
           <EmptyState
             icon={RotateCcw}
-            title="Aucune commande sur cet appareil"
-            description="Vos commandes apparaissent ici après un achat, ou rattachez-en une avec son numéro ci-dessus."
+            title={t('orderReturns.emptyTitle')}
+            description={t('orderReturns.emptyText')}
             actionTo="/order-history"
-            actionLabel="Voir mes commandes"
+            actionLabel={t('orderReturns.emptyCta')}
           />
         )}
       </section>
 
       <section className="space-y-3 rounded-2xl border border-border bg-card p-4">
-        <h2 className="text-sm font-bold">2. Précisez votre demande</h2>
+        <h2 className="text-sm font-bold">{t('orderReturns.step2')}</h2>
         <input
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
-          placeholder="Téléphone (pour suivre la demande)"
+          placeholder={t('orderReturns.phonePh')}
           className="h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"
         />
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={3}
-          placeholder="Décrivez le problème : état du colis, différence avec la description, photos disponibles…"
+          placeholder={t('orderReturns.descPh')}
           className="w-full rounded-lg border border-border bg-background p-3 text-sm"
         />
         {pickedCount ? (
           <div className="rounded-xl bg-secondary/60 p-3 text-xs">
-            <p className="font-semibold">{pickedCount} article(s) sélectionné(s) · {formatUSD(pickedTotal)}</p>
+            <p className="font-semibold">{t('orderReturns.pickedSummary', { count: pickedCount, total: formatUSD(pickedTotal) })}</p>
             <ul className="mt-1 space-y-0.5 text-muted-foreground">
               {Object.entries(selection).map(([key, value]) => {
                 const [orderId, index] = key.split('::');
@@ -230,13 +230,13 @@ export default function OrderReturns() {
           disabled={submitting || !pickedCount}
           className="rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50"
         >
-          {submitting ? 'Envoi…' : `Demander le retour (${pickedCount})`}
+          {submitting ? t('orderReturns.sending') : t('orderReturns.requestReturn', { count: pickedCount })}
         </button>
       </section>
 
       <section className="rounded-2xl border border-border bg-card p-4">
         <h2 className="mb-3 flex items-center gap-2 text-sm font-bold">
-          <RotateCcw className="h-4 w-4 text-primary" /> Mes demandes de retour
+          <RotateCcw className="h-4 w-4 text-primary" /> {t('orderReturns.myRequests')}
         </h2>
         {returns.length ? (
           <div className="space-y-2">
@@ -252,12 +252,12 @@ export default function OrderReturns() {
                 <p className="text-[11px] text-muted-foreground">
                   {r.order_number} · {r.product_title} · {RETURN_REASON_LABELS[r.reason] || r.reason} · {formatDate(r.created_date)}
                 </p>
-                {r.resolution_notes ? <p className="mt-1 text-xs text-primary">Réponse : {r.resolution_notes}</p> : null}
+                {r.resolution_notes ? <p className="mt-1 text-xs text-primary">{t('orderReturns.responseIs', { notes: r.resolution_notes })}</p> : null}
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-xs text-muted-foreground">Aucune demande enregistrée sur ce numéro de téléphone.</p>
+          <p className="text-xs text-muted-foreground">{t('orderReturns.noRequests')}</p>
         )}
       </section>
     </div>

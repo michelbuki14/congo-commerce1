@@ -1,5 +1,6 @@
 import React from 'react';
 import { CheckCircle2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { formatDateTime } from '@/lib/format';
 
 const SEVERITY = {
@@ -8,14 +9,14 @@ const SEVERITY = {
   info: 'bg-sky-100 text-sky-900',
 };
 
-const SEVERITY_LABELS = { critical: 'Critique', warning: 'Avertissement', info: 'Info' };
-
 /** Recent failures worth acting on, newest first. */
 export default function IncidentList({ incidents }) {
+  const { t } = useTranslation();
+  const SEVERITY_LABELS = { critical: t('incidentList.severityCritical'), warning: t('incidentList.severityWarning'), info: t('incidentList.severityInfo') };
   if (!incidents?.length) {
     return (
       <p className="flex items-center justify-center gap-2 px-4 py-6 text-center text-xs text-muted-foreground">
-        <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Aucun incident récent : tous les événements et workflows ont abouti.
+        <CheckCircle2 className="h-4 w-4 text-emerald-500" /> {t('incidentList.empty')}
       </p>
     );
   }

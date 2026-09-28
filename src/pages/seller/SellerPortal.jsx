@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Store, Package, ShoppingBag, Wallet as WalletIcon, TrendingUp, AlertTriangle, Boxes, ArrowRight } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
@@ -9,16 +10,10 @@ import { formatUSD } from '@/lib/format';
 
 const LOW_STOCK = 5;
 
-const LINKS = [
-  { to: '/seller-portal', label: 'Portail', end: true },
-  { to: '/seller/products', label: 'Produits' },
-  { to: '/inventory-management', label: 'Stock' },
-  { to: '/seller/orders', label: 'Commandes' },
-  { to: '/seller/wallet', label: 'Portefeuille' },
-  { to: '/seller/settings', label: 'Boutique' },
-];
+
 
 export default function SellerPortal() {
+  const { t } = useTranslation();
   const { seller, isAdmin, loading: loadingSeller } = useActiveSeller();
   const [products, setProducts] = useState([]);
   const [fulfillments, setFulfillments] = useState([]);
@@ -67,17 +62,17 @@ export default function SellerPortal() {
     return (
       <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
         <Store className="mx-auto h-8 w-8 text-muted-foreground" />
-        <p className="mt-2 font-semibold">Aucune boutique associée à votre compte</p>
+        <p className="mt-2 font-semibold">{t('sellerPortal.noShop')}</p>
         <p className="mt-1 text-sm text-muted-foreground">
-          Déposez une candidature vendeur ou demandez à l'administration de rattacher votre boutique à votre e-mail.
+          {t('sellerPortal.noShopDesc')}
         </p>
         <div className="mt-4 flex flex-wrap justify-center gap-2">
           <Link to="/seller-application" className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground">
-            Devenir vendeur
+            {t('sellerPortal.becomeSeller')}
           </Link>
           {isAdmin && (
             <Link to="/admin/users" className="rounded-full border border-border px-5 py-2 text-sm font-semibold">
-              Créer une boutique
+              {t('sellerPortal.createShop')}
             </Link>
           )}
         </div>
@@ -95,14 +90,21 @@ export default function SellerPortal() {
 
   return (
     <div className="space-y-5 pb-8">
-      <DashboardNav title={`Portail vendeur — ${seller.name}`} links={LINKS} />
+      <DashboardNav title={t('sellerPortal.title', { name: seller.name })} links={[
+        { to: '/seller-portal', label: t('sellerPortal.navPortal'), end: true },
+        { to: '/seller/products', label: t('sellerPortal.navProducts') },
+        { to: '/inventory-management', label: t('sellerPortal.navStock') },
+        { to: '/seller/orders', label: t('sellerPortal.navOrders') },
+        { to: '/seller/wallet', label: t('sellerPortal.navWallet') },
+        { to: '/seller/settings', label: t('sellerPortal.navShop') },
+      ]} />
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {[
-          { icon: TrendingUp, label: "Chiffre d'affaires", value: formatUSD(revenue) },
-          { icon: ShoppingBag, label: 'Commandes à traiter', value: toProcess.length },
-          { icon: Package, label: 'En livraison', value: inTransit.length },
-          { icon: WalletIcon, label: 'Solde retirable', value: formatUSD(wallet?.balance_usd || 0) },
+          { icon: TrendingUp, label: t('sellerPortal.kpiRevenue'), value: formatUSD(revenue) },
+          { icon: ShoppingBag, label: t('sellerPortal.kpiToProcess'), value: toProcess.length },
+          { icon: Package, label: t('sellerPortal.kpiInTransit'), value: inTransit.length },
+          { icon: WalletIcon, label: t('sellerPortal.kpiBalance'), value: formatUSD(wallet?.balance_usd || 0) },
         ].map((k) => (
           <div key={k.label} className="rounded-xl border border-border bg-card p-3.5">
             <k.icon className="h-4 w-4 text-primary" />
@@ -113,19 +115,19 @@ export default function SellerPortal() {
       </div>
 
       <section className="rounded-2xl border border-border bg-card p-4">
-        <h2 className="text-sm font-bold">Performance de la boutique</h2>
+        <h2 className="text-sm font-bold">{t('sellerPortal.perfTitle')}</h2>
         <div className="mt-3 grid gap-3 md:grid-cols-3">
           <div>
             <p className="text-lg font-bold">{published.length}</p>
-            <p className="text-[11px] text-muted-foreground">Produits en ligne sur {products.length}</p>
+            <p className="text-[11px] text-muted-foreground">{t('sellerPortal.onlineProducts', { count: products.length })}</p>
           </div>
           <div>
             <p className="text-lg font-bold">{delivered.length}</p>
-            <p className="text-[11px] text-muted-foreground">Commandes livrées</p>
+            <p className="text-[11px] text-muted-foreground">{t('sellerPortal.deliveredOrders')}</p>
           </div>
           <div>
             <p className="text-lg font-bold">{conversion} %</p>
-            <p className="text-[11px] text-muted-foreground">Livraisons / fiches en ligne</p>
+            <p className="text-[11px] text-muted-foreground">{t('sellerPortal.deliveryRatio')}</p>
           </div>
         </div>
         <div className="mt-3 h-2 overflow-hidden rounded-full bg-secondary">
@@ -139,36 +141,36 @@ export default function SellerPortal() {
       <section className="space-y-2 rounded-2xl border border-border bg-card p-4">
         <h2 className="flex items-center justify-between gap-2 text-sm font-bold">
           <span className="flex items-center gap-2">
-            <Boxes className="h-4 w-4 text-primary" /> Inventaire
+            <Boxes className="h-4 w-4 text-primary" /> {t('sellerPortal.inventory')}
           </span>
           <Link to="/inventory-management" className="text-xs font-semibold text-primary">
-            Gérer le stock
+            {t('sellerPortal.manageStock')}
           </Link>
         </h2>
         {lowStock.length ? (
           <div className="space-y-1.5">
             <p className="flex items-center gap-1.5 text-xs font-semibold text-amber-600">
-              <AlertTriangle className="h-3.5 w-3.5" /> {lowStock.length} référence(s) à réapprovisionner
+              <AlertTriangle className="h-3.5 w-3.5" /> {t('sellerPortal.lowStockCount', { count: lowStock.length })}
             </p>
             {lowStock.slice(0, 5).map((p) => (
               <div key={p.id} className="flex items-center justify-between rounded-xl border border-border px-3 py-2">
                 <span className="truncate text-xs">{p.title}</span>
                 <span className={`text-xs font-semibold ${(Number(p.stock) || 0) <= 0 ? 'text-destructive' : 'text-amber-600'}`}>
-                  {(Number(p.stock) || 0) <= 0 ? 'Rupture' : `${p.stock} restant(s)`}
+                  {(Number(p.stock) || 0) <= 0 ? t('sellerPortal.outOfStock') : t('sellerPortal.remaining', { count: p.stock })}
                 </span>
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-xs text-muted-foreground">Toutes vos références sont au-dessus du seuil d'alerte.</p>
+          <p className="text-xs text-muted-foreground">{t('sellerPortal.stockOk')}</p>
         )}
       </section>
 
       <section className="space-y-2 rounded-2xl border border-border bg-card p-4">
         <h2 className="flex items-center justify-between gap-2 text-sm font-bold">
-          <span>Commandes entrantes</span>
+          <span>{t('sellerPortal.incomingOrders')}</span>
           <Link to="/seller/orders" className="text-xs font-semibold text-primary">
-            Tout voir
+            {t('sellerPortal.viewAll')}
           </Link>
         </h2>
         {fulfillments.length ? (
@@ -177,7 +179,7 @@ export default function SellerPortal() {
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold">{f.order_number}</p>
                 <p className="text-[11px] text-muted-foreground">
-                  {f.fulfillment_number} · {(f.items || []).length} article(s)
+                  {t('sellerPortal.orderMeta', { num: f.fulfillment_number, count: (f.items || []).length })}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -187,16 +189,16 @@ export default function SellerPortal() {
             </div>
           ))
         ) : (
-          <p className="text-xs text-muted-foreground">Aucune commande pour le moment.</p>
+          <p className="text-xs text-muted-foreground">{t('sellerPortal.noOrders')}</p>
         )}
       </section>
 
       <section className="grid gap-2 md:grid-cols-2">
         {[
-          { to: '/seller/products', label: 'Créer ou modifier un produit', icon: Package },
-          { to: '/inventory-management', label: 'Suivre mon stock', icon: Boxes },
-          { to: '/seller/orders', label: 'Traiter les commandes', icon: ShoppingBag },
-          { to: '/seller/wallet', label: 'Retirer mes gains', icon: WalletIcon },
+          { to: '/seller/products', label: t('sellerPortal.tileProducts'), icon: Package },
+          { to: '/inventory-management', label: t('sellerPortal.tileStock'), icon: Boxes },
+          { to: '/seller/orders', label: t('sellerPortal.tileOrders'), icon: ShoppingBag },
+          { to: '/seller/wallet', label: t('sellerPortal.tileWallet'), icon: WalletIcon },
         ].map((t) => (
           <Link key={t.to} to={t.to} className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-3.5">
             <span className="flex items-center gap-3">

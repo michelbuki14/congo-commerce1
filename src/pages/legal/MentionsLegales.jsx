@@ -1,43 +1,45 @@
 import React from 'react';
 import LegalPage, { LegalSection, LegalRow } from '@/components/legal/LegalPage';
+import { useTranslation } from 'react-i18next';
 import { getCompanyConfig } from '@/lib/config';
 
 export default function MentionsLegales() {
+  const { t } = useTranslation();
   const c = getCompanyConfig();
 
   return (
     <LegalPage
-      title="Mentions légales"
-      subtitle="Informations relatives à l'éditeur de la plateforme Congo Commerce."
+      title={t('mentionsLegales.title')}
+      subtitle={t('mentionsLegales.subtitle')}
     >
-      <LegalSection title="Éditeur de la plateforme">
-        <LegalRow label="Dénomination sociale" value={c.legal_name} />
-        <LegalRow label="Nom commercial" value={c.trade_name} />
-        <LegalRow label="Forme juridique" value={c.legal_form} />
+      <LegalSection title={t('mentionsLegales.sectionEditor')}>
+        <LegalRow label={t('mentionsLegales.legalName')} value={c.legal_name} />
+        <LegalRow label={t('mentionsLegales.tradeName')} value={c.trade_name} />
+        <LegalRow label={t('mentionsLegales.legalForm')} value={c.legal_form} />
         <LegalRow label="RCCM" value={c.rccm} />
-        <LegalRow label="NIF (identifiant fiscal)" value={c.nif} />
-        <LegalRow label="Numéro de TVA" value={c.vat_number} />
-        <LegalRow label="Capital social" value={c.capital} />
-        <LegalRow label="Siège social" value={[c.address, c.city, c.country].filter(Boolean).join(', ')} />
-        <LegalRow label="Email" value={c.email} />
-        <LegalRow label="Téléphone" value={c.phone} />
+        <LegalRow label={t('mentionsLegales.nif')} value={c.nif} />
+        <LegalRow label={t('mentionsLegales.vatNumber')} value={c.vat_number} />
+        <LegalRow label={t('mentionsLegales.capital')} value={c.capital} />
+        <LegalRow label={t('mentionsLegales.hq')} value={[c.address, c.city, c.country].filter(Boolean).join(', ')} />
+        <LegalRow label={t('mentionsLegales.email')} value={c.email} />
+        <LegalRow label={t('mentionsLegales.phone')} value={c.phone} />
       </LegalSection>
 
-      <LegalSection title="Directeur de la publication">
+      <LegalSection title={t('mentionsLegales.sectionPublisher')}>
         <p>{c.publisher || 'Le représentant légal de la société, joignable aux coordonnées ci-dessus.'}</p>
       </LegalSection>
 
-      <LegalSection title="Hébergement">
+      <LegalSection title={t('mentionsLegales.sectionHosting')}>
         <p>
           La plateforme est hébergée sur une infrastructure cloud. Les coordonnées de l'hébergeur sont les
           suivantes :
         </p>
-        <LegalRow label="Hébergeur" value={c.host_name} />
-        <LegalRow label="Adresse" value={c.host_address} />
-        <LegalRow label="Contact" value={c.host_contact} />
+        <LegalRow label={t('mentionsLegales.host')} value={c.host_name} />
+        <LegalRow label={t('mentionsLegales.hostAddress')} value={c.host_address} />
+        <LegalRow label={t('mentionsLegales.hostContact')} value={c.host_contact} />
       </LegalSection>
 
-      <LegalSection title="Activité">
+      <LegalSection title={t('mentionsLegales.sectionActivity')}>
         <p>
           {c.trade_name || 'Congo Commerce'} exploite une place de marché en ligne permettant à des vendeurs
           établis en République Démocratique du Congo et à des fournisseurs internationaux de proposer des
@@ -49,7 +51,7 @@ export default function MentionsLegales() {
         </p>
       </LegalSection>
 
-      <LegalSection title="Propriété intellectuelle">
+      <LegalSection title={t('mentionsLegales.sectionIp')}>
         <p>
           La marque, les logos, l'interface et l'ensemble des contenus de la plateforme sont protégés. Toute
           reproduction ou représentation, totale ou partielle, sans autorisation écrite préalable est interdite.
@@ -60,7 +62,7 @@ export default function MentionsLegales() {
         </p>
       </LegalSection>
 
-      <LegalSection title="Signalement">
+      <LegalSection title={t('mentionsLegales.sectionReport')}>
         <p>
           Pour signaler un contenu illicite, un produit contrefait ou un comportement frauduleux, écrivez à{' '}
           {c.email || 'notre service client'} en précisant le numéro de commande ou l'adresse de la page

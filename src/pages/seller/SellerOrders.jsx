@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ChevronRight, PackageCheck } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useActiveSeller } from '@/lib/seller';
@@ -8,18 +9,12 @@ import DashboardNav from '@/components/DashboardNav';
 import StatusBadge from '@/components/StatusBadge';
 import { formatUSD } from '@/lib/format';
 
-const LINKS = [
-  { to: '/seller', label: 'Tableau de bord', end: true },
-  { to: '/seller/products', label: 'Produits' },
-  { to: '/seller/orders', label: 'Commandes' },
-  { to: '/seller/import', label: 'Import fournisseur' },
-  { to: '/seller/wallet', label: 'Portefeuille' },
-  { to: '/seller/settings', label: 'Boutique' },
-];
+
 
 const SELLER_FLOW = ['PENDING', 'CONFIRMED', 'PROCESSING', 'READY_FOR_PICKUP', 'PICKED_UP', 'IN_TRANSIT', 'OUT_FOR_DELIVERY', 'DELIVERED'];
 
 export default function SellerOrders() {
+  const { t } = useTranslation();
   const { seller, loading: loadingSeller } = useActiveSeller();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -73,22 +68,29 @@ export default function SellerOrders() {
 
   return (
     <div className="space-y-5 pb-8">
-      <DashboardNav title="Commandes reçues" links={LINKS} />
+      <DashboardNav title={t('sellerOrders.title')} links={[
+        { to: '/seller', label: t('sellerOrders.navDashboard'), end: true },
+        { to: '/seller/products', label: t('sellerOrders.navProducts') },
+        { to: '/seller/orders', label: t('sellerOrders.navOrders') },
+        { to: '/seller/import', label: t('sellerOrders.navImport') },
+        { to: '/seller/wallet', label: t('sellerOrders.navWallet') },
+        { to: '/seller/settings', label: t('sellerOrders.navShop') },
+      ]} />
 
       <div className="flex gap-2">
         {[
-          { id: 'open', label: 'À traiter' },
-          { id: 'all', label: 'Toutes' },
-        ].map((t) => (
+          { id: 'open', label: t('sellerOrders.filterOpen') },
+          { id: 'all', label: t('sellerOrders.filterAll') },
+        ].map((tx) => (
           <button
-            key={t.id}
+            key={tx.id}
             type="button"
-            onClick={() => setFilter(t.id)}
+            onClick={() => setFilter(tx.id)}
             className={`rounded-full px-3.5 py-1.5 text-xs font-semibold ${
-              filter === t.id ? 'bg-primary text-primary-foreground' : 'bg-secondary'
+              filter === tx.id ? 'bg-primary text-primary-foreground' : 'bg-secondary'
             }`}
           >
-            {t.label}
+            {tx.label}
           </button>
         ))}
       </div>
@@ -124,20 +126,20 @@ export default function SellerOrders() {
 
               <div className="mt-3 grid grid-cols-2 gap-2 rounded-xl bg-secondary/50 p-2.5 text-xs md:grid-cols-4">
                 <div>
-                  <p className="text-muted-foreground">Vente</p>
+                  <p className="text-muted-foreground">{t('sellerOrders.sale')}</p>
                   <p className="font-bold">{formatUSD(f.subtotal_usd)}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Ma part</p>
+                  <p className="text-muted-foreground">{t('sellerOrders.myShare')}</p>
                   <p className="font-bold text-emerald-600">{formatUSD(f.seller_payout_usd)}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Livraison</p>
+                  <p className="text-muted-foreground">{t('sellerOrders.delivery')}</p>
                   <p className="font-bold">{f.estimated_delivery || '—'}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Versement</p>
-                  <p className="font-bold">{f.payout_released ? 'Libéré' : 'En attente'}</p>
+                  <p className="text-muted-foreground">{t('sellerOrders.payout')}</p>
+                  <p className="font-bold">{f.payout_released ? t('sellerOrders.released') : t('sellerOrders.pending')}</p>
                 </div>
               </div>
 
@@ -150,12 +152,12 @@ export default function SellerOrders() {
                     className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-50"
                   >
                     <ChevronRight className="h-3.5 w-3.5" />
-                    Passer à « {SHIPMENT_STATUS_LABELS[next(f.status)]} »
+                    {t('sellerOrders.advanceTo', { status: SHIPMENT_STATUS_LABELS[next(f.status)] })}
                   </button>
                 )}
                 {f.status === 'DELIVERED' && (
                   <span className="flex items-center gap-1.5 rounded-full bg-emerald-100 px-4 py-2 text-xs font-semibold text-emerald-900">
-                    <PackageCheck className="h-3.5 w-3.5" /> Versement libéré
+                    <PackageCheck className="h-3.5 w-3.5" /> {t('sellerOrders.payoutReleased')}
                   </span>
                 )}
                 {!['DELIVERED', 'CANCELLED', 'RETURNED'].includes(f.status) && (
@@ -174,12 +176,12 @@ export default function SellerOrders() {
         </div>
       ) : (
         <p className="rounded-xl border border-dashed border-border bg-card p-6 text-center text-xs text-muted-foreground">
-          Aucune commande dans cette vue. Les nouvelles commandes apparaissent ici automatiquement.
+          {t('sellerOrders.empty')}
         </p>
       )}
 
       <p className="text-[11px] text-muted-foreground">
-        Cycle de vie : {SHIPMENT_STATUS_FLOW.slice(0, 8).map((s) => SHIPMENT_STATUS_LABELS[s]).join(' → ')}
+        {t('sellerOrders.lifecycle', { flow: SHIPMENT_STATUS_FLOW.slice(0, 8).map((s) => SHIPMENT_STATUS_LABELS[s]).join(' → ') })}
       </p>
     </div>
   );

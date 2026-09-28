@@ -9,10 +9,12 @@ import { SHIPMENT_STATUS_LABELS } from '@/lib/logistics';
 import { formatUSD, formatDateTime } from '@/lib/format';
 import { printShippingLabels } from '@/lib/shippingLabels';
 import BulkActionBar from '@/components/orders/BulkActionBar';
+import { useTranslation } from 'react-i18next';
 
 const FLOW = ['PENDING', 'CONFIRMED', 'PROCESSING', 'READY_FOR_PICKUP', 'PICKED_UP', 'IN_TRANSIT', 'OUT_FOR_DELIVERY', 'DELIVERED'];
 
 export default function AdminOrders() {
+  const { t } = useTranslation();
   const [orders, setOrders] = useState([]);
   const [fulfillments, setFulfillments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -86,7 +88,7 @@ export default function AdminOrders() {
     await base44.entities.Order.bulkUpdate(selectedOrders.map((o) => ({ id: o.id, ...patch })));
     await base44.entities.AuditLog.create({ action: 'order.bulk_update', actor: 'admin', entity: 'Order', reference: selectedOrders.map((o) => o.order_number).join(', ').slice(0, 500), severity: 'info', details: patch });
     setOrders((prev) => prev.map((o) => (selected.includes(o.id) ? { ...o, ...patch } : o)));
-    setBulkMsg(`${selectedOrders.length} commande(s) ${label}.`);
+    setBulkMsg(t('adminOrders.bulkDone', { count: selectedOrders.length, label }));
     setSelected([]);
     setBusy('');
   };
@@ -100,7 +102,7 @@ export default function AdminOrders() {
 
   return (
     <div className="space-y-5 pb-8">
-      <DashboardNav title="Commandes" links={ADMIN_LINKS} />
+      <DashboardNav title={t('adminOrders.title')} links={ADMIN_LINKS} />
 
       <div className="flex flex-wrap gap-2">
         {['all', 'PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'archived'].map((s) => (
@@ -112,7 +114,7 @@ export default function AdminOrders() {
               statusFilter === s ? 'bg-primary text-primary-foreground' : 'bg-secondary'
             }`}
           >
-            {s === 'all' ? 'Toutes' : s === 'archived' ? 'Archivées' : s === 'SHIPPED' ? 'Expédiée' : SHIPMENT_STATUS_LABELS[s] || s}
+            {s === 'all' ? t('adminOrders.all') : s === 'archived' ? t('adminOrders.archived') : s === 'SHIPPED' ? t('adminOrders.shipped') : SHIPMENT_STATUS_LABELS[s] || s}
           </button>
         ))}
       </div>
@@ -121,9 +123,9 @@ export default function AdminOrders() {
         count={selectedOrders.length}
         allSelected={!!visible.length && selectedOrders.length === visible.length}
         onToggleAll={toggleAll}
-        onStatus={(status) => bulkUpdate({ status }, `passée(s) en « ${SHIPMENT_STATUS_LABELS[status] || status} »`)}
+        onStatus={(status) => bulkUpdate({ status }, t('adminOrders.bulkStatusLabel', { status: SHIPMENT_STATUS_LABELS[status] || status }))}
         onPrint={bulkPrint}
-        onArchive={() => bulkUpdate(archivedView ? { archived: false, archived_at: '' } : { archived: true, archived_at: new Date().toISOString() }, archivedView ? 'désarchivée(s)' : 'archivée(s)')}
+        onArchive={() => bulkUpdate(archivedView ? { archived: false, archived_at: '' } : { archived: true, archived_at: new Date().toISOString() }, archivedView ? t('adminOrders.unarchived') : t('adminOrders.archivedDone'))}
         archivedView={archivedView}
         busy={busy === 'bulk'}
       />
@@ -137,7 +139,7 @@ export default function AdminOrders() {
             <div key={o.id} className="flex items-start rounded-2xl border border-border bg-card">
               <input
                 type="checkbox"
-                aria-label={`Sélectionner ${o.order_number}`}
+                aria-label={t('adminOrders.select', { order: o.order_number })}
                 checked={selected.includes(o.id)}
                 onChange={() => toggle(o.id)}
                 className="ml-4 mt-5 h-4 w-4 shrink-0"
@@ -167,13 +169,13 @@ export default function AdminOrders() {
               {open && (
                 <div className="space-y-3 border-t border-border p-4">
                   <div className="grid grid-cols-2 gap-2 text-xs md:grid-cols-4">
-                    <div><p className="text-muted-foreground">Sous-total</p><p className="font-semibold">{formatUSD(o.subtotal_usd)}</p></div>
-                    <div><p className="text-muted-foreground">Livraison</p><p className="font-semibold">{formatUSD(o.shipping_usd)}</p></div>
-                    <div><p className="text-muted-foreground">Remise</p><p className="font-semibold">{formatUSD(o.discount_usd)}</p></div>
-                    <div><p className="text-muted-foreground">Paiement</p><p className="font-semibold">{o.payment_method}</p></div>
+                    <div><p className="text-muted-foreground">{t('adminOrders.subtotal')}</p><p className="font-semibold">{formatUSD(o.subtotal_usd)}</p></div>
+                    <div><p className="text-muted-foreground">{t('adminOrders.shipping')}</p><p className="font-semibold">{formatUSD(o.shipping_usd)}</p></div>
+                    <div><p className="text-muted-foreground">{t('adminOrders.discount')}</p><p className="font-semibold">{formatUSD(o.discount_usd)}</p></div>
+                    <div><p className="text-muted-foreground">{t('adminOrders.payment')}</p><p className="font-semibold">{o.payment_method}</p></div>
                   </div>
                   {o.affiliate_code && (
-                    <p className="text-xs text-muted-foreground">Attribution créateur : {o.affiliate_code}</p>
+                    <p className="text-xs text-muted-foreground">{t('adminOrders.attribution', { code: o.affiliate_code })}</p>
                   )}
                   {!o.payment_verified && o.payment_status === 'PENDING' && (
                     <button
@@ -182,7 +184,7 @@ export default function AdminOrders() {
                       onClick={() => confirmPayment(o)}
                       className="rounded-full bg-emerald-600 px-3.5 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
                     >
-                      Confirmer le paiement reçu ({o.payment_method})
+                      {t('adminOrders.confirmPayment', { method: o.payment_method })}
                     </button>
                   )}
 
@@ -192,15 +194,15 @@ export default function AdminOrders() {
                         <div>
                           <p className="text-sm font-semibold">{f.seller_name || f.supplier_name}</p>
                           <p className="text-[11px] text-muted-foreground">
-                            {f.fulfillment_number} · {f.source_type === 'international_supplier' ? 'Import' : 'Local'} · {f.courier_name}
+                            {f.fulfillment_number} · {f.source_type === 'international_supplier' ? t('adminOrders.import') : t('adminOrders.local')} · {f.courier_name}
                           </p>
                         </div>
                         <StatusBadge status={f.status} />
                       </div>
                       <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-[11px] text-muted-foreground">
                         <span className="flex items-center gap-1"><Truck className="h-3 w-3" /> {f.tracking_number || '—'}</span>
-                        <span className="flex items-center gap-1"><Coins className="h-3 w-3" /> Revenu plateforme {formatUSD(f.platform_revenue_usd)}</span>
-                        <span>Payout vendeur {formatUSD(f.seller_payout_usd)} {f.payout_released ? '(libéré)' : '(en attente)'}</span>
+                        <span className="flex items-center gap-1"><Coins className="h-3 w-3" /> {t('adminOrders.platformRevenue', { amount: formatUSD(f.platform_revenue_usd) })}</span>
+                        <span>{t('adminOrders.sellerPayout', { amount: formatUSD(f.seller_payout_usd), state: f.payout_released ? t('adminOrders.released') : t('adminOrders.pending') })}</span>
                       </div>
                       <div className="mt-2 flex flex-wrap gap-2">
                         {nextStatus(f.status) && (
@@ -215,7 +217,7 @@ export default function AdminOrders() {
                         )}
                         {f.status === 'DELIVERED' && f.payout_released && (
                           <span className="rounded-full bg-emerald-100 px-3.5 py-1.5 text-xs font-semibold text-emerald-900">
-                            Versement libéré
+                            {t('adminOrders.payoutReleased')}
                           </span>
                         )}
                       </div>
@@ -229,7 +231,7 @@ export default function AdminOrders() {
         })}
         {!visible.length && (
           <p className="rounded-xl border border-dashed border-border bg-card p-6 text-center text-xs text-muted-foreground">
-            Aucune commande pour ce filtre.
+            {t('adminOrders.empty')}
           </p>
         )}
       </div>

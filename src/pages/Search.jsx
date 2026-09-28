@@ -1,19 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Search as SearchIcon, SlidersHorizontal, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import ProductGrid from '@/components/ProductGrid';
 import EmptyState from '@/components/EmptyState';
 import { resolveStorefrontScope, scopeRecords } from '@/lib/tenancy';
 
-const SORTS = [
-  { id: 'relevance', label: 'Pertinence' },
-  { id: 'new', label: 'Nouveautés' },
-  { id: 'sold', label: 'Les plus vendus' },
-  { id: 'price_asc', label: 'Prix croissant' },
-  { id: 'price_desc', label: 'Prix décroissant' },
-  { id: 'rating', label: 'Mieux notés' },
-];
+const SORT_IDS = ['relevance', 'new', 'sold', 'price_asc', 'price_desc', 'rating'];
 
 function normalize(value) {
   return String(value || '')
@@ -37,6 +31,8 @@ function score(product, term) {
 }
 
 export default function Search() {
+  const { t } = useTranslation();
+  const SORTS = SORT_IDS.map((id) => ({ id, label: t(`search.sort_${id}`) }));
   const [params, setParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -80,9 +76,9 @@ export default function Search() {
   }, [category, categories]);
 
   const results = useMemo(() => {
-    const t = normalize(term.trim());
-    let list = products.map((p) => ({ p, s: score(p, t) }));
-    if (t) list = list.filter((x) => x.s > 0);
+    const tx = normalize(term.trim());
+    let list = products.map((p) => ({ p, s: score(p, tx) }));
+    if (tx) list = list.filter((x) => x.s > 0);
     let out = list.map((x) => x.p);
     if (categoryId) out = out.filter((p) => p.category_id === categoryId);
     if (source === 'local') out = out.filter((p) => p.source_type !== 'international_supplier');
@@ -134,7 +130,7 @@ export default function Search() {
           <input
             value={term}
             onChange={(e) => setTerm(e.target.value)}
-            placeholder="Rechercher…"
+            placeholder={t('search.placeholder')}
             className="h-11 w-full rounded-full border border-border bg-card pl-9 pr-3 text-sm outline-none focus:border-primary"
           />
         </div>
@@ -142,7 +138,7 @@ export default function Search() {
           type="button"
           onClick={() => setShowFilters((s) => !s)}
           className="relative flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card"
-          aria-label="Filtres"
+          aria-label={t('search.filters')}
         >
           <SlidersHorizontal className="h-4 w-4" />
           {activeFilters > 0 && (
@@ -156,13 +152,13 @@ export default function Search() {
       {showFilters && (
         <div className="space-y-3 rounded-xl border border-border bg-card p-3">
           <div>
-            <p className="mb-1.5 text-xs font-semibold text-muted-foreground">Catégorie</p>
+            <p className="mb-1.5 text-xs font-semibold text-muted-foreground">{t('search.category')}</p>
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
               className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
             >
-              <option value="">Toutes</option>
+              <option value="">{t('search.all')}</option>
               {categories.map((c) => (
                 <option key={c.id} value={c.slug}>{c.name}</option>
               ))}
@@ -170,37 +166,37 @@ export default function Search() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <p className="mb-1.5 text-xs font-semibold text-muted-foreground">Prix max (USD)</p>
+              <p className="mb-1.5 text-xs font-semibold text-muted-foreground">{t('search.maxPrice')}</p>
               <input
                 type="number"
                 min="0"
                 value={maxPrice}
                 onChange={(e) => setMaxPrice(e.target.value)}
-                placeholder="Ex : 40"
+                placeholder={t('search.maxPricePh')}
                 className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
               />
             </div>
             <div>
-              <p className="mb-1.5 text-xs font-semibold text-muted-foreground">Note minimum</p>
+              <p className="mb-1.5 text-xs font-semibold text-muted-foreground">{t('search.minRating')}</p>
               <select
                 value={minRating}
                 onChange={(e) => setMinRating(Number(e.target.value))}
                 className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
               >
-                <option value={0}>Toutes</option>
-                <option value={3}>3★ et plus</option>
-                <option value={4}>4★ et plus</option>
-                <option value={4.5}>4,5★ et plus</option>
+                <option value={0}>{t('search.all')}</option>
+                <option value={3}>{t('search.rate3')}</option>
+                <option value={4}>{t('search.rate4')}</option>
+                <option value={4.5}>{t('search.rate45')}</option>
               </select>
             </div>
           </div>
           <div>
-            <p className="mb-1.5 text-xs font-semibold text-muted-foreground">Provenance</p>
+            <p className="mb-1.5 text-xs font-semibold text-muted-foreground">{t('search.origin')}</p>
             <div className="flex gap-2">
               {[
-                { id: 'all', label: 'Tout' },
-                { id: 'local', label: 'Local (RDC)' },
-                { id: 'international', label: 'International' },
+                { id: 'all', label: t('search.originAll') },
+                { id: 'local', label: t('search.originLocal') },
+                { id: 'international', label: t('search.originIntl') },
               ].map((o) => (
                 <button
                   key={o.id}
@@ -217,18 +213,18 @@ export default function Search() {
           </div>
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={inStock} onChange={(e) => setInStock(e.target.checked)} className="h-4 w-4 accent-[hsl(var(--primary))]" />
-            Disponible uniquement
+            {t('search.inStockOnly')}
           </label>
           <button type="button" onClick={clearFilters} className="flex items-center gap-1 text-xs font-semibold text-primary">
-            <X className="h-3.5 w-3.5" /> Réinitialiser les filtres
+            <X className="h-3.5 w-3.5" /> {t('search.resetFilters')}
           </button>
         </div>
       )}
 
       <div className="flex items-center justify-between gap-2">
         <p className="text-xs text-muted-foreground">
-          {loading ? 'Chargement…' : `${results.length} résultat${results.length === 1 ? '' : 's'}`}
-          {term ? ` pour « ${term} »` : ''}
+          {loading ? t('common.loading') : t('search.resultsCount', { count: results.length })}
+          {term ? t('search.resultsForTerm', { term }) : ''}
         </p>
         <select
           value={sort}
@@ -248,10 +244,10 @@ export default function Search() {
         emptyState={
           <EmptyState
             icon={SearchIcon}
-            title="Aucun article trouvé"
-            description="Essayez un autre mot-clé ou élargissez vos filtres."
+            title={t('search.emptyTitle')}
+            description={t('search.emptyDesc')}
             actionTo="/categories"
-            actionLabel="Parcourir les catégories"
+            actionLabel={t('search.emptyAction')}
           />
         }
       />
@@ -262,7 +258,7 @@ export default function Search() {
           onClick={() => setVisible((v) => v + 24)}
           className="mx-auto block rounded-full border border-border bg-card px-5 py-2 text-sm font-semibold"
         >
-          Charger plus d'articles
+          {t('search.loadMore')}
         </button>
       )}
     </div>

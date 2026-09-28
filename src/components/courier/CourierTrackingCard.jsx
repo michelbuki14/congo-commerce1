@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { MapPin, Phone, Navigation, CheckCircle2, XCircle } from 'lucide-react';
 import { SHIPMENT_STATUS_LABELS } from '@/lib/logistics';
 import { formatUSD } from '@/lib/format';
@@ -7,15 +8,16 @@ import CourierProofForm from './CourierProofForm';
 const STEPS = ['PICKED_UP', 'IN_TRANSIT', 'OUT_FOR_DELIVERY', 'DELIVERED'];
 
 const NEXT_STEP = {
-  PENDING: { status: 'PICKED_UP', label: 'Prendre en charge' },
-  CONFIRMED: { status: 'PICKED_UP', label: 'Prendre en charge' },
-  PROCESSING: { status: 'PICKED_UP', label: 'Prendre en charge' },
-  READY_FOR_PICKUP: { status: 'PICKED_UP', label: 'Prendre en charge' },
-  PICKED_UP: { status: 'IN_TRANSIT', label: 'Démarrer le transit' },
-  IN_TRANSIT: { status: 'OUT_FOR_DELIVERY', label: 'Passer en livraison' },
+  PENDING: { status: 'PICKED_UP', labelKey: 'takeCharge' },
+  CONFIRMED: { status: 'PICKED_UP', labelKey: 'takeCharge' },
+  PROCESSING: { status: 'PICKED_UP', labelKey: 'takeCharge' },
+  READY_FOR_PICKUP: { status: 'PICKED_UP', labelKey: 'takeCharge' },
+  PICKED_UP: { status: 'IN_TRANSIT', labelKey: 'startTransit' },
+  IN_TRANSIT: { status: 'OUT_FOR_DELIVERY', labelKey: 'outForDelivery' },
 };
 
 export default function CourierTrackingCard({ shipment, fulfillment, order, busy, showFleet, onAdvance }) {
+  const { t } = useTranslation();
   const [proofOpen, setProofOpen] = useState(false);
   const disabled = busy === shipment.id;
   const next = NEXT_STEP[shipment.status];
@@ -23,7 +25,7 @@ export default function CourierTrackingCard({ shipment, fulfillment, order, busy
   const destination = [order?.address, order?.city].filter(Boolean).join(', ');
 
   const logDelivery = async (extra) => {
-    const saved = await onAdvance(shipment, 'DELIVERED', `Livré à ${extra.delivered_to || 'client'}`, extra);
+    const saved = await onAdvance(shipment, 'DELIVERED', t('courierTrackingCard.deliveredTo', { name: extra.delivered_to || t('courierTrackingCard.clientFallback') }), extra);
     if (saved) setProofOpen(false);
   };
 
@@ -33,7 +35,7 @@ export default function CourierTrackingCard({ shipment, fulfillment, order, busy
         <div>
           <p className="text-sm font-bold">{shipment.order_number}</p>
           <p className="text-[11px] text-muted-foreground">
-            {shipment.tracking_number || 'Sans numéro de suivi'} · {formatUSD(fulfillment?.shipping_usd || 0)} de course
+            {shipment.tracking_number || t('courierTrackingCard.noTracking')} · {t('courierTrackingCard.tripPay', { amount: formatUSD(fulfillment?.shipping_usd || 0) })}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -62,9 +64,9 @@ export default function CourierTrackingCard({ shipment, fulfillment, order, busy
       <div className="mt-3 space-y-1 text-xs text-muted-foreground">
         <p className="flex items-center gap-1.5">
           <MapPin className="h-3.5 w-3.5 shrink-0 text-primary" />
-          {destination || 'Adresse non renseignée'}
+          {destination || t('courierTrackingCard.noAddress')}
         </p>
-        {order?.customer_name && <p className="text-foreground">Client : {order.customer_name}</p>}
+        {order?.customer_name && <p className="text-foreground">{t('courierTrackingCard.customer', { name: order.customer_name })}</p>}
       </div>
 
       {order?.customer_phone && (
@@ -73,7 +75,7 @@ export default function CourierTrackingCard({ shipment, fulfillment, order, busy
             href={`tel:${order.customer_phone}`}
             className="flex items-center gap-1.5 rounded-full border border-border px-3.5 py-1.5 text-xs font-semibold"
           >
-            <Phone className="h-3.5 w-3.5" /> Appeler
+            <Phone className="h-3.5 w-3.5" /> {t('courierTrackingCard.call')}
           </a>
           <a
             href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(destination)}`}
@@ -81,7 +83,7 @@ export default function CourierTrackingCard({ shipment, fulfillment, order, busy
             rel="noopener noreferrer"
             className="flex items-center gap-1.5 rounded-full border border-border px-3.5 py-1.5 text-xs font-semibold"
           >
-            <Navigation className="h-3.5 w-3.5" /> Itinéraire
+            <Navigation className="h-3.5 w-3.5" /> {t('courierTrackingCard.route')}
           </a>
         </div>
       )}
@@ -91,10 +93,10 @@ export default function CourierTrackingCard({ shipment, fulfillment, order, busy
           <button
             type="button"
             disabled={disabled}
-            onClick={() => onAdvance(shipment, next.status, next.label)}
+            onClick={() => onAdvance(shipment, next.status, t(`courierTrackingCard.${next.labelKey}`))}
             className="rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-60"
           >
-            {next.label}
+            {t(`courierTrackingCard.${next.labelKey}`)}
           </button>
         )}
         <button
@@ -103,15 +105,15 @@ export default function CourierTrackingCard({ shipment, fulfillment, order, busy
           onClick={() => setProofOpen((v) => !v)}
           className="flex items-center gap-1.5 rounded-full border border-border px-4 py-2 text-xs font-semibold disabled:opacity-60"
         >
-          <CheckCircle2 className="h-3.5 w-3.5" /> Confirmer la livraison
+          <CheckCircle2 className="h-3.5 w-3.5" /> {t('courierTrackingCard.confirmDelivery')}
         </button>
         <button
           type="button"
           disabled={disabled}
-          onClick={() => onAdvance(shipment, 'FAILED', 'Échec de livraison signalé')}
+          onClick={() => onAdvance(shipment, 'FAILED', t('courierTrackingCard.failLabel'))}
           className="flex items-center gap-1.5 rounded-full border border-border px-4 py-2 text-xs font-semibold text-destructive disabled:opacity-60"
         >
-          <XCircle className="h-3.5 w-3.5" /> Échec
+          <XCircle className="h-3.5 w-3.5" /> {t('courierTrackingCard.fail')}
         </button>
       </div>
 
@@ -122,9 +124,9 @@ export default function CourierTrackingCard({ shipment, fulfillment, order, busy
       )}
 
       <div className="mt-4 space-y-2 border-t border-border pt-3">
-        <p className="text-[11px] font-semibold">Historique du suivi</p>
+        <p className="text-[11px] font-semibold">{t('courierTrackingCard.history')}</p>
         {(shipment.events || []).length === 0 && (
-          <p className="text-[11px] text-muted-foreground">Aucun mouvement enregistré pour le moment.</p>
+          <p className="text-[11px] text-muted-foreground">{t('courierTrackingCard.noHistory')}</p>
         )}
         {(shipment.events || [])
           .slice()

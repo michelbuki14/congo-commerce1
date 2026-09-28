@@ -7,10 +7,12 @@ import { ADMIN_LINKS } from '@/lib/navLinks';
 import { getSupplierAdapter, SUPPLIER_REGISTRY } from '@/lib/suppliers';
 import CategoryMappingPanel from '@/components/suppliers/CategoryMappingPanel';
 import { formatUSD, formatDateTime } from '@/lib/format';
+import { useTranslation } from 'react-i18next';
 
 const ADAPTERS = Object.keys(SUPPLIER_REGISTRY);
 
 export default function AdminSuppliers() {
+  const { t } = useTranslation();
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState('');
@@ -57,11 +59,11 @@ export default function AdminSuppliers() {
     try {
       const products = await base44.entities.Product.filter({ supplier_id: s.id }, '-created_date', 50);
       if (!products.length) {
-        setMessage(`${s.name} : aucun produit importé à synchroniser.`);
+        setMessage(t('adminSuppliers.noProducts', { name: s.name }));
         return;
       }
       if (!SUPPLIER_REGISTRY[s.adapter]) {
-        setMessage(`${s.name} : aucun adaptateur connecté (fournisseur en saisie manuelle).`);
+        setMessage(t('adminSuppliers.noAdapter', { name: s.name }));
         return;
       }
       const adapter = getSupplierAdapter(s.adapter);
@@ -80,7 +82,7 @@ export default function AdminSuppliers() {
       }
       const fresh = await base44.entities.Supplier.update(s.id, { last_sync_at: new Date().toISOString() });
       setSuppliers((prev) => prev.map((x) => (x.id === s.id ? fresh : x)));
-      setMessage(`${s.name} : ${products.length} produit(s) vérifié(s), ${updated} stock(s) mis à jour.`);
+      setMessage(t('adminSuppliers.synced', { name: s.name, checked: products.length, updated }));
       await base44.entities.AuditLog.create({
         action: 'supplier.sync',
         actor: 'admin',
@@ -106,13 +108,12 @@ export default function AdminSuppliers() {
 
   return (
     <div className="space-y-5 pb-8">
-      <DashboardNav title="Fournisseurs" links={ADMIN_LINKS} />
+      <DashboardNav title={t('adminSuppliers.title')} links={ADMIN_LINKS} />
 
       <div className="flex items-start gap-2 rounded-xl border border-sky-200 bg-sky-50 p-3 text-xs text-sky-900">
         <Info className="mt-0.5 h-4 w-4 shrink-0" />
         <p>
-          Chaque fournisseur est branché via un adaptateur normalisé. Les adaptateurs marqués « démo » renvoient des données
-          simulées ; remplacez-les par l'API réelle du fournisseur sans toucher au moteur de commande.
+          {t('adminSuppliers.adapterNote')}
         </p>
       </div>
 
@@ -124,28 +125,28 @@ export default function AdminSuppliers() {
           onClick={() => setCreating((c) => !c)}
           className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground"
         >
-          <Plus className="h-3.5 w-3.5" /> Ajouter un fournisseur
+          <Plus className="h-3.5 w-3.5" /> {t('adminSuppliers.add')}
         </button>
       </div>
 
       {creating && (
         <form onSubmit={create} className="space-y-3 rounded-2xl border border-border bg-card p-4">
           <div className="grid gap-3 md:grid-cols-2">
-            <input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} placeholder="Nom" required className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
-            <input value={draft.code} onChange={(e) => setDraft({ ...draft, code: e.target.value.toUpperCase() })} placeholder="Code (ex : ALIEXPRESS)" required className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
+            <input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} placeholder={t('adminSuppliers.name')} required className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
+            <input value={draft.code} onChange={(e) => setDraft({ ...draft, code: e.target.value.toUpperCase() })} placeholder={t('adminSuppliers.code')} required className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
             <select value={draft.adapter} onChange={(e) => setDraft({ ...draft, adapter: e.target.value })} className="h-11 rounded-lg border border-border bg-background px-3 text-sm">
-              <option value="manual">Saisie manuelle</option>
+              <option value="manual">{t('adminSuppliers.manual')}</option>
               {ADAPTERS.map((a) => (
-                <option key={a} value={a}>{a} (démo)</option>
+                <option key={a} value={a}>{t('adminSuppliers.demoAdapter', { adapter: a })}</option>
               ))}
             </select>
             <select value={draft.type} onChange={(e) => setDraft({ ...draft, type: e.target.value })} className="h-11 rounded-lg border border-border bg-background px-3 text-sm">
-              <option value="international">International</option>
-              <option value="local_warehouse">Entrepôt local</option>
+              <option value="international">{t('adminSuppliers.intl')}</option>
+              <option value="local_warehouse">{t('adminSuppliers.warehouse')}</option>
             </select>
           </div>
-          <input value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} placeholder="Description" className="h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" />
-          <button type="submit" className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground">Créer</button>
+          <input value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} placeholder={t('adminSuppliers.description')} className="h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" />
+          <button type="submit" className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground">{t('adminSuppliers.create')}</button>
         </form>
       )}
 
@@ -162,13 +163,13 @@ export default function AdminSuppliers() {
                   </div>
                   <div>
                     <p className="text-sm font-bold">
-                      {s.name} {s.is_mock && <span className="ml-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-900">démo</span>}
+                      {s.name} {s.is_mock && <span className="ml-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-900">{t('adminSuppliers.demo')}</span>}
                     </p>
                     <p className="text-[11px] text-muted-foreground">
-                      {s.code} · {s.type === 'international' ? 'International' : 'Entrepôt'} · adaptateur {s.adapter} · {s.products_count || 0} produit(s)
+                      {t('adminSuppliers.rowMeta', { code: s.code, type: s.type === 'international' ? t('adminSuppliers.intl') : t('adminSuppliers.warehouseShort'), adapter: s.adapter, count: s.products_count || 0 })}
                     </p>
                     <p className="text-[11px] text-muted-foreground">
-                      Dernière synchro : {s.last_sync_at ? formatDateTime(s.last_sync_at) : 'jamais'}
+                      {t('adminSuppliers.lastSync', { when: s.last_sync_at ? formatDateTime(s.last_sync_at) : t('adminSuppliers.never') })}
                     </p>
                   </div>
                 </div>
@@ -180,7 +181,7 @@ export default function AdminSuppliers() {
                       mappingId === s.id ? 'bg-primary text-primary-foreground' : 'border border-border'
                     }`}
                   >
-                    <Layers className="h-3.5 w-3.5" /> Catégories
+                    <Layers className="h-3.5 w-3.5" /> {t('adminSuppliers.categories')}
                   </button>
                   <button
                     type="button"
@@ -188,7 +189,7 @@ export default function AdminSuppliers() {
                     onClick={() => sync(s)}
                     className="flex items-center gap-1.5 rounded-full border border-border px-3.5 py-2 text-xs font-semibold disabled:opacity-50"
                   >
-                    <RefreshCw className={`h-3.5 w-3.5 ${syncing === s.id ? 'animate-spin' : ''}`} /> Synchroniser
+                    <RefreshCw className={`h-3.5 w-3.5 ${syncing === s.id ? 'animate-spin' : ''}`} /> {t('adminSuppliers.sync')}
                   </button>
                   <button
                     type="button"
@@ -197,17 +198,17 @@ export default function AdminSuppliers() {
                       s.enabled ? 'bg-emerald-100 text-emerald-900' : 'bg-slate-200 text-slate-700'
                     }`}
                   >
-                    <Power className="h-3.5 w-3.5" /> {s.enabled ? 'Activé' : 'Désactivé'}
+                    <Power className="h-3.5 w-3.5" /> {s.enabled ? t('adminSuppliers.enabled') : t('adminSuppliers.disabled')}
                   </button>
                 </div>
               </div>
 
               <div className="mt-3 grid gap-3 md:grid-cols-4">
                 {[
-                  { field: 'default_markup_percent', label: 'Marge par défaut %' },
-                  { field: 'import_cost_percent', label: "Frais d'import %" },
-                  { field: 'shipping_base_usd', label: 'Transport de base USD' },
-                  { field: 'avg_shipping_days', label: 'Délai moyen (jours)' },
+                  { field: 'default_markup_percent', label: t('adminSuppliers.markup') },
+                  { field: 'import_cost_percent', label: t('adminSuppliers.importCost') },
+                  { field: 'shipping_base_usd', label: t('adminSuppliers.shippingBase') },
+                  { field: 'avg_shipping_days', label: t('adminSuppliers.avgDays') },
                 ].map((f) => (
                   <label key={f.field} className="text-[11px] text-muted-foreground">
                     {f.label}
@@ -232,15 +233,14 @@ export default function AdminSuppliers() {
           ))}
           {!suppliers.length && (
             <p className="rounded-xl border border-dashed border-border bg-card p-6 text-center text-xs text-muted-foreground">
-              Aucun fournisseur configuré.
+              {t('adminSuppliers.empty')}
             </p>
           )}
         </div>
       )}
 
       <p className="text-[11px] text-muted-foreground">
-        Les prix fournisseurs ne sont jamais exposés aux clients : le moteur de tarification applique transport, importation,
-        logistique, marge et frais avant d'afficher un prix. Valeur de référence : {formatUSD(0)}.
+        {t('adminSuppliers.footnote', { ref: formatUSD(0) })}
       </p>
     </div>
   );

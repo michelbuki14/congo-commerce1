@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useTranslation } from 'react-i18next';
 import { slugify } from '@/lib/tenancy';
 
 const EMPTY = {
@@ -22,7 +23,9 @@ const EMPTY = {
   vat_rate: 16,
 };
 
-export default function TenantForm({ initial, onSubmit, submitting = false, submitLabel = 'Enregistrer' }) {
+export default function TenantForm({ initial, onSubmit, submitting = false, submitLabel }) {
+  const { t } = useTranslation();
+  const resolvedLabel = submitLabel || t('tenantForm.save');
   const [form, setForm] = useState({ ...EMPTY, ...(initial || {}) });
   const [slugLocked, setSlugLocked] = useState(Boolean(initial?.slug));
 
@@ -46,11 +49,11 @@ export default function TenantForm({ initial, onSubmit, submitting = false, subm
     <form onSubmit={submit} className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1.5 sm:col-span-2">
-          <Label htmlFor="t-name">Nom de l’enseigne</Label>
-          <Input id="t-name" value={form.name} onChange={(e) => setName(e.target.value)} placeholder="Ex. Kin Fashion" required />
+          <Label htmlFor="t-name">{t('tenantForm.name')}</Label>
+          <Input id="t-name" value={form.name} onChange={(e) => setName(e.target.value)} placeholder={t('tenantForm.namePlaceholder')} required />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="t-slug">Identifiant (URL)</Label>
+          <Label htmlFor="t-slug">{t('tenantForm.slug')}</Label>
           <Input
             id="t-slug"
             value={form.slug}
@@ -59,38 +62,38 @@ export default function TenantForm({ initial, onSubmit, submitting = false, subm
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="t-city">Ville</Label>
+          <Label htmlFor="t-city">{t('tenantForm.city')}</Label>
           <Input id="t-city" value={form.city} onChange={(e) => set('city', e.target.value)} />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="t-owner">Responsable</Label>
-          <Input id="t-owner" value={form.owner_name} onChange={(e) => set('owner_name', e.target.value)} placeholder="Nom complet" />
+          <Label htmlFor="t-owner">{t('tenantForm.owner')}</Label>
+          <Input id="t-owner" value={form.owner_name} onChange={(e) => set('owner_name', e.target.value)} placeholder={t('tenantForm.ownerPlaceholder')} />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="t-email">E-mail du compte</Label>
+          <Label htmlFor="t-email">{t('tenantForm.email')}</Label>
           <Input id="t-email" type="email" value={form.owner_email} onChange={(e) => set('owner_email', e.target.value)} placeholder="vous@exemple.cd" />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="t-phone">Téléphone</Label>
+          <Label htmlFor="t-phone">{t('tenantForm.phone')}</Label>
           <Input id="t-phone" value={form.phone} onChange={(e) => set('phone', e.target.value)} placeholder="+243 …" />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="t-currency">Devise d’affichage</Label>
+          <Label htmlFor="t-currency">{t('tenantForm.currency')}</Label>
           <select
             id="t-currency"
             value={form.currency}
             onChange={(e) => set('currency', e.target.value)}
             className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
           >
-            <option value="USD">USD — dollar</option>
-            <option value="CDF">CDF — franc congolais</option>
+            <option value="USD">{t('tenantForm.usd')}</option>
+            <option value="CDF">{t('tenantForm.cdf')}</option>
           </select>
         </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="space-y-1.5">
-          <Label htmlFor="t-primary">Couleur principale</Label>
+          <Label htmlFor="t-primary">{t('tenantForm.primary')}</Label>
           <input
             id="t-primary"
             type="color"
@@ -100,7 +103,7 @@ export default function TenantForm({ initial, onSubmit, submitting = false, subm
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="t-accent">Couleur secondaire</Label>
+          <Label htmlFor="t-accent">{t('tenantForm.accent')}</Label>
           <input
             id="t-accent"
             type="color"
@@ -110,28 +113,28 @@ export default function TenantForm({ initial, onSubmit, submitting = false, subm
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="t-logo">Logo (URL)</Label>
+          <Label htmlFor="t-logo">{t('tenantForm.logo')}</Label>
           <Input id="t-logo" value={form.logo_url} onChange={(e) => set('logo_url', e.target.value)} placeholder="https://…" />
         </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="space-y-1.5">
-          <Label htmlFor="t-commission">Commission plateforme (%)</Label>
+          <Label htmlFor="t-commission">{t('tenantForm.commission')}</Label>
           <Input id="t-commission" type="number" min="0" max="50" step="0.5" value={form.commission_rate} onChange={(e) => set('commission_rate', e.target.value)} />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="t-vat">TVA appliquée (%)</Label>
+          <Label htmlFor="t-vat">{t('tenantForm.vat')}</Label>
           <Input id="t-vat" type="number" min="0" max="30" step="0.5" value={form.vat_rate} onChange={(e) => set('vat_rate', e.target.value)} />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="t-from">Nom d’expéditeur des e-mails</Label>
+          <Label htmlFor="t-from">{t('tenantForm.emailFrom')}</Label>
           <Input id="t-from" value={form.email_from_name} onChange={(e) => set('email_from_name', e.target.value)} placeholder="Kin Fashion" />
         </div>
       </div>
 
       <Button type="submit" disabled={submitting || !form.name}>
-        {submitting ? 'Enregistrement…' : submitLabel}
+        {submitting ? t('tenantForm.saving') : resolvedLabel}
       </Button>
     </form>
   );

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Store, BadgeCheck, AlertCircle, Clock, ArrowLeft, ArrowRight, Check } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
@@ -10,28 +11,22 @@ import { emitEvent } from '@/lib/events';
 import { formatDateTime } from '@/lib/format';
 
 const CITIES = ['Kinshasa', 'Lubumbashi', 'Goma', 'Bukavu', 'Matadi', 'Kolwezi', 'Autre'];
-const ID_TYPES = [
-  { id: 'carte_identite', label: "Carte d'identité" },
-  { id: 'passeport', label: 'Passeport' },
-  { id: 'permis', label: 'Permis de conduire' },
-  { id: 'attestation', label: "Attestation d'identité" },
-];
-const PAYOUT_METHODS = [
-  { id: 'mpesa', label: 'M-Pesa' },
-  { id: 'airtel', label: 'Airtel Money' },
-  { id: 'orange', label: 'Orange Money' },
-  { id: 'bank', label: 'Virement bancaire' },
-];
+const ID_TYPE_IDS = ['carte_identite', 'passeport', 'permis', 'attestation'];
+const PAYOUT_METHOD_IDS = ['mpesa', 'airtel', 'orange', 'bank'];
 
-const STEPS = [
-  { id: 'business', label: 'Activité' },
-  { id: 'identity', label: 'Identité' },
-  { id: 'payout', label: 'Paiement' },
-  { id: 'review', label: 'Validation' },
+const STEP_IDS = [
+  { id: 'business', key: 'stepBusiness' },
+  { id: 'identity', key: 'stepIdentity' },
+  { id: 'payout', key: 'stepPayout' },
+  { id: 'review', key: 'stepReview' },
 ];
 
 export default function SellerApplication() {
+  const { t } = useTranslation();
   const profile = getProfile();
+  const ID_TYPES = ID_TYPE_IDS.map((id) => ({ id, label: t(`sellerApplication.idType_${id}`) }));
+  const PAYOUT_METHODS = PAYOUT_METHOD_IDS.map((id) => ({ id, label: t(`sellerApplication.payout_${id}`) }));
+  const STEPS = STEP_IDS.map((s) => ({ id: s.id, label: t(`sellerApplication.${s.key}`) }));
   const [application, setApplication] = useState(getSellerApplication());
   const [editing, setEditing] = useState(!application);
   const [step, setStep] = useState(0);
@@ -62,13 +57,13 @@ export default function SellerApplication() {
 
   const validateStep = () => {
     if (step === 0 && (!form.shop_name.trim() || !form.owner_name.trim() || !form.phone.trim())) {
-      return 'Le nom de la boutique, le responsable et un téléphone joignable sont obligatoires.';
+      return t('sellerApplication.errStep0');
     }
     if (step === 1 && (!form.id_number.trim() || !form.id_document?.file_uri)) {
-      return "Renseignez votre pièce d'identité et joignez-en une copie.";
+      return t('sellerApplication.errStep1');
     }
     if (step === 2 && (!form.payout_holder.trim() || !form.payout_account.trim())) {
-      return 'Indiquez le titulaire du compte et le numéro qui recevra vos encaissements.';
+      return t('sellerApplication.errStep2');
     }
     return '';
   };
@@ -83,7 +78,7 @@ export default function SellerApplication() {
     e.preventDefault();
     setError('');
     if (!form.consent) {
-      setError('Merci d’accepter les règles vendeurs et la politique de confidentialité.');
+      setError(t('sellerApplication.errConsent'));
       return;
     }
     setSubmitting(true);
@@ -126,7 +121,7 @@ export default function SellerApplication() {
       setEditing(false);
       setStep(0);
     } catch {
-      setError("La candidature n'a pas pu être envoyée. Réessayez dans un instant.");
+      setError(t('sellerApplication.submitFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -135,30 +130,29 @@ export default function SellerApplication() {
   return (
     <InfoPage
       icon={Store}
-      title="Devenir vendeur"
-      subtitle="Quatre étapes : votre activité, votre identité, vos coordonnées de paiement, puis la validation. Notre équipe vérifie le dossier et rattache votre boutique à votre compte sous 48 h."
+      title={t('sellerApplication.title')}
+      subtitle={t('sellerApplication.subtitle')}
     >
       {application && !editing ? (
-        <InfoSection title="Candidature envoyée">
+        <InfoSection title={t('sellerApplication.sentTitle')}>
           <div className="rounded-xl border border-primary/30 bg-primary/5 p-3">
             <p className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
-              <Clock className="h-3.5 w-3.5 text-primary" /> En attente de validation
+              <Clock className="h-3.5 w-3.5 text-primary" /> {t('sellerApplication.pending')}
             </p>
             <p className="mt-1.5 text-xs">
               <span className="font-semibold text-foreground">{application.shop_name}</span> · {application.city}
               {application.commune ? ` (${application.commune})` : ''}
             </p>
             <p className="mt-0.5 text-[11px] text-muted-foreground">
-              Envoyée le {formatDateTime(application.submitted_at)} · contact {application.phone}
+              {t('sellerApplication.sentMeta', { date: formatDateTime(application.submitted_at), phone: application.phone })}
             </p>
             <p className="mt-0.5 text-[11px] text-muted-foreground">
-              Pièce d'identité : {application.id_document_name || 'non fournie'} · encaissement{' '}
-              {PAYOUT_METHODS.find((m) => m.id === application.payout_method)?.label || 'à préciser'}
+              {t('sellerApplication.idDocLabel')} : {application.id_document_name || t('sellerApplication.notProvided')} · {t('sellerApplication.payoutLabel')}{' '}
+              {PAYOUT_METHODS.find((m) => m.id === application.payout_method)?.label || t('sellerApplication.toSpecify')}
             </p>
           </div>
           <p className="mt-2">
-            Un agent vous appelle pour vérifier votre identité et vos références produits. Dès la validation, votre espace
-            vendeur et votre portefeuille s'ouvrent automatiquement.
+{t('sellerApplication.agentNote')}
           </p>
           <div className="flex flex-wrap gap-2 pt-1">
             <button
@@ -166,36 +160,36 @@ export default function SellerApplication() {
               onClick={() => { setEditing(true); setStep(0); }}
               className="rounded-full border border-border px-4 py-2 text-xs font-semibold text-foreground"
             >
-              Modifier ma candidature
+              {t('sellerApplication.editApp')}
             </button>
             <Link to="/seller" className="rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground">
-              Accéder à mon espace vendeur
+              {t('sellerApplication.gotoSeller')}
             </Link>
             <Link to="/support-tickets" className="rounded-full border border-border px-4 py-2 text-xs font-semibold text-foreground">
-              Contacter l'équipe vendeurs
+              {t('sellerApplication.contactTeam')}
             </Link>
           </div>
         </InfoSection>
       ) : (
         <section className="space-y-4 rounded-2xl border border-border bg-card p-5">
           <h2 className="flex items-center gap-2 text-sm font-bold">
-            <BadgeCheck className="h-4 w-4 text-primary" /> Formulaire d'inscription vendeur
+            <BadgeCheck className="h-4 w-4 text-primary" /> {t('sellerApplication.formTitle')}
           </h2>
           <OnboardingStepper steps={STEPS} current={step} />
 
           <form onSubmit={submit} className="space-y-3">
             {step === 0 ? (
               <div className="grid gap-3 md:grid-cols-2">
-                <input value={form.shop_name} onChange={(e) => set({ shop_name: e.target.value })} placeholder="Nom de la boutique *" className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
-                <input value={form.owner_name} onChange={(e) => set({ owner_name: e.target.value })} placeholder="Nom du responsable *" className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
-                <input value={form.phone} onChange={(e) => set({ phone: e.target.value })} placeholder="Téléphone / WhatsApp *" className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
-                <input value={form.email} onChange={(e) => set({ email: e.target.value })} placeholder="E-mail de l'activité" className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
+                <input value={form.shop_name} onChange={(e) => set({ shop_name: e.target.value })} placeholder={t('sellerApplication.phShop')} className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
+                <input value={form.owner_name} onChange={(e) => set({ owner_name: e.target.value })} placeholder={t('sellerApplication.phOwner')} className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
+                <input value={form.phone} onChange={(e) => set({ phone: e.target.value })} placeholder={t('sellerApplication.phPhone')} className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
+                <input value={form.email} onChange={(e) => set({ email: e.target.value })} placeholder={t('sellerApplication.phEmail')} className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
                 <select value={form.city} onChange={(e) => set({ city: e.target.value })} className="h-11 rounded-lg border border-border bg-background px-3 text-sm">
                   {CITIES.map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
-                <input value={form.commune} onChange={(e) => set({ commune: e.target.value })} placeholder="Commune / quartier" className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
-                <input value={form.activity} onChange={(e) => set({ activity: e.target.value })} placeholder="Type d'activité (mode, beauté, électronique…)" className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
-                <input value={form.rccm} onChange={(e) => set({ rccm: e.target.value })} placeholder="RCCM / registre (optionnel)" className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
+                <input value={form.commune} onChange={(e) => set({ commune: e.target.value })} placeholder={t('sellerApplication.phCommune')} className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
+                <input value={form.activity} onChange={(e) => set({ activity: e.target.value })} placeholder={t('sellerApplication.phActivity')} className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
+                <input value={form.rccm} onChange={(e) => set({ rccm: e.target.value })} placeholder={t('sellerApplication.phRccm')} className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
               </div>
             ) : null}
 
@@ -205,17 +199,17 @@ export default function SellerApplication() {
                   <select value={form.id_type} onChange={(e) => set({ id_type: e.target.value })} className="h-11 rounded-lg border border-border bg-background px-3 text-sm">
                     {ID_TYPES.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
                   </select>
-                  <input value={form.id_number} onChange={(e) => set({ id_number: e.target.value })} placeholder="Numéro de la pièce *" className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
+                  <input value={form.id_number} onChange={(e) => set({ id_number: e.target.value })} placeholder={t('sellerApplication.phIdNumber')} className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
                 </div>
                 <DocumentUploadField
-                  label="Copie de la pièce d'identité *"
-                  hint="Photo ou scan lisible du document du responsable de la boutique."
+                  label={t('sellerApplication.idCopyLabel')}
+                  hint={t('sellerApplication.idCopyHint')}
                   value={form.id_document}
                   onChange={(doc) => set({ id_document: doc })}
                 />
                 <DocumentUploadField
-                  label="Document d'entreprise (optionnel)"
-                  hint="Registre de commerce, attestation fiscale ou facture fournisseur à votre nom."
+                  label={t('sellerApplication.bizDocLabel')}
+                  hint={t('sellerApplication.bizDocHint')}
                   value={form.business_document}
                   onChange={(doc) => set({ business_document: doc })}
                 />
@@ -239,37 +233,35 @@ export default function SellerApplication() {
                   ))}
                 </div>
                 <div className="grid gap-3 md:grid-cols-2">
-                  <input value={form.payout_holder} onChange={(e) => set({ payout_holder: e.target.value })} placeholder="Titulaire du compte *" className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
-                  <input value={form.payout_account} onChange={(e) => set({ payout_account: e.target.value })} placeholder={form.payout_method === 'bank' ? 'Numéro de compte *' : 'Numéro mobile money *'} className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
+                  <input value={form.payout_holder} onChange={(e) => set({ payout_holder: e.target.value })} placeholder={t('sellerApplication.phHolder')} className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
+                  <input value={form.payout_account} onChange={(e) => set({ payout_account: e.target.value })} placeholder={form.payout_method === 'bank' ? t('sellerApplication.phBankAcct') : t('sellerApplication.phMomo')} className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
                   {form.payout_method === 'bank' ? (
-                    <input value={form.payout_bank_name} onChange={(e) => set({ payout_bank_name: e.target.value })} placeholder="Banque" className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
+                    <input value={form.payout_bank_name} onChange={(e) => set({ payout_bank_name: e.target.value })} placeholder={t('sellerApplication.phBank')} className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
                   ) : null}
                 </div>
                 <p className="text-[11px] text-muted-foreground">
-                  Les versements ne sont faits qu'au nom du titulaire du compte. Un numéro au nom d'un tiers fait échouer la
-                  vérification.
+                  {t('sellerApplication.payoutWarn')}
                 </p>
               </div>
             ) : null}
 
             {step === 3 ? (
               <div className="space-y-3">
-                <textarea value={form.description} onChange={(e) => set({ description: e.target.value })} rows={3} placeholder="Présentez votre activité : produits, fournisseurs, volume mensuel estimé…" className="w-full rounded-lg border border-border bg-background p-3 text-sm" />
+                <textarea value={form.description} onChange={(e) => set({ description: e.target.value })} rows={3} placeholder={t('sellerApplication.phDescribe')} className="w-full rounded-lg border border-border bg-background p-3 text-sm" />
                 <div className="rounded-xl bg-secondary/50 p-3 text-xs">
-                  <p className="font-semibold">Récapitulatif</p>
+                  <p className="font-semibold">{t('sellerApplication.summary')}</p>
                   <ul className="mt-1 space-y-0.5 text-muted-foreground">
-                    <li>Boutique : {form.shop_name || '—'} · {form.city}{form.commune ? ` (${form.commune})` : ''}</li>
-                    <li>Responsable : {form.owner_name || '—'} · {form.phone || '—'}</li>
-                    <li>Identité : {ID_TYPES.find((t) => t.id === form.id_type)?.label} {form.id_number || '—'} · {form.id_document?.file_name || 'sans copie'}</li>
-                    <li>Encaissement : {PAYOUT_METHODS.find((m) => m.id === form.payout_method)?.label} · {form.payout_account || '—'}</li>
+                    <li>{t('sellerApplication.sumShop', { shop: form.shop_name || '—', city: form.city, commune: form.commune ? ` (${form.commune})` : '' })}</li>
+                    <li>{t('sellerApplication.sumOwner', { owner: form.owner_name || '—', phone: form.phone || '—' })}</li>
+                    <li>{t('sellerApplication.sumId', { type: ID_TYPES.find((x) => x.id === form.id_type)?.label, num: form.id_number || '—', doc: form.id_document?.file_name || t('sellerApplication.noCopy') })}</li>
+                    <li>{t('sellerApplication.sumPayout', { method: PAYOUT_METHODS.find((m) => m.id === form.payout_method)?.label, acct: form.payout_account || '—' })}</li>
                   </ul>
                 </div>
                 <label className="flex items-start gap-2 text-xs text-muted-foreground">
                   <input type="checkbox" checked={form.consent} onChange={(e) => set({ consent: e.target.checked })} className="mt-0.5 h-4 w-4" />
                   <span>
-                    J'accepte les <Link to="/platform-guidelines" className="font-semibold text-primary">règles vendeurs</Link> et la{' '}
-                    <Link to="/confidentialite" className="font-semibold text-primary">politique de confidentialité</Link>, et je
-                    certifie vendre des produits licites en RDC.
+                    {t('sellerApplication.consentA')} <Link to="/platform-guidelines" className="font-semibold text-primary">{t('sellerApplication.consentRules')}</Link> {t('sellerApplication.consentB')}{' '}
+                    <Link to="/confidentialite" className="font-semibold text-primary">{t('sellerApplication.consentPrivacy')}</Link>{t('sellerApplication.consentC')}
                   </span>
                 </label>
               </div>
@@ -288,7 +280,7 @@ export default function SellerApplication() {
                   onClick={() => { setError(''); setStep((s) => s - 1); }}
                   className="flex items-center gap-1.5 rounded-full border border-border px-5 py-3 text-sm font-semibold"
                 >
-                  <ArrowLeft className="h-4 w-4" /> Précédent
+                  <ArrowLeft className="h-4 w-4" /> {t('sellerApplication.prev')}
                 </button>
               ) : null}
               {step < STEPS.length - 1 ? (
@@ -297,7 +289,7 @@ export default function SellerApplication() {
                   onClick={next}
                   className="flex items-center gap-1.5 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground"
                 >
-                  Continuer <ArrowRight className="h-4 w-4" />
+                  {t('sellerApplication.next')} <ArrowRight className="h-4 w-4" />
                 </button>
               ) : (
                 <button
@@ -305,7 +297,7 @@ export default function SellerApplication() {
                   disabled={submitting}
                   className="flex items-center gap-1.5 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50"
                 >
-                  <Check className="h-4 w-4" /> {submitting ? 'Envoi…' : 'Envoyer ma candidature'}
+                  <Check className="h-4 w-4" /> {submitting ? t('sellerApplication.sending') : t('sellerApplication.submit')}
                 </button>
               )}
               {application ? (
@@ -314,7 +306,7 @@ export default function SellerApplication() {
                   onClick={() => setEditing(false)}
                   className="rounded-full border border-border px-5 py-3 text-sm font-semibold"
                 >
-                  Annuler
+                  {t('sellerApplication.cancel')}
                 </button>
               ) : null}
             </div>
@@ -322,12 +314,12 @@ export default function SellerApplication() {
         </section>
       )}
 
-      <InfoSection title="Ce qui est vérifié">
+      <InfoSection title={t('sellerApplication.checkedTitle')}>
         <ul className="space-y-1.5">
-          <li>• Identité du responsable et adresse de stock ou de préparation.</li>
-          <li>• Numéro mobile money ou compte bancaire au nom du titulaire du compte.</li>
-          <li>• Conformité des produits : pas de contrefaçon, ni d'articles interdits.</li>
-          <li>• Délais de préparation réalistes pour les villes desservies.</li>
+          <li>• {t('sellerApplication.checked1')}</li>
+          <li>• {t('sellerApplication.checked2')}</li>
+          <li>• {t('sellerApplication.checked3')}</li>
+          <li>• {t('sellerApplication.checked4')}</li>
         </ul>
       </InfoSection>
     </InfoPage>

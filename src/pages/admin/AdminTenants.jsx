@@ -11,16 +11,17 @@ import TenantForm from '@/components/saas/TenantForm';
 import { loadPlans } from '@/lib/plans';
 import { annualRunRate, monthlyRecurring } from '@/lib/saas';
 import { formatDate, formatUSD } from '@/lib/format';
-
-const STATUS_LABELS = {
-  onboarding: 'À configurer',
-  trial: 'Essai',
-  active: 'Actif',
-  suspended: 'Suspendu',
-  cancelled: 'Annulé',
-};
+import { useTranslation } from 'react-i18next';
 
 export default function AdminTenants() {
+  const { t } = useTranslation();
+  const STATUS_LABELS = {
+    onboarding: t('adminTenants.statusOnboarding'),
+    trial: t('adminTenants.statusTrial'),
+    active: t('adminTenants.statusActive'),
+    suspended: t('adminTenants.statusSuspended'),
+    cancelled: t('adminTenants.statusCancelled'),
+  };
   const [tenants, setTenants] = useState([]);
   const [subscriptions, setSubscriptions] = useState([]);
   const [plans, setPlans] = useState([]);
@@ -31,14 +32,14 @@ export default function AdminTenants() {
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
-    const [t, s, p, i, d] = await Promise.all([
+    const [tx, s, p, i, d] = await Promise.all([
       base44.entities.Tenant.list('-created_date', 200).catch(() => []),
       base44.entities.Subscription.list('-created_date', 200).catch(() => []),
       loadPlans(),
       base44.entities.TenantInvoice.list('-created_date', 50).catch(() => []),
       base44.entities.TenantDomain.list('-created_date', 200).catch(() => []),
     ]);
-    setTenants(t);
+    setTenants(tx);
     setSubscriptions(s);
     setPlans(p);
     setInvoices(i);
@@ -79,15 +80,15 @@ export default function AdminTenants() {
 
   const mrr = monthlyRecurring(subscriptions);
   const kpis = [
-    { label: 'Enseignes', value: tenants.length, icon: Building2 },
-    { label: 'Abonnements actifs', value: subscriptions.filter((s) => ['active', 'trialing'].includes(s.status)).length, icon: Users },
-    { label: 'Revenu mensuel (MRR)', value: formatUSD(mrr), icon: TrendingUp },
-    { label: 'Revenu annuel projeté', value: formatUSD(annualRunRate(subscriptions)), icon: CreditCard },
+    { label: t('adminTenants.kpiTenants'), value: tenants.length, icon: Building2 },
+    { label: t('adminTenants.kpiActive'), value: subscriptions.filter((s) => ['active', 'trialing'].includes(s.status)).length, icon: Users },
+    { label: t('adminTenants.kpiMrr'), value: formatUSD(mrr), icon: TrendingUp },
+    { label: t('adminTenants.kpiArr'), value: formatUSD(annualRunRate(subscriptions)), icon: CreditCard },
   ];
 
   return (
     <div className="space-y-5 py-2">
-      <DashboardNav title="Console plateforme" links={ADMIN_LINKS} />
+      <DashboardNav title={t('adminTenants.title')} links={ADMIN_LINKS} />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {kpis.map((k) => (
@@ -105,29 +106,29 @@ export default function AdminTenants() {
 
       <Card>
         <CardContent className="space-y-3 p-5">
-          <h2 className="font-heading text-base font-bold">Enseignes clientes</h2>
-          {tenants.length === 0 && <p className="text-sm text-muted-foreground">Aucune enseigne créée pour le moment.</p>}
+          <h2 className="font-heading text-base font-bold">{t('adminTenants.tenants')}</h2>
+          {tenants.length === 0 && <p className="text-sm text-muted-foreground">{t('adminTenants.noTenants')}</p>}
           <div className="space-y-2">
-            {tenants.map((t) => {
-              const sub = subscriptions.find((s) => s.tenant_id === t.id);
-              const tenantDomains = domains.filter((d) => d.tenant_id === t.id);
+            {tenants.map((tx) => {
+              const sub = subscriptions.find((s) => s.tenant_id === tx.id);
+              const tenantDomains = domains.filter((d) => d.tenant_id === tx.id);
               return (
-                <div key={t.id} className="rounded-xl border border-border p-3">
+                <div key={tx.id} className="rounded-xl border border-border p-3">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="min-w-[220px]">
-                      <p className="text-sm font-semibold">{t.name} <span className="font-mono text-xs text-muted-foreground">/{t.slug}</span></p>
+                      <p className="text-sm font-semibold">{tx.name} <span className="font-mono text-xs text-muted-foreground">/{tx.slug}</span></p>
                       <p className="text-xs text-muted-foreground">
-                        {t.owner_email || 'sans responsable'} · {t.city || '—'} · {sub ? sub.plan_code : t.plan_code} · {STATUS_LABELS[t.status] || t.status}
+                        {t('adminTenants.rowMeta', { owner: tx.owner_email || t('adminTenants.noOwner'), city: tx.city || '—', plan: sub ? sub.plan_code : tx.plan_code, status: STATUS_LABELS[tx.status] || tx.status })}
                       </p>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {sub ? `${sub.billing_cycle === 'yearly' ? 'annuel' : 'mensuel'} · ${formatUSD(sub.amount_usd)} · période jusqu’au ${formatDate(sub.current_period_end)}` : 'sans abonnement'}
+                      {sub ? t('adminTenants.subMeta', { cycle: sub.billing_cycle === 'yearly' ? t('adminTenants.yearly') : t('adminTenants.monthly'), amount: formatUSD(sub.amount_usd), end: formatDate(sub.current_period_end) }) : t('adminTenants.noSub')}
                     </p>
                     <div className="flex flex-wrap gap-2">
-                      <Button size="sm" variant="outline" onClick={() => setEditing(t)}>Modifier</Button>
-                      {t.status === 'suspended'
-                        ? <Button size="sm" variant="ghost" onClick={() => setStatus(t, 'active')}>Réactiver</Button>
-                        : <Button size="sm" variant="ghost" onClick={() => setStatus(t, 'suspended')}>Suspendre</Button>}
+                      <Button size="sm" variant="outline" onClick={() => setEditing(tx)}>{t('adminTenants.edit')}</Button>
+                      {tx.status === 'suspended'
+                        ? <Button size="sm" variant="ghost" onClick={() => setStatus(tx, 'active')}>{t('adminTenants.reactivate')}</Button>
+                        : <Button size="sm" variant="ghost" onClick={() => setStatus(tx, 'suspended')}>{t('adminTenants.suspend')}</Button>}
                     </div>
                   </div>
 
@@ -137,7 +138,7 @@ export default function AdminTenants() {
                         <span key={d.id} className="flex items-center gap-2 rounded-full border border-border px-2 py-0.5 text-[11px]">
                           {d.hostname} · {d.status}
                           {d.status !== 'verified' && (
-                            <button type="button" className="font-semibold underline" onClick={() => verifyDomain(d)}>valider</button>
+                            <button type="button" className="font-semibold underline" onClick={() => verifyDomain(d)}>{t('adminTenants.validate')}</button>
                           )}
                         </span>
                       ))}
@@ -153,9 +154,9 @@ export default function AdminTenants() {
       {editing && (
         <Card>
           <CardContent className="space-y-4 p-5">
-            <h2 className="font-heading text-base font-bold">Modifier {editing.name}</h2>
-            <TenantForm initial={editing} onSubmit={saveTenant} submitting={busy} submitLabel="Enregistrer" />
-            <Button variant="ghost" size="sm" onClick={() => setEditing(null)}>Annuler</Button>
+            <h2 className="font-heading text-base font-bold">{t('adminTenants.editTitle', { name: editing.name })}</h2>
+            <TenantForm initial={editing} onSubmit={saveTenant} submitting={busy} submitLabel={t('adminTenants.save')} />
+            <Button variant="ghost" size="sm" onClick={() => setEditing(null)}>{t('adminTenants.cancel')}</Button>
           </CardContent>
         </Card>
       )}
@@ -163,7 +164,7 @@ export default function AdminTenants() {
       <SubscriptionPanel subscriptions={subscriptions} plans={plans} onChange={load} />
 
       <div>
-        <h2 className="mb-3 font-heading text-base font-bold">Catalogue des formules</h2>
+        <h2 className="mb-3 font-heading text-base font-bold">{t('adminTenants.plans')}</h2>
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           {plans.map((plan) => <PlanEditor key={plan.code} plan={plan} onSaved={load} />)}
         </div>
@@ -171,14 +172,14 @@ export default function AdminTenants() {
 
       <Card>
         <CardContent className="space-y-2 p-5">
-          <h2 className="font-heading text-base font-bold">Dernières factures d’abonnement</h2>
-          {invoices.length === 0 && <p className="text-sm text-muted-foreground">Aucune facture émise.</p>}
+          <h2 className="font-heading text-base font-bold">{t('adminTenants.invoices')}</h2>
+          {invoices.length === 0 && <p className="text-sm text-muted-foreground">{t('adminTenants.noInvoices')}</p>}
           {invoices.map((inv) => (
             <div key={inv.id} className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-2 text-sm last:border-0">
               <span className="font-mono text-xs">{inv.invoice_number}</span>
               <span className="text-muted-foreground">{inv.tenant_name} · {inv.plan_code} · {formatDate(inv.issued_at)}</span>
               <span className="font-semibold">{formatUSD(inv.total_usd)}</span>
-              <span className="text-xs">{inv.status === 'paid' ? 'Payée' : inv.status === 'past_due' ? 'Impayée' : inv.status}</span>
+              <span className="text-xs">{inv.status === 'paid' ? t('adminTenants.paid') : inv.status === 'past_due' ? t('adminTenants.pastDue') : inv.status}</span>
             </div>
           ))}
         </CardContent>

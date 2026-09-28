@@ -5,18 +5,13 @@ import DashboardNav from '@/components/DashboardNav';
 import StatusBadge from '@/components/StatusBadge';
 import { ADMIN_LINKS } from '@/lib/navLinks';
 import { formatUSD, formatDateTime } from '@/lib/format';
+import { useTranslation } from 'react-i18next';
 
-const REASON_LABELS = {
-  not_received: 'Article non reçu',
-  wrong_product: 'Mauvais article',
-  damaged: 'Article endommagé',
-  not_as_described: 'Non conforme',
-  missing_item: 'Article manquant',
-  changed_mind: "Changement d'avis",
-  payment_issue: 'Problème de paiement',
-};
+const REASON_IDS = ['not_received', 'wrong_product', 'damaged', 'not_as_described', 'missing_item', 'changed_mind', 'payment_issue'];
 
 export default function AdminReturns() {
+  const { t } = useTranslation();
+  const REASON_LABELS = Object.fromEntries(REASON_IDS.map((id) => [id, t(`adminReturns.reason_${id}`)]));
   const [returns, setReturns] = useState([]);
   const [disputes, setDisputes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -52,16 +47,16 @@ export default function AdminReturns() {
         return_number: ret.return_number,
       });
       if (!res?.data?.order) {
-        setMessage(res?.data?.error || 'Remboursement impossible.');
+        setMessage(res?.data?.error || t('adminReturns.refundFailed'));
         return;
       }
       if (res.data.provider_refund === 'manual_required') {
-        setMessage(`Retour ${ret.return_number} remboursé en portefeuille. Solde carte à rembourser dans le dashboard du prestataire.`);
+        setMessage(t('adminReturns.manualRefund', { num: ret.return_number }));
       } else {
-        setMessage(`Retour ${ret.return_number} remboursé (${formatUSD(amount)} crédités).`);
+        setMessage(t('adminReturns.refunded', { num: ret.return_number, amount: formatUSD(amount) }));
       }
     } else {
-      setMessage(`Retour ${ret.return_number} mis à jour : ${status}.`);
+      setMessage(t('adminReturns.updated', { num: ret.return_number, status }));
     }
     await base44.entities.AuditLog.create({
       action: `return.${status}`,
@@ -77,27 +72,27 @@ export default function AdminReturns() {
   const updateDispute = async (d, status) => {
     const updated = await base44.entities.Dispute.update(d.id, { status, admin_notes: notes[d.id] || d.admin_notes || '' });
     setDisputes((prev) => prev.map((x) => (x.id === d.id ? updated : x)));
-    setMessage(`Litige ${d.order_number} mis à jour : ${status}.`);
+    setMessage(t('adminReturns.disputeUpdated', { order: d.order_number, status }));
   };
 
   if (loading) return <div className="h-64 animate-pulse rounded-2xl bg-secondary" />;
 
   return (
     <div className="space-y-5 pb-8">
-      <DashboardNav title="Retours & litiges" links={ADMIN_LINKS} />
+      <DashboardNav title={t('adminReturns.title')} links={ADMIN_LINKS} />
 
       <div className="flex gap-2">
         {[
-          { id: 'returns', label: `Retours (${returns.length})` },
-          { id: 'disputes', label: `Litiges (${disputes.length})` },
-        ].map((t) => (
+          { id: 'returns', label: t('adminReturns.tabReturns', { count: returns.length }) },
+          { id: 'disputes', label: t('adminReturns.tabDisputes', { count: disputes.length }) },
+        ].map((tx) => (
           <button
-            key={t.id}
+            key={tx.id}
             type="button"
-            onClick={() => setTab(t.id)}
-            className={`rounded-full px-3.5 py-1.5 text-xs font-semibold ${tab === t.id ? 'bg-primary text-primary-foreground' : 'bg-secondary'}`}
+            onClick={() => setTab(tx.id)}
+            className={`rounded-full px-3.5 py-1.5 text-xs font-semibold ${tab === tx.id ? 'bg-primary text-primary-foreground' : 'bg-secondary'}`}
           >
-            {t.label}
+            {tx.label}
           </button>
         ))}
       </div>
@@ -117,7 +112,7 @@ export default function AdminReturns() {
                     {r.order_number} · {r.customer_name} · {r.customer_phone} · {formatDateTime(r.created_date)}
                   </p>
                   <p className="text-[11px] text-muted-foreground">
-                    Motif : {REASON_LABELS[r.reason] || r.reason} · {r.product_title || 'article non précisé'}
+                    {t('adminReturns.reasonLine', { reason: REASON_LABELS[r.reason] || r.reason, product: r.product_title || t('adminReturns.unspecified') })}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -129,28 +124,28 @@ export default function AdminReturns() {
               <input
                 value={notes[r.id] ?? r.resolution_notes ?? ''}
                 onChange={(e) => setNotes({ ...notes, [r.id]: e.target.value })}
-                placeholder="Note interne / réponse au client"
+                placeholder={t('adminReturns.notePlaceholder')}
                 className="mt-2 h-10 w-full rounded-lg border border-border bg-background px-3 text-xs"
               />
               <div className="mt-2 flex flex-wrap gap-2">
                 <button type="button" onClick={() => updateReturn(r, 'under_review')} className="rounded-full border border-border px-3.5 py-1.5 text-xs font-semibold">
-                  Mettre en examen
+                  {t('adminReturns.review')}
                 </button>
                 <button type="button" onClick={() => updateReturn(r, 'approved')} className="flex items-center gap-1 rounded-full bg-sky-100 px-3.5 py-1.5 text-xs font-semibold text-sky-900">
-                  <Check className="h-3.5 w-3.5" /> Approuver
+                  <Check className="h-3.5 w-3.5" /> {t('adminReturns.approve')}
                 </button>
                 <button type="button" onClick={() => updateReturn(r, 'refunded')} className="flex items-center gap-1 rounded-full bg-emerald-100 px-3.5 py-1.5 text-xs font-semibold text-emerald-900">
-                  <Banknote className="h-3.5 w-3.5" /> Rembourser
+                  <Banknote className="h-3.5 w-3.5" /> {t('adminReturns.refund')}
                 </button>
                 <button type="button" onClick={() => updateReturn(r, 'rejected')} className="flex items-center gap-1 rounded-full bg-red-100 px-3.5 py-1.5 text-xs font-semibold text-red-900">
-                  <X className="h-3.5 w-3.5" /> Refuser
+                  <X className="h-3.5 w-3.5" /> {t('adminReturns.reject')}
                 </button>
               </div>
             </div>
           ))}
           {!returns.length && (
             <p className="rounded-xl border border-dashed border-border bg-card p-6 text-center text-xs text-muted-foreground">
-              Aucune demande de retour.
+              {t('adminReturns.emptyReturns')}
             </p>
           )}
         </div>
@@ -179,28 +174,28 @@ export default function AdminReturns() {
               <input
                 value={notes[d.id] ?? d.admin_notes ?? ''}
                 onChange={(e) => setNotes({ ...notes, [d.id]: e.target.value })}
-                placeholder="Décision et notes d'arbitrage"
+                placeholder={t('adminReturns.decisionPlaceholder')}
                 className="mt-2 h-10 w-full rounded-lg border border-border bg-background px-3 text-xs"
               />
               <div className="mt-2 flex flex-wrap gap-2">
                 <button type="button" onClick={() => updateDispute(d, 'investigating')} className="rounded-full border border-border px-3.5 py-1.5 text-xs font-semibold">
-                  Enquêter
+                  {t('adminReturns.investigate')}
                 </button>
                 <button type="button" onClick={() => updateDispute(d, 'resolved_buyer')} className="rounded-full bg-emerald-100 px-3.5 py-1.5 text-xs font-semibold text-emerald-900">
-                  Faveur acheteur
+                  {t('adminReturns.favorBuyer')}
                 </button>
                 <button type="button" onClick={() => updateDispute(d, 'resolved_seller')} className="rounded-full bg-sky-100 px-3.5 py-1.5 text-xs font-semibold text-sky-900">
-                  Faveur vendeur
+                  {t('adminReturns.favorSeller')}
                 </button>
                 <button type="button" onClick={() => updateDispute(d, 'closed')} className="rounded-full border border-border px-3.5 py-1.5 text-xs font-semibold">
-                  Clôturer
+                  {t('adminReturns.close')}
                 </button>
               </div>
             </div>
           ))}
           {!disputes.length && (
             <p className="rounded-xl border border-dashed border-border bg-card p-6 text-center text-xs text-muted-foreground">
-              Aucun litige ouvert. Les cas signalés apparaissent ici pour arbitrage.
+              {t('adminReturns.emptyDisputes')}
             </p>
           )}
         </div>

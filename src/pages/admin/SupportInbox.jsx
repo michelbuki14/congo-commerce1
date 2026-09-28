@@ -2,9 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import DashboardNav from '@/components/DashboardNav';
 import ChatInbox from '@/components/chat/ChatInbox';
+import { useTranslation } from 'react-i18next';
 import { ADMIN_LINKS } from '@/lib/navLinks';
 
 export default function SupportInbox() {
+  const { t } = useTranslation();
   const [threads, setThreads] = useState([]);
   const [activeId, setActiveId] = useState(null);
 
@@ -18,8 +20,8 @@ export default function SupportInbox() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-4 px-3 py-5 md:px-6">
-      <DashboardNav title="Chat support" links={ADMIN_LINKS} />
-      <ChatInbox threads={threads} activeId={activeId} onSelect={setActiveId} role="support" senderName="Support Congo Commerce" emptyText="Aucune demande de support." />
+      <DashboardNav title={t('supportInbox.title')} links={ADMIN_LINKS} />
+      <ChatInbox threads={threads} activeId={activeId} onSelect={setActiveId} role="support" senderName="Support Congo Commerce" emptyText={t('supportInbox.empty')} />
     </div>
   );
 }

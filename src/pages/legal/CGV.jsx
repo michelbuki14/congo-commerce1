@@ -1,19 +1,21 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import LegalPage, { LegalSection } from '@/components/legal/LegalPage';
+import { useTranslation } from 'react-i18next';
 import { getCompanyConfig, getTaxConfig } from '@/lib/config';
 
 export default function CGV() {
+  const { t } = useTranslation();
   const c = getCompanyConfig();
   const tax = getTaxConfig();
   const rate = tax.enabled === false ? 0 : Number(tax.vat_rate) || 0;
 
   return (
     <LegalPage
-      title="Conditions générales de vente"
-      subtitle={`Applicables à toute commande passée sur ${c.trade_name || 'Congo Commerce'}.`}
+      title={t('cgv.title')}
+      subtitle={t('cgv.subtitle', { shop: c.trade_name || 'Congo Commerce' })}
     >
-      <LegalSection title="1. Objet">
+      <LegalSection title={t('cgv.s1')}>
         <p>
           Les présentes conditions régissent les ventes conclues sur la plateforme entre, d'une part,{' '}
           {c.legal_name || 'Congo Commerce'}, exploitant de la place de marché, et, d'autre part, tout acheteur
@@ -26,7 +28,7 @@ export default function CGV() {
         </p>
       </LegalSection>
 
-      <LegalSection title="2. Produits">
+      <LegalSection title={t('cgv.s2')}>
         <p>
           Les produits sont décrits et illustrés par les vendeurs, sous leur responsabilité. Les photographies
           ont une valeur indicative et n'entrent pas dans le champ contractuel.
@@ -37,7 +39,7 @@ export default function CGV() {
         </p>
       </LegalSection>
 
-      <LegalSection title="3. Prix et TVA">
+      <LegalSection title={t('cgv.s3')}>
         <p>
           Les prix sont affichés en dollars américains (USD), toutes taxes comprises. Le montant en francs
           congolais (CDF) est fourni à titre indicatif au taux de conversion appliqué au moment de la commande.
@@ -59,7 +61,7 @@ export default function CGV() {
         </p>
       </LegalSection>
 
-      <LegalSection title="4. Commande">
+      <LegalSection title={t('cgv.s4')}>
         <p>
           La commande est validée après acceptation des présentes conditions et de la politique de
           confidentialité. Un accusé de réception reprenant le détail de la commande est affiché immédiatement
@@ -71,7 +73,7 @@ export default function CGV() {
         </p>
       </LegalSection>
 
-      <LegalSection title="5. Paiement">
+      <LegalSection title={t('cgv.s5')}>
         <p>
           Le paiement s'effectue par mobile money (M-Pesa, Airtel Money, Orange Money), par carte bancaire ou à
           la livraison selon les options proposées au moment de la commande.
@@ -86,7 +88,7 @@ export default function CGV() {
         </p>
       </LegalSection>
 
-      <LegalSection title="6. Livraison">
+      <LegalSection title={t('cgv.s6')}>
         <p>
           La livraison est assurée à domicile ou en point de retrait, dans les villes desservies indiquées au
           moment de la commande. Les délais estimés sont affichés par produit et confirmés au suivi de commande.
@@ -103,7 +105,7 @@ export default function CGV() {
         </p>
       </LegalSection>
 
-      <LegalSection title="7. Retours et remboursements">
+      <LegalSection title={t('cgv.s7')}>
         <p>
           L'acheteur dispose de sept (7) jours à compter de la réception pour demander un retour, depuis la page
           « Retours » de son espace client, pour tout article non utilisé, complet, dans son emballage d'origine.
@@ -124,7 +126,7 @@ export default function CGV() {
         </p>
       </LegalSection>
 
-      <LegalSection title="8. Litiges et protection de l'acheteur">
+      <LegalSection title={t('cgv.s8')}>
         <p>
           En cas de désaccord avec un vendeur, l'acheteur peut ouvrir un litige depuis son espace client. La
           plateforme instruit le dossier et peut prononcer un remboursement ou un dédommagement.
@@ -135,7 +137,7 @@ export default function CGV() {
         </p>
       </LegalSection>
 
-      <LegalSection title="9. Données personnelles">
+      <LegalSection title={t('cgv.s9')}>
         <p>
           Le traitement des données personnelles est décrit dans la{' '}
           <Link to="/confidentialite" className="font-semibold text-primary">
@@ -145,7 +147,7 @@ export default function CGV() {
         </p>
       </LegalSection>
 
-      <LegalSection title="10. Droit applicable">
+      <LegalSection title={t('cgv.s10')}>
         <p>
           Les présentes conditions sont soumises au droit congolais. En cas de litige non résolu à l'amiable, les
           juridictions de Kinshasa sont compétentes, sans préjudice des règles protectrices applicables aux

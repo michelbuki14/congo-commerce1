@@ -1,30 +1,32 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { RotateCcw, ShieldCheck, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '@/components/StatusBadge';
 import { getOrderIds, getProfile, uid } from '@/lib/session';
 import { formatUSD, formatDate } from '@/lib/format';
 
-const REASONS = [
-  { id: 'not_received', label: 'Article non reçu' },
-  { id: 'wrong_product', label: 'Mauvais article reçu' },
-  { id: 'damaged', label: 'Article endommagé' },
-  { id: 'not_as_described', label: 'Article très différent de la description' },
-  { id: 'missing_item', label: 'Article manquant dans le colis' },
-  { id: 'changed_mind', label: "Changement d'avis" },
-];
-
 const WINDOW_DAYS = 7;
 
-function eligible(order) {
-  if (order.status !== 'DELIVERED') return { ok: false, reason: 'Retour possible après réception du colis.' };
-  const days = (Date.now() - new Date(order.updated_date || order.created_date).getTime()) / 86400000;
-  if (days > WINDOW_DAYS) return { ok: false, reason: `Délai de ${WINDOW_DAYS} jours dépassé.` };
-  return { ok: true, reason: '' };
-}
-
 export default function ReturnsPortal() {
+  const { t } = useTranslation();
+  const REASONS = [
+    { id: 'not_received', label: t('returnsPortal.reasonNotReceived') },
+    { id: 'wrong_product', label: t('returnsPortal.reasonWrongProduct') },
+    { id: 'damaged', label: t('returnsPortal.reasonDamaged') },
+    { id: 'not_as_described', label: t('returnsPortal.reasonNotAsDescribed') },
+    { id: 'missing_item', label: t('returnsPortal.reasonMissingItem') },
+    { id: 'changed_mind', label: t('returnsPortal.reasonChangedMind') },
+  ];
+
+  function eligible(order) {
+    if (order.status !== 'DELIVERED') return { ok: false, reason: t('returnsPortal.eligibleAfterDelivery') };
+    const days = (Date.now() - new Date(order.updated_date || order.created_date).getTime()) / 86400000;
+    if (days > WINDOW_DAYS) return { ok: false, reason: t('returnsPortal.windowPassed', { days: WINDOW_DAYS }) };
+    return { ok: true, reason: '' };
+  }
+
   const profile = getProfile();
   const [orders, setOrders] = useState([]);
   const [returns, setReturns] = useState([]);
@@ -58,7 +60,7 @@ export default function ReturnsPortal() {
     setError('');
     setMessage('');
     if (!selected.length) {
-      setError('Sélectionnez au moins un article à retourner.');
+      setError(t('returnsPortal.selectItems'));
       return;
     }
     setSubmitting(true);
@@ -91,11 +93,11 @@ export default function ReturnsPortal() {
         audience: 'admin',
         is_demo: true,
       });
-      setMessage(`Votre demande porte sur ${selected.length} article(s). Un agent vous répond sous 48 h.`);
+      setMessage(t('returnsPortal.requestCovers', { count: selected.length }));
       setSelected([]);
       setDescription('');
     } catch {
-      setError("La demande n'a pas pu être envoyée. Réessayez.");
+      setError(t('returnsPortal.submitFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -103,18 +105,17 @@ export default function ReturnsPortal() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-5 pb-8">
-      <h1 className="text-lg font-bold md:text-xl">Portail des retours</h1>
+      <h1 className="text-lg font-bold md:text-xl">{t('returnsPortal.title')}</h1>
 
       <div className="flex items-start gap-2 rounded-xl border border-primary/30 bg-primary/5 p-3 text-xs">
         <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
         <p>
-          Protection acheteur : vous disposez de {WINDOW_DAYS} jours après réception pour demander un retour. Les articles
-          endommagés ou non conformes sont remboursés intégralement ; les remboursements partiels sont possibles.
+          {t('returnsPortal.protection', { days: WINDOW_DAYS })}
         </p>
       </div>
 
       <section className="space-y-3 rounded-2xl border border-border bg-card p-4">
-        <h2 className="text-sm font-bold">1. Choisissez les articles concernés</h2>
+        <h2 className="text-sm font-bold">{t('returnsPortal.step1')}</h2>
         {loading ? (
           <div className="h-24 animate-pulse rounded-xl bg-secondary" />
         ) : orders.length ? (
@@ -160,7 +161,7 @@ export default function ReturnsPortal() {
                   </div>
                   {!state.ok && (
                     <Link to="/support" className="mt-1 inline-block text-[11px] font-semibold text-primary">
-                      Colis non reçu ? Ouvrir un ticket support
+                      {t('returnsPortal.notReceivedTicket')}
                     </Link>
                   )}
                 </div>
@@ -169,13 +170,13 @@ export default function ReturnsPortal() {
           </div>
         ) : (
           <p className="rounded-xl border border-dashed border-border p-5 text-center text-xs text-muted-foreground">
-            Aucune commande sur cet appareil. Vos commandes apparaissent ici après un achat.
+            {t('returnsPortal.noOrders')}
           </p>
         )}
       </section>
 
       <section className="space-y-3 rounded-2xl border border-border bg-card p-4">
-        <h2 className="text-sm font-bold">2. Motif du retour</h2>
+        <h2 className="text-sm font-bold">{t('returnsPortal.step2')}</h2>
         <select
           value={reason}
           onChange={(e) => setReason(e.target.value)}
@@ -189,7 +190,7 @@ export default function ReturnsPortal() {
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={3}
-          placeholder="Décrivez le problème rencontré"
+          placeholder={t('returnsPortal.descPh')}
           className="w-full rounded-lg border border-border bg-background p-3 text-sm"
         />
         {error && (
@@ -208,13 +209,13 @@ export default function ReturnsPortal() {
           disabled={submitting || !selected.length}
           className="rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50"
         >
-          {submitting ? 'Envoi…' : `Demander le retour (${selected.length})`}
+          {submitting ? t('returnsPortal.sending') : t('returnsPortal.requestReturn', { count: selected.length })}
         </button>
       </section>
 
       <section className="rounded-2xl border border-border bg-card p-4">
         <h2 className="mb-3 flex items-center gap-2 text-sm font-bold">
-          <RotateCcw className="h-4 w-4 text-primary" /> Mes demandes
+          <RotateCcw className="h-4 w-4 text-primary" /> {t('returnsPortal.myRequests')}
         </h2>
         {returns.length ? (
           <div className="space-y-2">
@@ -231,7 +232,7 @@ export default function ReturnsPortal() {
             ))}
           </div>
         ) : (
-          <p className="text-xs text-muted-foreground">Aucune demande enregistrée sur ce numéro.</p>
+          <p className="text-xs text-muted-foreground">{t('returnsPortal.noRequests')}</p>
         )}
       </section>
     </div>

@@ -1,27 +1,29 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import LegalPage, { LegalSection, LegalRow } from '@/components/legal/LegalPage';
+import { useTranslation } from 'react-i18next';
 import DataRightsForm from '@/components/legal/DataRightsForm';
 import { getCompanyConfig } from '@/lib/config';
 
 export default function Confidentialite() {
+  const { t } = useTranslation();
   const c = getCompanyConfig();
 
   return (
     <LegalPage
-      title="Politique de confidentialité"
-      subtitle="Comment nous collectons, utilisons et conservons vos données personnelles."
+      title={t('confidentialite.title')}
+      subtitle={t('confidentialite.subtitle')}
     >
-      <LegalSection title="1. Responsable du traitement">
+      <LegalSection title={t('confidentialite.s1')}>
         <p>
           Le responsable du traitement des données collectées sur la plateforme est :
         </p>
-        <LegalRow label="Société" value={c.legal_name} />
-        <LegalRow label="Siège" value={[c.address, c.city, c.country].filter(Boolean).join(', ')} />
-        <LegalRow label="Contact données" value={c.data_contact || c.email} />
+        <LegalRow label={t('confidentialite.company')} value={c.legal_name} />
+        <LegalRow label={t('confidentialite.hq')} value={[c.address, c.city, c.country].filter(Boolean).join(', ')} />
+        <LegalRow label={t('confidentialite.dataContact')} value={c.data_contact || c.email} />
       </LegalSection>
 
-      <LegalSection title="2. Données collectées">
+      <LegalSection title={t('confidentialite.s2')}>
         <p>Nous collectons uniquement les données nécessaires au traitement de vos commandes :</p>
         <ul className="list-disc space-y-1 pl-4">
           <li>identité : nom, prénom ;</li>
@@ -35,7 +37,7 @@ export default function Confidentialite() {
         </p>
       </LegalSection>
 
-      <LegalSection title="3. Finalités et fondement du traitement">
+      <LegalSection title={t('confidentialite.s3')}>
         <p>
           Vos données sont traitées pour exécuter la commande (préparation, expédition, livraison, service
           client), pour respecter nos obligations comptables et fiscales, et — uniquement avec votre accord
@@ -48,7 +50,7 @@ export default function Confidentialite() {
         </p>
       </LegalSection>
 
-      <LegalSection title="4. Durée de conservation">
+      <LegalSection title={t('confidentialite.s4')}>
         <p>
           Les données de commande et les factures sont conservées dix (10) ans pour répondre à nos obligations
           comptables et fiscales. Les données de prospection sont conservées jusqu'à votre désinscription, puis
@@ -56,7 +58,7 @@ export default function Confidentialite() {
         </p>
       </LegalSection>
 
-      <LegalSection title="5. Destinataires">
+      <LegalSection title={t('confidentialite.s5')}>
         <p>
           Vos données sont accessibles à nos équipes internes, aux vendeurs et transporteurs strictement pour
           l'exécution de votre commande (nom, adresse et téléphone de livraison), à nos prestataires de paiement
@@ -68,7 +70,7 @@ export default function Confidentialite() {
         </p>
       </LegalSection>
 
-      <LegalSection title="6. Sécurité">
+      <LegalSection title={t('confidentialite.s6')}>
         <p>
           L'accès aux données est restreint par des règles d'habilitation : chaque utilisateur n'accède qu'aux
           enregistrements qui le concernent. Les échanges sont chiffrés et les opérations sensibles sont
@@ -76,7 +78,7 @@ export default function Confidentialite() {
         </p>
       </LegalSection>
 
-      <LegalSection title="7. Vos droits">
+      <LegalSection title={t('confidentialite.s7')}>
         <p>
           Vous disposez d'un droit d'accès, de rectification, d'effacement, de limitation et d'opposition au
           traitement de vos données, ainsi que du droit de retirer votre consentement à tout moment.
@@ -90,7 +92,7 @@ export default function Confidentialite() {
 
       <DataRightsForm />
 
-      <LegalSection title="8. Cookies et mesure d'audience">
+      <LegalSection title={t('confidentialite.s8')}>
         <p>
           La plateforme utilise un identifiant de session stocké sur votre appareil pour conserver votre panier et
           vos préférences. Vous pouvez le supprimer à tout moment depuis les réglages de votre navigateur ; le
@@ -98,7 +100,7 @@ export default function Confidentialite() {
         </p>
       </LegalSection>
 
-      <LegalSection title="9. Modifications">
+      <LegalSection title={t('confidentialite.s9')}>
         <p>
           Cette politique peut être mise à jour pour refléter une évolution de nos pratiques ou de la
           réglementation. La date de dernière mise à jour figure en haut de cette page. Les{' '}

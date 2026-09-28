@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { BadgeCheck, MapPin } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Image } from '@/components/ui/image';
@@ -7,6 +8,7 @@ import RatingStars from './RatingStars';
 import { compactNumber } from '@/lib/format';
 
 export default function SellerCard({ seller }) {
+  const { t } = useTranslation();
   const [sales, setSales] = useState(Number(seller.total_sales) || 0);
 
   // Social proof: the seller's own counter when set, otherwise the units sold
@@ -46,11 +48,11 @@ export default function SellerCard({ seller }) {
             <MapPin className="h-3 w-3" /> {seller.city}
           </span>
           <span>·</span>
-          <span>{compactNumber(seller.followers_count || 0)} abonnés</span>
+          <span>{t('sellerCard.followers', { count: compactNumber(seller.followers_count || 0) })}</span>
         </div>
         <div className="flex items-center gap-2">
           <RatingStars rating={seller.rating || 0} count={seller.products_count || 0} />
-          {sales > 0 && <span className="text-[11px] text-muted-foreground">{compactNumber(sales)} ventes</span>}
+          {sales > 0 && <span className="text-[11px] text-muted-foreground">{t('sellerCard.sales', { count: compactNumber(sales) })}</span>}
         </div>
       </div>
     </Link>

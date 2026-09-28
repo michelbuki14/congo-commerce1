@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { BadgeCheck, Star, Truck, Users } from 'lucide-react';
 import { formatDate } from '@/lib/format';
 
@@ -21,6 +22,7 @@ function Stars({ value = 0 }) {
 
 /** One seller's public performance card. */
 export default function SellerRatingCard({ metrics }) {
+  const { t } = useTranslation();
   const { seller, avgRating, reviewsCount, verifiedReviews, fiveStars, orders, productsCount, disputes, openDisputes, disputeRate, trustScore, level, verified, followers, deliveryInfo, city } = metrics;
 
   return (
@@ -32,7 +34,7 @@ export default function SellerRatingCard({ metrics }) {
             {verified ? <BadgeCheck className="h-4 w-4 text-primary" /> : null}
           </p>
           <p className="text-[11px] text-muted-foreground">
-            {[city, deliveryInfo].filter(Boolean).join(' · ') || 'Vendeur de la place'}
+            {[city, deliveryInfo].filter(Boolean).join(' · ') || t('sellerRatingCard.defaultSeller')}
           </p>
         </div>
         <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${TONES[level.tone] || TONES.default}`}>
@@ -45,17 +47,17 @@ export default function SellerRatingCard({ metrics }) {
         <span className="text-xs font-semibold">
           {avgRating ? avgRating.toFixed(1) : '—'}
           <span className="ml-1 font-normal text-muted-foreground">
-            ({reviewsCount} avis{verifiedReviews ? ` · ${verifiedReviews} vérifié${verifiedReviews > 1 ? 's' : ''}` : ''})
+            {t('sellerRatingCard.reviews', { count: reviewsCount })}{verifiedReviews ? t('sellerRatingCard.verified', { count: verifiedReviews }) : ''}
           </span>
         </span>
       </div>
 
       <div className="grid grid-cols-2 gap-2 text-[11px] md:grid-cols-4">
         {[
-          { icon: Truck, label: 'Commandes livrées', value: orders },
-          { icon: Star, label: 'Avis 5 étoiles', value: fiveStars },
-          { icon: Users, label: 'Abonnés', value: followers },
-          { label: 'Catalogue', value: `${productsCount} produit(s)` },
+          { icon: Truck, label: t('sellerRatingCard.delivered'), value: orders },
+          { icon: Star, label: t('sellerRatingCard.fiveStars'), value: fiveStars },
+          { icon: Users, label: t('sellerRatingCard.followers'), value: followers },
+          { label: t('sellerRatingCard.catalog'), value: t('sellerRatingCard.catalogValue', { count: productsCount }) },
         ].map((stat) => (
           <div key={stat.label} className="rounded-xl bg-secondary/60 p-2.5">
             <p className="text-muted-foreground">{stat.label}</p>
@@ -66,11 +68,11 @@ export default function SellerRatingCard({ metrics }) {
 
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border px-3 py-2 text-[11px]">
         <span>
-          Litiges : <strong>{disputes}</strong> ({Math.round(disputeRate * 1000) / 10} % des commandes)
-          {openDisputes ? ` · ${openDisputes} en cours` : ' · aucun en cours'}
+          {t('sellerRatingCard.disputesPrefix')} <strong>{disputes}</strong> {t('sellerRatingCard.disputesSuffix', { rate: Math.round(disputeRate * 1000) / 10 })}
+          {openDisputes ? t('sellerRatingCard.openDisputes', { count: openDisputes }) : t('sellerRatingCard.noneOpen')}
         </span>
         <Link to={`/store/${seller.slug}`} className="font-semibold text-primary">
-          Voir la boutique
+          {t('sellerRatingCard.viewStore')}
         </Link>
       </div>
 
@@ -84,14 +86,14 @@ export default function SellerRatingCard({ metrics }) {
               </div>
               {review.comment ? <p className="mt-1 text-[11px]">{review.comment}</p> : null}
               <p className="mt-0.5 text-[10px] text-muted-foreground">
-                {review.customer_name || 'Client'} · {review.product_title || 'produit'}
-                {review.verified_purchase ? ' · achat vérifié' : ''}
+                {review.customer_name || t('sellerRatingCard.customer')} · {review.product_title || t('sellerRatingCard.product')}
+                {review.verified_purchase ? t('sellerRatingCard.verifiedPurchaseSuffix') : ''}
               </p>
             </div>
           ))}
         </div>
       ) : (
-        <p className="text-[11px] text-muted-foreground">Aucun avis publié pour le moment.</p>
+        <p className="text-[11px] text-muted-foreground">{t('sellerRatingCard.noReviews')}</p>
       )}
     </article>
   );

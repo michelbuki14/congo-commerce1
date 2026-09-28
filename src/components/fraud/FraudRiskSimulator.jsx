@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
 import { Loader2, ShieldQuestion } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
-const FIELDS = [
-  { key: 'amount_usd', label: 'Montant (USD)', placeholder: '500' },
-  { key: 'customer_phone', label: 'Téléphone client', placeholder: '+243…' },
-  { key: 'customer_email', label: 'E-mail client', placeholder: 'client@exemple.cd' },
-  { key: 'session_id', label: 'Session', placeholder: 'sess-…' },
-  { key: 'coupon_code', label: 'Code promo', placeholder: 'PROMO10' },
-  { key: 'affiliate_code', label: 'Code affiliation', placeholder: 'AFF-…' },
+const FIELD_DEFS = [
+  { key: 'amount_usd', placeholder: '500' },
+  { key: 'customer_phone', placeholder: '+243…' },
+  { key: 'customer_email', placeholder: 'client@exemple.cd' },
+  { key: 'session_id', placeholder: 'sess-…' },
+  { key: 'coupon_code', placeholder: 'PROMO10' },
+  { key: 'affiliate_code', placeholder: 'AFF-…' },
 ];
 
 export default function FraudRiskSimulator({ onSimulate }) {
+  const { t } = useTranslation();
+  const FIELDS = FIELD_DEFS.map((f) => ({ ...f, label: t(`fraudRiskSimulator.field_${f.key}`) }));
   const [form, setForm] = useState({ amount_usd: '', customer_phone: '', customer_email: '', session_id: '', coupon_code: '', affiliate_code: '' });
   const [result, setResult] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -37,10 +40,10 @@ export default function FraudRiskSimulator({ onSimulate }) {
     <section className="space-y-3 rounded-2xl border border-border bg-card p-4">
       <div>
         <h2 className="flex items-center gap-2 text-sm font-bold">
-          <ShieldQuestion className="h-4 w-4 text-primary" /> Testeur de règles
+          <ShieldQuestion className="h-4 w-4 text-primary" /> {t('fraudRiskSimulator.title')}
         </h2>
         <p className="mt-1 text-[11px] text-muted-foreground">
-          Évalue une commande hypothétique avec les règles actives. Aucune commande n'est créée.
+          {t('fraudRiskSimulator.subtitle')}
         </p>
       </div>
 
@@ -65,19 +68,19 @@ export default function FraudRiskSimulator({ onSimulate }) {
         className="flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-40"
       >
         {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ShieldQuestion className="h-3.5 w-3.5" />}
-        {busy ? 'Évaluation…' : 'Évaluer le risque'}
+        {busy ? t('fraudRiskSimulator.evaluating') : t('fraudRiskSimulator.evaluate')}
       </button>
 
       {result && (
         <div className="rounded-xl border border-border p-3">
           <p className="text-sm font-semibold">
-            Score {result.score} · niveau {result.level} · recommandation {result.action === 'block' ? 'blocage' : 'examen'}
+            {t('fraudRiskSimulator.resultLine', { score: result.score, level: result.level, action: result.action === 'block' ? t('fraudRiskSimulator.actionBlock') : t('fraudRiskSimulator.actionReview') })}
           </p>
           <ul className="mt-1.5 space-y-0.5 text-[11px] text-muted-foreground">
             {result.signals.map((s, i) => (
-              <li key={i}>• {s.label} : valeur {s.value} pour un seuil de {s.threshold} (+{s.points})</li>
+              <li key={i}>{t('fraudRiskSimulator.signalLine', { label: s.label, value: s.value, threshold: s.threshold, points: s.points })}</li>
             ))}
-            {!result.signals.length && <li>• Aucune règle déclenchée.</li>}
+            {!result.signals.length && <li>{t('fraudRiskSimulator.noSignals')}</li>}
           </ul>
         </div>
       )}

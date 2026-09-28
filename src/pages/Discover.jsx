@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Heart, Share2, ShoppingBag, Plus, BadgeCheck, Play, Volume2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Image } from '@/components/ui/image';
@@ -8,6 +9,7 @@ import { getLikedContent, getReferralCode, toggleLikedContent } from '@/lib/sess
 import { compactNumber } from '@/lib/format';
 
 export default function Discover() {
+  const { t } = useTranslation();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [liked, setLiked] = useState([]);
@@ -48,7 +50,7 @@ export default function Discover() {
         await navigator.share({ title: content.title, url });
       } else {
         await navigator.clipboard.writeText(url);
-        flash('Lien copié');
+        flash(t('discover.linkCopied'));
       }
       await base44.entities.Content.update(content.id, { shares_count: (content.shares_count || 0) + 1 });
       setItems((prev) => prev.map((c) => (c.id === content.id ? { ...c, shares_count: (c.shares_count || 0) + 1 } : c)));
@@ -62,9 +64,9 @@ export default function Discover() {
     try {
       const product = await base44.entities.Product.get(content.product_id);
       addItem(product, 1);
-      flash('Ajouté au panier');
+      flash(t('discover.addedToCart'));
     } catch {
-      flash('Article indisponible');
+      flash(t('discover.unavailable'));
     }
   };
 
@@ -75,8 +77,8 @@ export default function Discover() {
   if (!items.length) {
     return (
       <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
-        <p className="font-semibold">Aucune vidéo pour le moment</p>
-        <p className="mt-1 text-sm text-muted-foreground">Les contenus des créateurs apparaîtront ici.</p>
+        <p className="font-semibold">{t('discover.emptyTitle')}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{t('discover.emptyDesc')}</p>
       </div>
     );
   }
@@ -98,7 +100,7 @@ export default function Discover() {
 
               <div className="absolute left-3 top-3 flex items-center gap-1 rounded-full bg-black/40 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur">
                 {c.media_type === 'video' ? <Play className="h-3 w-3" /> : <Volume2 className="h-3 w-3" />}
-                {c.media_type === 'video' ? 'Vidéo' : 'Photo produit'}
+                {c.media_type === 'video' ? t('discover.video') : t('discover.photo')}
               </div>
 
               <div className="absolute bottom-28 left-3 right-16 text-white">
@@ -130,7 +132,7 @@ export default function Discover() {
                 </button>
                 <button type="button" onClick={() => add(c)} className="flex flex-col items-center gap-1">
                   <ShoppingBag className="h-6 w-6" />
-                  <span className="text-[10px] font-semibold">Panier</span>
+                  <span className="text-[10px] font-semibold">{t('discover.cart')}</span>
                 </button>
               </div>
 
@@ -148,7 +150,7 @@ export default function Discover() {
                     type="button"
                     onClick={() => add(c)}
                     className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground"
-                    aria-label="Ajouter au panier"
+                    aria-label={t('discover.addToCart')}
                   >
                     <Plus className="h-4 w-4" />
                   </button>

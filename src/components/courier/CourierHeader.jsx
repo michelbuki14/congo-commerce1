@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Truck } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 
@@ -8,6 +9,7 @@ import { Image } from '@/components/ui/image';
  * deliveries listed below.
  */
 export default function CourierHeader({ user, fleets, activeFleet, isAdmin, couriers, onSelectFleet }) {
+  const { t } = useTranslation();
   const name = user?.full_name || user?.email || '';
   const initial = name.trim().charAt(0).toUpperCase() || '?';
 
@@ -25,16 +27,16 @@ export default function CourierHeader({ user, fleets, activeFleet, isAdmin, cour
             )}
           </div>
           <div className="min-w-0">
-            <p className="truncate text-sm font-bold">{activeFleet?.name || 'Aucune société de livraison'}</p>
+            <p className="truncate text-sm font-bold">{activeFleet?.name || t('courierHeader.noFleet')}</p>
             <p className="text-[11px] text-muted-foreground">
-              {isAdmin ? 'Société inspectée' : 'Ma société de livraison'}
+              {isAdmin ? t('courierHeader.inspected') : t('courierHeader.myFleet')}
             </p>
           </div>
         </div>
 
         <div className="ml-auto flex items-center gap-3">
           <div className="text-right">
-            <p className="text-sm font-semibold">{name || 'Compte connecté'}</p>
+            <p className="text-sm font-semibold">{name || t('courierHeader.signedIn')}</p>
             {user?.email && <p className="text-[11px] text-muted-foreground">{user.email}</p>}
           </div>
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
@@ -45,13 +47,13 @@ export default function CourierHeader({ user, fleets, activeFleet, isAdmin, cour
 
       {isAdmin ? (
         <label className="mt-3 flex items-center gap-2 border-t border-border pt-3 text-[11px] text-muted-foreground">
-          Je livre pour
+          {t('courierHeader.deliverFor')}
           <select
             value={activeFleet?.id || ''}
             onChange={(e) => onSelectFleet(e.target.value)}
             className="h-9 rounded-lg border border-border bg-background px-2 text-sm text-foreground"
           >
-            {couriers.length === 0 && <option value="">Aucun transporteur</option>}
+            {couriers.length === 0 && <option value="">{t('courierHeader.noCarrier')}</option>}
             {couriers.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
@@ -60,7 +62,7 @@ export default function CourierHeader({ user, fleets, activeFleet, isAdmin, cour
       ) : (
         fleets.length > 1 && (
           <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3">
-            <span className="text-[11px] text-muted-foreground">Mes flottes :</span>
+            <span className="text-[11px] text-muted-foreground">{t('courierHeader.myFleets')}</span>
             {fleets.map((f) => (
               <span key={f.id} className="flex items-center gap-1.5 rounded-full bg-secondary px-2.5 py-1 text-[11px] font-semibold">
                 {f.logo_url && <Image src={f.logo_url} alt={f.name} className="h-4 w-4 rounded-full object-cover" />}

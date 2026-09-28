@@ -4,8 +4,10 @@ import DashboardNav from '@/components/DashboardNav';
 import { ADMIN_LINKS } from '@/lib/navLinks';
 import SheetSourceForm from '@/components/inventory/SheetSourceForm';
 import SheetSourceCard from '@/components/inventory/SheetSourceCard';
+import { useTranslation } from 'react-i18next';
 
 export default function InventorySheets() {
+  const { t } = useTranslation();
   const [sources, setSources] = useState(null);
   const [suppliers, setSuppliers] = useState([]);
   const [syncing, setSyncing] = useState(null);
@@ -28,25 +30,24 @@ export default function InventorySheets() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-5 px-4 py-5">
-      <DashboardNav title="Stocks Google Sheets" links={ADMIN_LINKS} />
+      <DashboardNav title={t('inventorySheets.title')} links={ADMIN_LINKS} />
       <div className="rounded-2xl border border-border bg-card p-4 text-xs text-muted-foreground">
-        La première ligne de chaque feuille doit contenir une colonne <b>sku</b> (référence fournisseur ou slug du produit) et une colonne <b>stock</b>.
-        Les feuilles actives sont synchronisées automatiquement toutes les heures. Partagez chaque feuille avec le compte Google connecté.
+        {t('inventorySheets.guideA')} <b>sku</b> {t('inventorySheets.guideB')} <b>stock</b>{t('inventorySheets.guideC')}
       </div>
       <div className="rounded-2xl border border-border bg-card p-4">
-        <p className="mb-3 text-sm font-bold">Ajouter une feuille d'inventaire</p>
+        <p className="mb-3 text-sm font-bold">{t('inventorySheets.add')}</p>
         <SheetSourceForm suppliers={suppliers} onSave={add} />
       </div>
       <div className="flex items-center justify-between">
-        <p className="text-sm font-bold">Feuilles connectées ({sources?.length ?? 0})</p>
+        <p className="text-sm font-bold">{t('inventorySheets.connected', { count: sources?.length ?? 0 })}</p>
         {sources?.length > 0 && (
           <button type="button" onClick={() => sync(null)} disabled={!!syncing} className="text-xs font-semibold underline">
-            {syncing === 'all' ? 'Synchronisation…' : 'Tout synchroniser'}
+            {syncing === 'all' ? t('inventorySheets.syncing') : t('inventorySheets.syncAll')}
           </button>
         )}
       </div>
       {!sources ? <div className="h-32 animate-pulse rounded-2xl bg-secondary" /> : sources.length === 0 ? (
-        <p className="text-xs text-muted-foreground">Aucune feuille ajoutée pour l'instant.</p>
+        <p className="text-xs text-muted-foreground">{t('inventorySheets.empty')}</p>
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
           {sources.map((s) => (
