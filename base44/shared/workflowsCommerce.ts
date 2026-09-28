@@ -138,13 +138,13 @@ const returnRefund = {
   name: 'Retour & remboursement',
   description:
     'Traite un retour : décision, remboursement du client (portefeuille, une seule fois), reprise des gains vendeur, remise en stock et notification.',
-  version: '1.0',
+  version: '1.1',
   category: 'commerce',
   trigger: 'event',
   event_names: ['return_requested'],
   aggregateType: 'Return',
   tenant_scoped: true,
-  admin_only: false,
+  admin_only: true,
   idempotent: true,
   max_attempts: 2,
   steps: [
@@ -186,6 +186,7 @@ const returnRefund = {
         if (!decision) {
           return { waiting: true, reason: 'Décision d’un agent requise sur ce retour (approve / reject)' };
         }
+        if (!['approve', 'reject'].includes(decision)) throw new Error('Décision de retour invalide');
         const row = ctx.data.row;
         const status = decision === 'reject' ? 'rejected' : 'approved';
         const updated = await ctx.base44.asServiceRole.entities.Return.update(row.id, {
@@ -202,6 +203,9 @@ const returnRefund = {
       label: 'Rembourser le client',
       run: async (ctx) => {
         if (!ctx.data.row || ctx.data.rejected) return { skipped: true, reason: 'Retour non traité' };
+        if (ctx.input.decision !== 'approve' || ctx.data.row.status !== 'approved') {
+          throw new Error('Approbation explicite requise avant remboursement');
+        }
         const row = ctx.data.row;
         const order = ctx.data.order;
         const amount = ctx.data.refundAmount;
@@ -331,13 +335,13 @@ const creatorCommission = {
   name: 'Commission créateur',
   description:
     'Calcule et règle la commission d’un créateur : attribution, calcul, gel en cas de litige, crédit du portefeuille et notification.',
-  version: '1.0',
+  version: '1.1',
   category: 'commerce',
   trigger: 'event',
   event_names: ['payout_released'],
   aggregateType: 'Creator',
   tenant_scoped: true,
-  admin_only: false,
+  admin_only: true,
   idempotent: true,
   max_attempts: 2,
   steps: [
@@ -362,8 +366,9 @@ const creatorCommission = {
           return { skipped: true, reason: 'Versement non libéré sur cette commande' };
         }
 
-        const creatorId = String(ctx.input.creator_id || order.creator_id || '');
-        const code = String(ctx.input.affiliate_code || order.affiliate_code || '');
+        // Attribution is owned by the order, never by a workflow caller.
+        const creatorId = String(order.creator_id || '');
+        const code = String(order.affiliate_code || '');
         let creator = creatorId ? await ctx.base44.asServiceRole.entities.Creator.get(creatorId).catch(() => null) : null;
         if (!creator && code) {
           creator = (await ctx.base44.asServiceRole.entities.Creator.filter({ referral_code: code }).catch(() => []))[0] || null;

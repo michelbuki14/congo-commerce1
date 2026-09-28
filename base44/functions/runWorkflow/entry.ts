@@ -76,6 +76,6 @@ export default async function (req) {
     });
     return Response.json(result);
   } catch (error) {
-    return Response.json({ error: String(error?.message || error) }, { status: 500 });
+    return Response.json({ error: String(error?.message || error) }, { status: error?.status || 500 });
   }
 }

@@ -130,6 +130,10 @@ export default async function (req) {
     const isAdmin = String(user?.role || '') === 'admin';
     const payload = body.payload && typeof body.payload === 'object' ? body.payload : {};
     const reference = String(body.reference || '').trim();
+    // A released payout is a privileged financial assertion, not a client event.
+    if (name === 'payout_released' && !isAdmin) {
+      return Response.json({ error: 'Versement réservé aux administrateurs' }, { status: user ? 403 : 401 });
+    }
 
     // ---- 0. Trust boundary --------------------------------------------------
     // Anyone can reach this endpoint. An anonymous caller may only report the
@@ -221,8 +225,7 @@ export default async function (req) {
     // Starting an event-owned workflow is a privileged act — the engine runs
     // its steps as the platform itself. A workflow reserved for administrators
     // therefore starts only for an administrator, whatever the event claims.
-    const mayStartWorkflow = Boolean(owned) && Boolean(user) && !body.workflow_code
-      && (!owned.admin_only || isAdmin);
+    const mayStartWorkflow = Boolean(owned) && isAdmin && !body.workflow_code;
     if (mayStartWorkflow) {
       workflowRun = await startWorkflow(base44, {
         code: owned.code,
@@ -247,7 +250,7 @@ export default async function (req) {
         at: new Date().toISOString(),
         detail: owned.code,
       });
-    } else if (owned && user && owned.admin_only && !isAdmin) {
+    } else if (owned && !isAdmin) {
       actions.push({
         type: 'workflow',
         label: `${owned.name} — réservé aux administrateurs`,
@@ -309,6 +312,6 @@ export default async function (req) {
 
     return Response.json({ ok: true, event_id: record.id, category, severity: rule.severity, actions });
   } catch (error) {
-    return Response.json({ error: String(error?.message || error) }, { status: 500 });
+    return Response.json({ error: String(error?.message || error) }, { status: error?.status || 500 });
   }
 }
