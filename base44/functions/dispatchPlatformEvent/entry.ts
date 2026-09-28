@@ -141,16 +141,23 @@ export default async function (req) {
     // session; only an administrator (which is what the platform's own
     // workflows are) may state one.
     let guestRecord = null;
+    let guestEntity = '';
     if (!user) {
       const guest = GUEST_EVENTS[name];
       guestRecord = guest && reference ? await findGuestRecord(base44, guest, reference) : null;
       if (!guestRecord) return Response.json({ error: 'Événement non autorisé' }, { status: 401 });
+      guestEntity = guest.entity;
     }
 
     const ctx = {
       name,
-      source: String(body.source || '').trim(),
-      sourceId: String(body.source_id || '').trim(),
+      // A guest's event carries no caller-chosen field at all: only the event
+      // name and the reference were accepted above, and the reference was
+      // checked against a real record. Everything else — which surface it came
+      // from, its severity, its category and the values it displays — is read
+      // from that record, never from the request body.
+      source: guestRecord ? guestEntity : String(body.source || '').trim(),
+      sourceId: guestRecord ? String(guestRecord.id || '') : String(body.source_id || '').trim(),
       reference,
       actorEmail: isAdmin && body.actor_email ? String(body.actor_email) : user?.email || '',
       actorName: isAdmin && body.actor_name ? String(body.actor_name) : user?.full_name || '',
@@ -170,9 +177,9 @@ export default async function (req) {
         : payload,
     };
 
-    const severity = SEVERITIES.includes(body.severity) ? body.severity : '';
+    const severity = !guestRecord && SEVERITIES.includes(body.severity) ? body.severity : '';
     const rule = planForEvent(name, severity);
-    const category = String(body.category || '').trim() || rule.category;
+    const category = guestRecord ? rule.category : String(body.category || '').trim() || rule.category;
 
     // ---- 1. Record ----------------------------------------------------------
     const record = await base44.asServiceRole.entities.PlatformEvent.create({
