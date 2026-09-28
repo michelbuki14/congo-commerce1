@@ -27,11 +27,13 @@ export const PAYMENT_PROVIDERS = {
   mpesa: {
     id: 'mpesa',
     name: 'M-Pesa',
+    nameKey: 'pay.mpesaName',
     kind: 'mobile_money',
     currencies: ['CDF', 'USD'],
     feePercent: 2.5,
     requiresPhone: true,
     instructions: 'Vous recevrez une demande de paiement sur votre téléphone. Entrez votre code secret M-Pesa.',
+    instructionsKey: 'pay.mpesaInstructions',
     isMock: true,
     async charge({ amount, phone, orderNumber }) {
       if (!phone) throw new Error('Un numéro de téléphone est requis pour M-Pesa.');
@@ -44,11 +46,13 @@ export const PAYMENT_PROVIDERS = {
   airtel: {
     id: 'airtel',
     name: 'Airtel Money',
+    nameKey: 'pay.airtelName',
     kind: 'mobile_money',
     currencies: ['CDF', 'USD'],
     feePercent: 2.5,
     requiresPhone: true,
     instructions: 'Validez la demande de paiement Airtel Money reçue sur votre téléphone.',
+    instructionsKey: 'pay.airtelInstructions',
     isMock: true,
     async charge({ amount, phone, orderNumber }) {
       if (!phone) throw new Error('Un numéro de téléphone est requis pour Airtel Money.');
@@ -61,11 +65,13 @@ export const PAYMENT_PROVIDERS = {
   orange: {
     id: 'orange',
     name: 'Orange Money',
+    nameKey: 'pay.orangeName',
     kind: 'mobile_money',
     currencies: ['CDF', 'USD'],
     feePercent: 2.5,
     requiresPhone: true,
     instructions: 'Validez la demande de paiement Orange Money reçue sur votre téléphone.',
+    instructionsKey: 'pay.orangeInstructions',
     isMock: true,
     async charge({ amount, phone, orderNumber }) {
       if (!phone) throw new Error('Un numéro de téléphone est requis pour Orange Money.');
@@ -78,11 +84,13 @@ export const PAYMENT_PROVIDERS = {
   card: {
     id: 'card',
     name: 'Carte bancaire (Visa / Mastercard)',
+    nameKey: 'pay.cardName',
     kind: 'card',
     currencies: ['USD'],
     feePercent: 3.2,
     requiresPhone: false,
     instructions: 'Vous serez redirigé vers la page sécurisée de notre prestataire. Aucune donnée de carte ne transite par Congo Commerce.',
+    instructionsKey: 'pay.cardInstructions',
     isMock: false,
     hostedCheckout: true,
     // Real card payment: the order stays PENDING until the provider's signed webhook confirms it.
@@ -96,11 +104,13 @@ export const PAYMENT_PROVIDERS = {
   cod: {
     id: 'cod',
     name: 'Paiement à la livraison',
+    nameKey: 'pay.codName',
     kind: 'cash',
     currencies: ['CDF', 'USD'],
     feePercent: 0,
     requiresPhone: true,
     instructions: 'Vous payez en espèces au livreur ou au point de retrait, à la réception du colis.',
+    instructionsKey: 'pay.codInstructions',
     isMock: true,
     async charge({ amount, orderNumber }) {
       return { status: 'PENDING', provider_txn_id: mockTxn('COD'), amount: round2(amount), message: `Commande ${orderNumber} enregistrée. Paiement à la livraison.` };
@@ -112,11 +122,13 @@ export const PAYMENT_PROVIDERS = {
   wallet: {
     id: 'wallet',
     name: 'Portefeuille Congo Commerce',
+    nameKey: 'pay.walletName',
     kind: 'wallet',
     currencies: ['USD'],
     feePercent: 0,
     requiresPhone: false,
     instructions: 'Le montant est débité de votre solde portefeuille.',
+    instructionsKey: 'pay.walletInstructions',
     isMock: true,
     async charge({ amount, orderNumber }) {
       return { status: 'PAID', provider_txn_id: mockTxn('WALLET'), amount: round2(amount), message: `Payé avec le portefeuille pour ${orderNumber}.` };

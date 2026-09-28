@@ -83,4 +83,18 @@ export default {
     wallet: 'Pochi yangu',
     tracking: 'Fuatilia mzigo',
   },
+  status: {
+    PENDING: 'Inasubiri',
+    PAID: 'Imelipwa',
+    CONFIRMED: 'Imethibitishwa',
+    DELIVERED: 'Imewasilishwa',
+    FAILED: 'Imeshindikana',
+    CANCELLED: 'Imeghairiwa',
+    REFUNDED: 'Imerejeshwa',
+  },
+  product: {
+    outOfStock: 'Imekwisha',
+    soldCount: 'Zimeuzwa {{count}}',
+    addToWishlist: 'Weka kwenye matakwa',
+  },
 };
