@@ -14,6 +14,7 @@ export default function SellerSettings() {
   const [form, setForm] = useState(null);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (seller) {
@@ -34,10 +35,14 @@ export default function SellerSettings() {
     e.preventDefault();
     if (!seller || !form) return;
     setSaving(true);
+    setError('');
     try {
-      await base44.entities.Seller.update(seller.id, form);
+      const { name, description, city, phone, logo_url, banner_url, delivery_info } = form;
+      await base44.functions.invoke('sellerProfile', { action: 'profile', seller_id: seller.id, profile: { name, description, city, phone, logo_url, banner_url, delivery_info } });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
+    } catch (e) {
+      setError(e?.response?.data?.error || e?.message || 'Enregistrement impossible.');
     } finally {
       setSaving(false);
     }
@@ -71,6 +76,7 @@ export default function SellerSettings() {
 
       <form onSubmit={submit} className="space-y-3 rounded-2xl border border-border bg-card p-4">
         <h2 className="text-sm font-bold">{t('sellerSettings.infoTitle')}</h2>
+        {error && <p role="alert" className="text-xs text-destructive">{error}</p>}
         <div className="grid gap-3 md:grid-cols-2">
           <input
             value={form.name}
@@ -95,7 +101,8 @@ export default function SellerSettings() {
           />
           <input
             value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            readOnly
+            title="Contactez un administrateur pour changer l'adresse de connexion"
             placeholder={t('sellerSettings.phEmail')}
             className="h-11 rounded-lg border border-border bg-background px-3 text-sm"
           />

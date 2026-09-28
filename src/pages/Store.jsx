@@ -54,11 +54,11 @@ export default function Store() {
     const next = toggleFollowId(seller.id);
     const nowFollowing = next.includes(seller.id);
     setFollowing(nowFollowing);
-    const delta = nowFollowing ? 1 : -1;
-    const updated = await base44.entities.Seller.update(seller.id, {
-      followers_count: Math.max(0, (seller.followers_count || 0) + delta),
-    }).catch(() => null);
-    if (updated) setSeller(updated);
+    const user = await base44.auth.me().catch(() => null);
+    if (user) {
+      const response = await base44.functions.invoke('sellerProfile', { action: 'follow', seller_id: seller.id, follow: nowFollowing }).catch(() => null);
+      if (response?.data?.seller) setSeller(response.data.seller);
+    }
   };
 
   if (loading) {

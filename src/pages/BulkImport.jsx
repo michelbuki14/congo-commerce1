@@ -60,9 +60,7 @@ export default function BulkImport() {
     try {
       const created = await base44.entities.Product.bulkCreate(products);
       if (seller?.id) {
-        await base44.entities.Seller.update(seller.id, {
-          products_count: (Number(seller.products_count) || 0) + created.length,
-        }).catch(() => {});
+        await base44.functions.invoke('sellerProfile', { action: 'productCount', seller_id: seller.id }).catch(() => {});
       }
       emitEvent('products_bulk_imported', {
         category: 'catalogue',

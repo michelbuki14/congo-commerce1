@@ -113,7 +113,7 @@ export default function SellerProducts() {
       setShowForm(false);
       setEditingId(null);
       setForm(EMPTY);
-      await base44.entities.Seller.update(seller.id, { products_count: products.length + (editingId ? 0 : 1) });
+      await base44.functions.invoke('sellerProfile', { action: 'productCount', seller_id: seller.id });
     } finally {
       setSaving(false);
     }

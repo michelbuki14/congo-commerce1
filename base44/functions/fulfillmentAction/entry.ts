@@ -1,11 +1,8 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
+import { sellerMayAct, courierMayAct, validAdvance, validCourierAdvance, TERMINAL } from '../../shared/fulfillmentAccess.js';
 
-const FLOW = ['PENDING', 'CONFIRMED', 'PROCESSING', 'READY_FOR_PICKUP', 'PICKED_UP', 'IN_TRANSIT', 'OUT_FOR_DELIVERY', 'DELIVERED'];
-const COURIER_NEXT = { PENDING: 'PICKED_UP', CONFIRMED: 'PICKED_UP', PROCESSING: 'PICKED_UP', READY_FOR_PICKUP: 'PICKED_UP', PICKED_UP: 'IN_TRANSIT', IN_TRANSIT: 'OUT_FOR_DELIVERY' };
-const terminal = ['DELIVERED', 'FAILED', 'RETURNED', 'CANCELLED'];
 const money = (value) => Math.round(Number(value || 0) * 100) / 100;
 const fail = (error, status = 400) => Response.json({ error }, { status });
-const same = (a, b) => !!a && !!b && String(a).trim().toLowerCase() === String(b).trim().toLowerCase();
 
 async function releasePayout(db, fulfillment, order) {
   if (fulfillment.payout_released || order.payment_status !== 'PAID' || order.payment_verified !== true) return fulfillment;
@@ -54,16 +51,16 @@ export default async function(req: Request): Promise<Response> {
     if (action === 'advance') {
       if (!admin) {
         const seller = fulfillment.seller_id ? await db.entities.Seller.get(fulfillment.seller_id).catch(() => null) : null;
-        if (!seller || seller.status !== 'active' || !same(seller.email, user.email)) return fail('Accès interdit', 403);
+        if (!sellerMayAct(seller, user)) return fail('Accès interdit', 403);
       }
     } else {
       const matches = await db.entities.Courier.filter({ name: shipment.courier_name });
-      courier = matches.find((c) => c.active !== false && same(c.email, user.email));
+      courier = matches.find((c) => courierMayAct(c, user));
       if (!admin && !courier) return fail('Accès interdit', 403);
       if (!courier && admin) courier = matches.find((c) => c.active !== false) || { id: shipment.courier_id, name: shipment.courier_name, email: '' };
     }
     if (action === 'respond') {
-      if (terminal.includes(shipment.status) || shipment.courier_response !== 'pending') return fail('Offre déjà traitée', 409);
+      if (TERMINAL.includes(shipment.status) || shipment.courier_response !== 'pending') return fail('Offre déjà traitée', 409);
       if (typeof body.accepted !== 'boolean') return fail('Réponse invalide');
       const updated = await db.entities.Shipment.update(shipment.id, { courier_response: body.accepted ? 'accepted' : 'declined', events: [...(shipment.events || []), { status: shipment.status, label: body.accepted ? 'Course acceptée par le transporteur' : 'Course refusée par le transporteur', at: new Date().toISOString() }] });
       await db.entities.AuditLog.create({ action: 'shipment.response', actor: user.email, entity: 'Shipment', entity_id: updated.id, reference: order.order_number, details: { accepted: body.accepted } });
@@ -71,16 +68,12 @@ export default async function(req: Request): Promise<Response> {
     }
     const status = String(body.status || '');
     if (action === 'advance') {
-      const current = FLOW.indexOf(fulfillment.status);
-      const next = FLOW.indexOf(status);
       const cancel = status === 'CANCELLED' && ['PENDING', 'CONFIRMED', 'PROCESSING', 'READY_FOR_PICKUP'].includes(fulfillment.status);
-      if (!cancel && (current < 0 || next !== current + 1)) return fail('Transition invalide', 409);
-      if (!admin && !cancel && !['PROCESSING', 'READY_FOR_PICKUP'].includes(status)) return fail('Transition réservée à la plateforme', 403);
+      if (!validAdvance(fulfillment.status, status, admin)) return fail('Transition invalide', 409);
+      if (cancel && order.payment_verified) return fail('Une commande payée doit suivre la procédure de remboursement', 409);
       if (!cancel && order.payment_status !== 'PAID' && order.payment_provider !== 'cod') return fail('Paiement non confirmé', 409);
     } else {
-      const next = COURIER_NEXT[shipment.status];
-      const valid = shipment.courier_response === 'accepted' && !terminal.includes(shipment.status) && (status === next || status === 'FAILED' || status === 'DELIVERED' && ['PICKED_UP', 'IN_TRANSIT', 'OUT_FOR_DELIVERY'].includes(shipment.status));
-      if (!valid || fulfillment.status === 'DELIVERED' || fulfillment.status === 'CANCELLED') return fail('Transition invalide', 409);
+      if (!validCourierAdvance(shipment, fulfillment, status)) return fail('Transition invalide', 409);
       if (order.payment_status !== 'PAID' && order.payment_provider !== 'cod') return fail('Paiement non confirmé', 409);
       if (status === 'DELIVERED' && order.pickup_code && String(body.pickup_code || '').trim() !== String(order.pickup_code)) return fail('Code de retrait incorrect', 403);
     }
