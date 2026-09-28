@@ -57,6 +57,20 @@ export default function AdminOrders() {
     }
   };
 
+  const confirmPayment = async (o) => {
+    setBusy(o.id);
+    try {
+      const res = await base44.functions.invoke('confirm-payment', { order_number: o.order_number });
+      const updated = res?.data?.order;
+      if (updated) {
+        setOrders((prev) => prev.map((x) => (x.id === o.id ? { ...x, ...updated } : x)));
+        setFulfillments((prev) => prev.map((f) => (f.order_id === o.id && f.status === 'PENDING' ? { ...f, status: 'CONFIRMED' } : f)));
+      }
+    } finally {
+      setBusy('');
+    }
+  };
+
   const [selected, setSelected] = useState([]);
   const [bulkMsg, setBulkMsg] = useState('');
   const archivedView = statusFilter === 'archived';
@@ -160,6 +174,16 @@ export default function AdminOrders() {
                   </div>
                   {o.affiliate_code && (
                     <p className="text-xs text-muted-foreground">Attribution créateur : {o.affiliate_code}</p>
+                  )}
+                  {!o.payment_verified && o.payment_status === 'PENDING' && (
+                    <button
+                      type="button"
+                      disabled={busy === o.id}
+                      onClick={() => confirmPayment(o)}
+                      className="rounded-full bg-emerald-600 px-3.5 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+                    >
+                      Confirmer le paiement reçu ({o.payment_method})
+                    </button>
                   )}
 
                   {lines.map((f) => (

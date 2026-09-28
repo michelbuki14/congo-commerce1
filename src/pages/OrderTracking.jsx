@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Truck, Clock, MapPin, Circle, CheckCircle2 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
 import StatusBadge from '@/components/StatusBadge';
 import { getOrderIds, getProfile } from '@/lib/session';
+import { lookupOrder } from '@/lib/orderLookup';
 import { formatUSD, formatDateTime } from '@/lib/format';
 import { SHIPMENT_STATUS_FLOW, SHIPMENT_STATUS_LABELS } from '@/lib/logistics';
 
@@ -26,26 +26,14 @@ export default function OrderTracking() {
     }
     setSearching(true);
     try {
-      const rows = await base44.entities.Order.filter({ order_number: value });
-      const found = rows[0];
-      if (!found) {
-        setOrder(null);
-        setShipments([]);
-        setError('Aucune commande trouvée avec ce numéro.');
-        return;
-      }
-      if (phone.trim() && found.customer_phone && !found.customer_phone.includes(phone.trim().slice(-6))) {
-        setOrder(null);
-        setShipments([]);
-        setError('Le téléphone ne correspond pas à cette commande.');
-        return;
-      }
-      const s = await base44.entities.Shipment.filter({ order_number: found.order_number }, '-created_date', 50).catch(() => []);
-      setNumber(found.order_number);
-      setOrder(found);
-      setShipments(s);
-    } catch {
-      setError('Le suivi est momentanément indisponible. Réessayez.');
+      const data = await lookupOrder(value, phone.trim() || getProfile().phone);
+      setNumber(data.order.order_number);
+      setOrder(data.order);
+      setShipments(data.shipments || []);
+    } catch (e) {
+      setOrder(null);
+      setShipments([]);
+      setError(e.message || 'Le suivi est momentanément indisponible. Réessayez.');
     } finally {
       setSearching(false);
     }

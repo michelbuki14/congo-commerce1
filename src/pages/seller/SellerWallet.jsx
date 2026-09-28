@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Wallet as WalletIcon, ArrowDownLeft, ArrowUpRight, Banknote } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useActiveSeller } from '@/lib/seller';
+import { requestWithdrawal, WITHDRAWAL_METHOD_IDS } from '@/lib/wallet';
 import DashboardNav from '@/components/DashboardNav';
 import { formatUSD, formatDateTime } from '@/lib/format';
 
@@ -43,7 +44,7 @@ export default function SellerWallet() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [seller, loadingSeller]);
 
-  const requestWithdrawal = async (e) => {
+  const submitWithdrawal = async (e) => {
     e.preventDefault();
     setMessage('');
     const value = Number(amount);
@@ -59,35 +60,14 @@ export default function SellerWallet() {
       setMessage('Montant supérieur au solde disponible.');
       return;
     }
-    const updated = await base44.entities.Wallet.update(wallet.id, {
-      balance_usd: Math.round(((wallet.balance_usd || 0) - value) * 100) / 100,
-      lifetime_debit_usd: Math.round(((wallet.lifetime_debit_usd || 0) + value) * 100) / 100,
-    });
-    await base44.entities.WalletTransaction.create({
-      wallet_id: wallet.id,
-      owner_type: 'seller',
-      owner_name: seller.name,
-      type: 'PAYOUT',
-      direction: 'debit',
-      amount_usd: value,
-      balance_after_usd: updated.balance_usd,
-      currency: 'USD',
-      description: `Retrait vers ${method}`,
-      reference: `WD-${Date.now().toString(36).toUpperCase()}`,
-      status: 'pending',
-    });
-    await base44.entities.AuditLog.create({
-      action: 'wallet.withdrawal_requested',
-      actor: 'seller',
-      entity: 'Wallet',
-      entity_id: wallet.id,
-      reference: seller.name,
-      severity: 'info',
-      details: { amount_usd: value, method },
-    });
-    setWallet(updated);
-    setAmount('');
-    setMessage(`Demande de retrait de ${formatUSD(value)} envoyée via ${method}.`);
+    try {
+      const updated = await requestWithdrawal({ wallet, amount: value, method: WITHDRAWAL_METHOD_IDS[method] || 'mpesa' });
+      setWallet(updated);
+      setAmount('');
+      setMessage(`Demande de retrait de ${formatUSD(value)} envoyée via ${method}.`);
+    } catch (err) {
+      setMessage(err?.message || 'Retrait impossible pour le moment.');
+    }
     await load();
   };
 
@@ -108,7 +88,7 @@ export default function SellerWallet() {
         </div>
       </section>
 
-      <form onSubmit={requestWithdrawal} className="space-y-3 rounded-2xl border border-border bg-card p-4">
+      <form onSubmit={submitWithdrawal} className="space-y-3 rounded-2xl border border-border bg-card p-4">
         <h2 className="flex items-center gap-2 text-sm font-bold">
           <Banknote className="h-4 w-4 text-primary" /> Demander un retrait
         </h2>

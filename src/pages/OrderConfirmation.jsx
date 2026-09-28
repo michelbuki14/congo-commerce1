@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { CheckCircle2, Package, Truck, MapPin, Wallet } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { getProfile } from '@/lib/session';
+import { lookupOrder } from '@/lib/orderLookup';
 import { Image } from '@/components/ui/image';
 import StatusBadge from '@/components/StatusBadge';
 import { formatUSD, formatDateTime } from '@/lib/format';
@@ -17,11 +18,9 @@ export default function OrderConfirmation() {
   useEffect(() => {
     (async () => {
       try {
-        const byNumber = await base44.entities.Order.filter({ order_number: number });
-        const o = byNumber[0] || (await base44.entities.Order.get(number));
-        const f = await base44.entities.FulfillmentOrder.filter({ order_id: o.id }, 'fulfillment_number', 50);
-        setOrder(o);
-        setFulfillments(f);
+        const data = await lookupOrder(number, getProfile().phone);
+        setOrder(data.order);
+        setFulfillments(data.fulfillments || []);
       } catch {
         setNotFound(true);
       } finally {
