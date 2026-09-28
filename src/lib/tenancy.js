@@ -124,12 +124,16 @@ export function useActiveTenant() {
     const user = await base44.auth.me().catch(() => null);
     const admin = user?.role === 'admin';
     const email = String(user?.email || '').trim().toLowerCase();
-    const all = await base44.entities.Tenant.list('name', 200).catch(() => []);
-    const host = await resolveTenantByHost();
+    const [all, memberships, host] = await Promise.all([
+      base44.entities.Tenant.list('name', 200).catch(() => []),
+      email ? base44.entities.TenantMember.filter({ email }).catch(() => []) : Promise.resolve([]),
+      resolveTenantByHost(),
+    ]);
+    const assigned = new Set(memberships.filter(m => m.status !== 'suspended').map(m => m.tenant_id));
     setMe(user);
     setIsAdmin(admin);
     setHostTenant(host);
-    setTenants(admin ? all : all.filter((t) => email && String(t.owner_email || '').trim().toLowerCase() === email));
+    setTenants(admin ? all : all.filter((t) => email && (String(t.owner_email || '').trim().toLowerCase() === email || assigned.has(t.id))));
     setLoading(false);
   }, []);
 

@@ -22,36 +22,49 @@ export default function TenantConsole() {
   const [invoices, setInvoices] = useState([]);
   const [usage, setUsage] = useState({ products: 0, stores: 0, sellers: 0, members: 0 });
   const [busy, setBusy] = useState(false);
+  const [access, setAccess] = useState(null);
+  const [accessError, setAccessError] = useState('');
 
   const loadTenantData = useCallback(async () => {
-    if (!tenant) return;
+    if (!tenant || !access?.granted) return;
+    const has = (key) => access.owner || access.permissions.includes(key);
     const [subs, doms, mems, invs, products, sellers] = await Promise.all([
-      base44.entities.Subscription.filter({ tenant_id: tenant.id }, '-created_date', 1).catch(() => []),
-      base44.entities.TenantDomain.filter({ tenant_id: tenant.id }, '-created_date', 20).catch(() => []),
-      base44.entities.TenantMember.filter({ tenant_id: tenant.id }, '-created_date', 50).catch(() => []),
-      base44.entities.TenantInvoice.filter({ tenant_id: tenant.id }, '-created_date', 20).catch(() => []),
-      base44.entities.Product.filter({ tenant_id: tenant.id }, '-created_date', 500).catch(() => []),
-      base44.entities.Seller.filter({ tenant_id: tenant.id }, '-created_date', 200).catch(() => []),
+      access.owner ? base44.entities.Subscription.filter({ tenant_id: tenant.id }, '-created_date', 1).catch(() => []) : [],
+      access.owner ? base44.entities.TenantDomain.filter({ tenant_id: tenant.id }, '-created_date', 20).catch(() => []) : [],
+      has('TEAM_MANAGE') ? base44.functions.invoke('manageTenantTeam', { action: 'list', tenantId: tenant.id }).then(r => r.data.members) : [],
+      access.owner ? base44.entities.TenantInvoice.filter({ tenant_id: tenant.id }, '-created_date', 20).catch(() => []) : [],
+      access.owner ? base44.entities.Product.filter({ tenant_id: tenant.id }, '-created_date', 500).catch(() => []) : [],
+      access.owner ? base44.entities.Seller.filter({ tenant_id: tenant.id }, '-created_date', 200).catch(() => []) : [],
     ]);
     setSubscription(subs[0] || null);
     setDomains(doms);
     setMembers(mems);
     setInvoices(invs);
     setUsage({ products: products.length, stores: 1, sellers: sellers.length, members: mems.length });
-  }, [tenant]);
+  }, [tenant, access]);
 
   useEffect(() => {
-    loadPlans().then(setPlans);
-  }, []);
+    let alive = true;
+    setAccess(null);
+    setAccessError('');
+    if (tenant) base44.functions.invoke('manageTenantTeam', { action: 'access', tenantId: tenant.id })
+      .then(r => { if (alive) setAccess({ ...r.data, tenantId: tenant.id }); })
+      .catch(() => { if (alive) setAccessError('Impossible de vérifier vos droits.'); });
+    return () => { alive = false; };
+  }, [tenant?.id]);
 
   useEffect(() => {
-    loadTenantData();
-  }, [loadTenantData]);
+    if (access && tenant && access.tenantId === tenant.id && access.owner) loadPlans().then(setPlans);
+  }, [tenant?.id, access]);
+
+  useEffect(() => {
+    if (access?.tenantId === tenant?.id) loadTenantData();
+  }, [access, loadTenantData, tenant?.id]);
 
   const saveTenant = async (form) => {
     setBusy(true);
     try {
-      await base44.entities.Tenant.update(tenant.id, form);
+      await base44.entities.Tenant.update(tenant.id, { ...form, owner_email: tenant.owner_email });
       await reload();
     } finally {
       setBusy(false);
@@ -73,6 +86,11 @@ export default function TenantConsole() {
       />
     );
   }
+
+  if (accessError) return <p role="alert" className="p-6 text-destructive">{accessError}</p>;
+  if (!access || access.tenantId !== tenant.id) return <div className="h-64 animate-pulse rounded-2xl bg-secondary" />;
+  if (!access.granted) return <p role="alert" className="p-6">Accès refusé à cette enseigne.</p>;
+  const has = (key) => access.owner || access.permissions.includes(key);
 
   return (
     <div className="space-y-5 py-2">
@@ -99,28 +117,22 @@ export default function TenantConsole() {
         )}
       </div>
 
-      <TenantPlanPanel
-        tenant={tenant}
-        subscription={subscription}
-        plans={plans}
-        invoices={invoices}
-        usage={usage}
-        onChange={loadTenantData}
-      />
+      {access.owner && <TenantPlanPanel tenant={tenant} subscription={subscription} plans={plans} invoices={invoices} usage={usage} onChange={loadTenantData} />}
 
-      <TenantDomainPanel tenant={tenant} domains={domains} onChange={loadTenantData} />
+      {access.owner && <TenantDomainPanel tenant={tenant} domains={domains} onChange={loadTenantData} />}
 
-      <TenantTeamPanel tenant={tenant} members={members} onChange={loadTenantData} />
+      {has('TEAM_MANAGE') && <TenantTeamPanel tenant={tenant} members={members} onChange={loadTenantData} permissions={access.permissions} owner={access.owner} />}
 
-      <Card>
+      {access.owner && <Card>
         <CardContent className="space-y-4 p-5">
           <div>
             <h2 className="font-heading text-base font-bold">{t('tenantConsole.brandTitle')}</h2>
             <p className="text-sm text-muted-foreground">{t('tenantConsole.brandDesc')}</p>
           </div>
-          <TenantForm initial={tenant} onSubmit={saveTenant} submitting={busy} submitLabel={t('tenantConsole.saveIdentity')} />
+          <TenantForm initial={tenant} lockOwnerEmail onSubmit={saveTenant} submitting={busy} submitLabel={t('tenantConsole.saveIdentity')} />
         </CardContent>
-      </Card>
+      </Card>}
+      {!has('TEAM_MANAGE') && !access.owner && <p className="rounded-xl border border-border bg-card p-5 text-sm text-muted-foreground">Vos droits portent sur les opérations de cette enseigne, accessibles depuis votre espace métier.</p>}
     </div>
   );
 }

@@ -36,7 +36,7 @@ export default function TenantOnboarding() {
     try {
       const tenant = await base44.entities.Tenant.create({
         ...form,
-        owner_email: form.owner_email || me?.email || '',
+        owner_email: me?.email || '',
         status: 'trial',
         plan_code: plan.code,
         subdomain: form.slug,
@@ -52,17 +52,7 @@ export default function TenantOnboarding() {
         ssl_status: 'active',
         is_primary: true,
       });
-      await base44.entities.TenantMember.create({
-        tenant_id: tenant.id,
-        tenant_name: tenant.name,
-        owner_email: tenant.owner_email,
-        email: tenant.owner_email,
-        full_name: form.owner_name || tenant.name,
-        role: 'TENANT_ADMIN',
-        permissions: ['PRODUCT_CREATE', 'PRODUCT_UPDATE', 'PRODUCT_DELETE', 'ORDER_READ', 'ORDER_UPDATE', 'REFUND_CREATE', 'SELLER_APPROVE', 'SELLER_SUSPEND', 'FINANCE_READ', 'PAYOUT_APPROVE', 'SUPPLIER_MANAGE', 'ANALYTICS_READ', 'DOMAIN_MANAGE', 'TEAM_MANAGE'],
-        status: 'active',
-        invited_by: tenant.owner_email,
-      });
+      await base44.functions.invoke('manageTenantTeam', { action: 'bootstrap', tenantId: tenant.id });
       writeActiveTenantId(tenant.id);
       setDone(tenant);
     } catch (e) {
@@ -127,6 +117,7 @@ export default function TenantOnboarding() {
             </p>
           </div>
           <TenantForm
+            lockOwnerEmail
             initial={{ owner_email: me?.email || '', owner_name: me?.full_name || '' }}
             onSubmit={create}
             submitting={busy}
