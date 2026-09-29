@@ -63,6 +63,53 @@ export default async function (req: Request) {
       return Response.json({ order, fulfillments: fulfillments || [] });
     }
 
+    if (action === "confirm_fulfillment") {
+      const orderNumber = String(body.order_number || "").trim().toUpperCase();
+      const fulfillmentId = String(body.fulfillment_id || "").trim();
+      if (!orderNumber || !fulfillmentId) return err("Expédition requise.");
+      const rows = await db.entities.Order.filter({ order_number: orderNumber }).catch(() => []);
+      const order = rows?.[0];
+      if (!order) return err("Commande introuvable.", 404);
+
+      const owns =
+        (sessionId && String(order.session_id || "") === sessionId) ||
+        (!!phone &&
+          [order.customer_phone, order.payment_phone].filter(Boolean).map(digits).includes(digits(phone)));
+      if (!owns) return err("Commande introuvable.", 404);
+
+      const fulfillment = await db.entities.FulfillmentOrder.get(fulfillmentId).catch(() => null);
+      if (!fulfillment || fulfillment.order_id !== order.id) return err("Expédition introuvable.", 404);
+      if (fulfillment.source_type !== "international_supplier") return err("Confirmation non requise.", 409);
+      if (fulfillment.status !== "AWAITING_CUSTOMER_APPROVAL") return err("Cette expédition est déjà confirmée.", 409);
+
+      // The customer's approval is what releases the international leg: the goods
+      // leave our origin warehouse for the destination only from here.
+      const now = new Date().toISOString();
+      const updated = await db.entities.FulfillmentOrder.update(fulfillment.id, {
+        status: "IN_TRANSIT",
+        customer_approved_at: now,
+        customer_approved_by: phone || sessionId,
+      });
+      await db.entities.Notification.create({
+        tenant_id: fulfillment.tenant_id || order.tenant_id || "",
+        tenant_owner_email: fulfillment.tenant_owner_email || order.tenant_owner_email || "",
+        title: `Expédition confirmée (${order.order_number})`,
+        message: `Vous avez validé la marchandise réceptionnée à ${fulfillment.origin_warehouse || "notre entrepôt"}. Votre colis part vers ${order.city || "votre destination"}.`,
+        type: "order",
+        audience: "customer",
+        order_number: order.order_number,
+      });
+      await db.entities.AuditLog.create({
+        action: "fulfillment.customer_approved",
+        actor: "customer",
+        entity: "FulfillmentOrder",
+        entity_id: updated.id,
+        reference: order.order_number,
+        details: { warehouse: fulfillment.origin_warehouse || "", approved_by: phone || "session" },
+      });
+      return Response.json({ fulfillment: updated });
+    }
+
     if (action === "wallet") {
       if (!sessionId) return Response.json({ wallet: null, transactions: [] });
       const rows = await db.entities.Wallet

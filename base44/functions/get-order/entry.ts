@@ -34,7 +34,22 @@ export default async function (req: Request) {
         db.entities.Shipment.filter({ fulfillment_order_id: f.id }).catch(() => []),
       ),
     );
-    return Response.json({ order, fulfillments: fulfillments || [], shipments: shipments.flat() });
+    // The origin-warehouse photo is stored privately, and the buyer — who
+    // usually has no account — needs to see it, so it is handed over as a
+    // short-lived signed link rather than a permanent public URL.
+    const withPhoto = await Promise.all(
+      (fulfillments || []).map(async (f: any) => {
+        if (!f.origin_photo_url) return f;
+        try {
+          const { signed_url } = await db.integrations.Core.CreateFileSignedUrl({ file_uri: f.origin_photo_url, expires_in: 900 });
+          return { ...f, origin_photo_signed_url: signed_url };
+        } catch (e) {
+          console.error("get-order: signed photo failed", e);
+          return f;
+        }
+      }),
+    );
+    return Response.json({ order, fulfillments: withPhoto, shipments: shipments.flat() });
   } catch (e) {
     console.error("get-order: unhandled error", e);
     return err("Recherche indisponible. Réessayez.", 500);

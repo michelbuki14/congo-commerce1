@@ -1,5 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
-import { sellerMayAct, courierMayAct, validAdvance, validCourierAdvance, TERMINAL } from '../../shared/fulfillmentAccess.js';
+import { sellerMayAct, courierMayAct, validAdvance, validCourierAdvance, TERMINAL, isInternational, INTL_RECEIVABLE } from '../../shared/fulfillmentAccess.js';
 import { postWalletEntry, releasePending } from '../../shared/walletLedger.ts';
 
 const money = (value) => Math.round(Number(value || 0) * 100) / 100;
@@ -48,16 +48,48 @@ export default async function(req: Request): Promise<Response> {
     if (!user?.email) return fail('Authentification requise', 401);
     const body = await req.json().catch(() => ({}));
     const action = String(body.action || '');
-    if (!['advance', 'respond', 'courierAdvance'].includes(action)) return fail('Action invalide');
+    if (!['advance', 'respond', 'courierAdvance', 'intlReceive'].includes(action)) return fail('Action invalide');
     const db = base44.asServiceRole;
-    const shipment = action === 'advance' ? null : await db.entities.Shipment.get(String(body.shipment_id || '')).catch(() => null);
-    if (action !== 'advance' && !shipment) return fail('Expédition introuvable', 404);
-    const fulfillmentId = action === 'advance' ? String(body.fulfillment_id || '') : shipment.fulfillment_order_id;
+    const usesShipment = action === 'respond' || action === 'courierAdvance';
+    const shipment = usesShipment ? await db.entities.Shipment.get(String(body.shipment_id || '')).catch(() => null) : null;
+    if (usesShipment && !shipment) return fail('Expédition introuvable', 404);
+    const fulfillmentId = usesShipment ? shipment.fulfillment_order_id : String(body.fulfillment_id || '');
     const fulfillment = await db.entities.FulfillmentOrder.get(fulfillmentId).catch(() => null);
     if (!fulfillment || (shipment && (shipment.order_number !== fulfillment.order_number || shipment.courier_name !== fulfillment.courier_name || shipment.courier_id !== fulfillment.courier_id))) return fail('Commande introuvable', 404);
     const order = await db.entities.Order.get(fulfillment.order_id).catch(() => null);
     if (!order || order.order_number !== fulfillment.order_number) return fail('Commande introuvable', 404);
     const admin = user.role === 'admin';
+    // International goods land in our own warehouse abroad, not with a local
+    // courier: the photo taken there is what the customer approves before we
+    // ship to the destination, so this step is the platform's, admin-only.
+    if (action === 'intlReceive') {
+      if (!admin) return fail('Accès interdit', 403);
+      if (!isInternational(fulfillment.source_type)) return fail('Réservé aux fournisseurs internationaux', 409);
+      if (!INTL_RECEIVABLE.includes(fulfillment.status)) return fail('Marchandise déjà réceptionnée', 409);
+      if (order.payment_status !== 'PAID' && order.payment_provider !== 'cod') return fail('Paiement non confirmé', 409);
+      const warehouse = String(body.origin_warehouse || '').trim().slice(0, 120);
+      const photo = String(body.origin_photo || '').trim().slice(0, 500);
+      if (!warehouse) return fail('Indiquez l’entrepôt de réception.');
+      if (!photo) return fail('La photo de la marchandise est requise.');
+      const now = new Date().toISOString();
+      const received = await db.entities.FulfillmentOrder.update(fulfillment.id, {
+        status: 'AWAITING_CUSTOMER_APPROVAL',
+        origin_warehouse: warehouse,
+        origin_photo_url: photo,
+        origin_received_at: now,
+      });
+      await db.entities.Notification.create({
+        tenant_id: fulfillment.tenant_id || order.tenant_id || '',
+        tenant_owner_email: fulfillment.tenant_owner_email || order.tenant_owner_email || '',
+        title: `Votre colis est arrivé dans notre entrepôt (${order.order_number})`,
+        message: `Marchandise réceptionnée à ${warehouse}. Consultez la photo et confirmez l’expédition vers ${order.city || 'votre destination'} depuis le suivi de commande.`,
+        type: 'order',
+        audience: 'customer',
+        order_number: order.order_number,
+      });
+      await db.entities.AuditLog.create({ action: 'fulfillment.origin_received', actor: user.email, entity: 'FulfillmentOrder', entity_id: received.id, reference: order.order_number, details: { warehouse, from: fulfillment.status, to: 'AWAITING_CUSTOMER_APPROVAL' } });
+      return Response.json({ fulfillment: received });
+    }
     let courier = null;
     if (action === 'advance') {
       if (!admin) {
@@ -80,7 +112,7 @@ export default async function(req: Request): Promise<Response> {
     const status = String(body.status || '');
     if (action === 'advance') {
       const cancel = status === 'CANCELLED' && ['PENDING', 'CONFIRMED', 'PROCESSING', 'READY_FOR_PICKUP'].includes(fulfillment.status);
-      if (!validAdvance(fulfillment.status, status, admin)) return fail('Transition invalide', 409);
+      if (!validAdvance(fulfillment.status, status, admin, fulfillment.source_type)) return fail('Transition invalide', 409);
       if (cancel && order.payment_verified) return fail('Une commande payée doit suivre la procédure de remboursement', 409);
       if (!cancel && order.payment_status !== 'PAID' && order.payment_provider !== 'cod') return fail('Paiement non confirmé', 409);
     } else {

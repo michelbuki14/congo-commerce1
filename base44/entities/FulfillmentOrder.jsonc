@@ -81,6 +81,7 @@
         "PENDING",
         "CONFIRMED",
         "PROCESSING",
+        "AWAITING_CUSTOMER_APPROVAL",
         "READY_FOR_PICKUP",
         "PICKED_UP",
         "IN_TRANSIT",
@@ -105,6 +106,23 @@
       "type": "string"
     },
     "estimated_delivery": {
+      "type": "string"
+    },
+    "origin_warehouse": {
+      "type": "string",
+      "description": "Our receiving warehouse in the supplier's country."
+    },
+    "origin_photo_url": {
+      "type": "string",
+      "description": "Photo of the goods taken at the origin warehouse and sent to the customer for approval."
+    },
+    "origin_received_at": {
+      "type": "string"
+    },
+    "customer_approved_at": {
+      "type": "string"
+    },
+    "customer_approved_by": {
       "type": "string"
     },
     "payout_released": {

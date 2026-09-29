@@ -4,6 +4,7 @@ import fr from './fr';
 import en from './en';
 import ln from './ln';
 import sw from './sw';
+import intlShipment from './intlShipment';
 
 export const LANGUAGES = [
   { id: 'fr', label: 'FR', name: 'Français' },
@@ -26,12 +27,15 @@ function initialLanguage() {
   return 'fr';
 }
 
+const mergeNamespaces = (base, extra) =>
+  Object.entries(extra).reduce((out, [ns, values]) => ({ ...out, [ns]: { ...(out[ns] || {}), ...values } }), { ...base });
+
 i18n.use(initReactI18next).init({
   resources: {
-    fr: { translation: fr },
-    en: { translation: en },
-    ln: { translation: ln },
-    sw: { translation: sw },
+    fr: { translation: mergeNamespaces(fr, intlShipment.fr) },
+    en: { translation: mergeNamespaces(en, intlShipment.en) },
+    ln: { translation: mergeNamespaces(ln, intlShipment.fr) },
+    sw: { translation: mergeNamespaces(sw, intlShipment.fr) },
   },
   lng: initialLanguage(),
   fallbackLng: 'fr',

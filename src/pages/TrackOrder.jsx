@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Search, Package, Truck, CheckCircle2, Circle } from 'lucide-react';
+import { Search, Package, Truck, CheckCircle2, Circle, Warehouse } from 'lucide-react';
 import StatusBadge from '@/components/StatusBadge';
+import IntlApprovalCard from '@/components/tracking/IntlApprovalCard';
 import { getOrderIds, getProfile } from '@/lib/session';
 import { lookupOrder } from '@/lib/orderLookup';
 import { formatUSD, formatDate } from '@/lib/format';
-import { SHIPMENT_STATUS_FLOW, SHIPMENT_STATUS_LABELS } from '@/lib/logistics';
+import { SHIPMENT_STATUS_FLOW, SHIPMENT_STATUS_LABELS, INTL_TRACKING_FLOW } from '@/lib/logistics';
 
 export default function TrackOrder() {
   const { t } = useTranslation();
@@ -18,6 +19,12 @@ export default function TrackOrder() {
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState('');
   const history = getOrderIds();
+  // An international import waiting on the buyer's go-ahead gets the photo card
+  // instead of the courier step tracker — there is no courier leg at the origin.
+  const awaitingApproval = fulfillments.filter(
+    (f) => f.source_type === 'international_supplier' && f.status === 'AWAITING_CUSTOMER_APPROVAL',
+  );
+  const trackedFulfillments = fulfillments.filter((f) => !awaitingApproval.includes(f));
 
   const lookup = async (e) => {
     e.preventDefault();
@@ -127,10 +134,24 @@ export default function TrackOrder() {
             </p>
           </section>
 
-          {fulfillments.map((f) => {
+          {awaitingApproval.map((f) => (
+            <IntlApprovalCard
+              key={f.id}
+              fulfillment={f}
+              order={order}
+              phone={phone}
+              onConfirmed={(updated) =>
+                setFulfillments((prev) => prev.map((x) => (x.id === updated.id ? { ...x, ...updated } : x)))
+              }
+            />
+          ))}
+
+          {trackedFulfillments.map((f) => {
             const shipment = shipments.find((s) => s.fulfillment_order_id === f.id);
-            const currentIndex = SHIPMENT_STATUS_FLOW.indexOf(f.status);
-            const steps = SHIPMENT_STATUS_FLOW.slice(0, 8);
+            const isIntl = f.source_type === 'international_supplier';
+            // International imports never pass through a local courier pickup.
+            const steps = isIntl ? INTL_TRACKING_FLOW : SHIPMENT_STATUS_FLOW.slice(0, 8);
+            const currentIndex = steps.indexOf(f.status);
             return (
               <section key={f.id} className="rounded-2xl border border-border bg-card p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
@@ -144,7 +165,15 @@ export default function TrackOrder() {
                 </div>
 
                 <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Truck className="h-3.5 w-3.5" /> {f.courier_name || t('orderTracking.carrierFallback')} · {f.tracking_number ? t('orderTracking.trackingNo', { number: f.tracking_number }) : t('orderTracking.trackingPending')}
+                  {isIntl ? (
+                    <>
+                      <Warehouse className="h-3.5 w-3.5" /> {f.origin_warehouse || t('intlApproval.warehouse')}
+                    </>
+                  ) : (
+                    <>
+                      <Truck className="h-3.5 w-3.5" /> {f.courier_name || t('orderTracking.carrierFallback')} · {f.tracking_number ? t('orderTracking.trackingNo', { number: f.tracking_number }) : t('orderTracking.trackingPending')}
+                    </>
+                  )}
                 </p>
 
                 <div className="mt-3 space-y-2">
