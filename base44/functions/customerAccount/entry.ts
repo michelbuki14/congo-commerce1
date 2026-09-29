@@ -28,6 +28,19 @@ const ref = (prefix: string) =>
 const dedupe = (rows: any[]) =>
   (rows || []).reduce((acc: any[], row: any) => (acc.some((x) => x.id === row.id) ? acc : [...acc, row]), []);
 
+/** The only statuses a case may be ruled into (the entity's own enum). */
+const DISPUTE_STATUSES = new Set([
+  "open",
+  "investigating",
+  "resolved_buyer",
+  "resolved_seller",
+  "escalated",
+  "closed",
+]);
+
+/** The resolutions a shop owner may propose on a case. */
+const RESOLUTION_IDS = new Set(["refund", "replacement", "goodwill", "reject"]);
+
 export default async function (req: Request) {
   try {
     if (req.method !== "POST") return err("Method not allowed", 405);
@@ -355,8 +368,12 @@ export default async function (req: Request) {
       if (!allowed) return err("Accès refusé.", 403);
 
       if (action === "set_dispute_status") {
+        // Ruling on a case decides money and blame, and the app only offers
+        // these controls to mediation. A shop owner answers a case; it does not
+        // close it, and it never writes mediation's private notes.
+        if (!isAdmin) return err("Réservé aux administrateurs.", 403);
         const status = String(body.status || "").trim();
-        if (!status) return err("Statut requis.");
+        if (!DISPUTE_STATUSES.has(status)) return err("Statut invalide.");
         const updated = await db.entities.Dispute.update(dispute.id, {
           status,
           admin_notes: body.note !== undefined ? String(body.note) : dispute.admin_notes || "",
@@ -373,11 +390,15 @@ export default async function (req: Request) {
         return Response.json({ dispute: updated });
       }
 
+      // Who wrote a message is decided here, never by the caller: a shop owner
+      // must not be able to post into a mediation thread under the "admin" label.
       const entry = {
-        author: String(body.author || (isAdmin ? "admin" : "seller")),
-        author_name: String(body.author_name || ""),
-        body: String(body.body || ""),
-        resolution: String(body.resolution || ""),
+        author: isAdmin ? "admin" : "seller",
+        author_name: String(user.full_name || user.email || "").slice(0, 120),
+        body: String(body.body || "").slice(0, 4000),
+        resolution: isAdmin
+          ? ""
+          : (RESOLUTION_IDS.has(String(body.resolution || "")) ? String(body.resolution) : ""),
         at: new Date().toISOString(),
         file_uri: body.file_uri || undefined,
         attachment_name: body.attachment_name || undefined,
@@ -385,7 +406,9 @@ export default async function (req: Request) {
       const ticketId = String(body.ticket_id || "").trim();
       if (ticketId) {
         const ticket = await db.entities.SupportTicket.get(ticketId).catch(() => null);
-        if (!ticket) return err("Fil introuvable.", 404);
+        // The thread must be the one attached to this case — otherwise a seller
+        // could write into a stranger's support conversation.
+        if (!ticket || String(ticket.order_number || "") !== orderNumber) return err("Fil introuvable.", 404);
         const updated = await db.entities.SupportTicket.update(ticket.id, {
           messages: [...(ticket.messages || []), entry],
           status: "open",
@@ -408,10 +431,21 @@ export default async function (req: Request) {
     }
 
     if (action === "dispute_index") {
+      // Trust metrics for the public ratings page: per-shop counts only. The
+      // individual cases stay private — no case rows, no per-case statuses and
+      // no order numbers leave here for a caller who does not own them.
       const rows = await db.entities.Dispute.list("-created_date", 500).catch(() => []);
-      return Response.json({
-        disputes: (rows || []).map((d: any) => ({ seller_name: d.seller_name || "", status: d.status || "" })),
-      });
+      const bySeller = new Map<string, any>();
+      for (const d of rows || []) {
+        const name = String(d.seller_name || "").trim();
+        if (!name) continue;
+        const key = name.toLowerCase();
+        const entry = bySeller.get(key) || { seller_name: name, disputes: 0, open_disputes: 0 };
+        entry.disputes += 1;
+        if (["open", "investigating", "escalated"].includes(String(d.status || ""))) entry.open_disputes += 1;
+        bySeller.set(key, entry);
+      }
+      return Response.json({ disputes: [...bySeller.values()] });
     }
 
     if (action === "signals") {
