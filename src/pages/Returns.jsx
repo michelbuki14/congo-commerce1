@@ -8,7 +8,7 @@ import { getProfile, uid } from '@/lib/session';
 import { formatDate, formatUSD } from '@/lib/format';
 import { emitEvent } from '@/lib/events';
 import { lookupOrder } from '@/lib/orderLookup';
-import { returnEligibility } from '@/lib/returns';
+import { returnEligibility, loadMyReturns } from '@/lib/returns';
 import { RETURN_COPY } from '@/lib/returnCopy';
 
 export default function Returns() {
@@ -31,7 +31,7 @@ export default function Returns() {
   const [success, setSuccess] = useState('');
 
   const load = async () => {
-    const rows = await base44.entities.Return.filter({ customer_phone: form.phone || profile.phone || '—' }, '-created_date', 30).catch(() => []);
+    const rows = await loadMyReturns(form.phone || profile.phone || '');
     setReturns(rows);
     setLoading(false);
   };

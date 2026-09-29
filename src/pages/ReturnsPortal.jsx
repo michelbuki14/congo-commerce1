@@ -6,6 +6,7 @@ import { base44 } from '@/api/base44Client';
 import StatusBadge from '@/components/StatusBadge';
 import { getProfile, uid } from '@/lib/session';
 import { fetchMyOrders } from '@/lib/customerAccount';
+import { loadMyReturns } from '@/lib/returns';
 import { formatUSD, formatDate } from '@/lib/format';
 import { RETURN_COPY } from '@/lib/returnCopy';
 
@@ -95,7 +96,7 @@ export default function ReturnsPortal() {
         is_demo: true,
       });
       setMessage(t('returnsPortal.requestCovers', { count: selected.length }));
-      setReturns(await base44.entities.Return.filter({ customer_phone: profile.phone || '—' }, '-created_date', 30));
+      setReturns(await loadMyReturns(profile.phone || ''));
       setSelected([]);
       setDescription('');
     } catch {

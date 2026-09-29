@@ -123,6 +123,79 @@ export default async function (req: Request) {
       return Response.json({ wallet, transactions: transactions || [] });
     }
 
+    if (action === "returns") {
+      const limit = Math.min(Number(body.limit) || 30, 100);
+      const orderNumbers = sessionId
+        ? (await db.entities.Order.filter({ session_id: sessionId }, "-created_date", limit).catch(() => []))
+            .map((o: any) => o.order_number)
+            .filter(Boolean)
+        : [];
+      const [byPhone, byOrder] = await Promise.all([
+        phone ? db.entities.Return.filter({ customer_phone: phone }, "-created_date", limit).catch(() => []) : [],
+        orderNumbers.length
+          ? db.entities.Return.filter({ order_number: { $in: orderNumbers } }, "-created_date", limit).catch(() => [])
+          : [],
+      ]);
+      const returns = [...(byPhone || []), ...(byOrder || [])].reduce(
+        (acc: any[], row: any) => (acc.some((x) => x.id === row.id) ? acc : [...acc, row]),
+        [],
+      );
+      return Response.json({ returns });
+    }
+
+    if (action === "disputes") {
+      const limit = Math.min(Number(body.limit) || 30, 100);
+      const orderNumbers = sessionId
+        ? (await db.entities.Order.filter({ session_id: sessionId }, "-created_date", limit).catch(() => []))
+            .map((o: any) => o.order_number)
+            .filter(Boolean)
+        : [];
+      const [byPhone, byOrder] = await Promise.all([
+        phone ? db.entities.Dispute.filter({ customer_phone: phone }, "-created_date", limit).catch(() => []) : [],
+        orderNumbers.length
+          ? db.entities.Dispute.filter({ order_number: { $in: orderNumbers } }, "-created_date", limit).catch(() => [])
+          : [],
+      ]);
+      const disputes = [...(byPhone || []), ...(byOrder || [])].reduce(
+        (acc: any[], row: any) => (acc.some((x) => x.id === row.id) ? acc : [...acc, row]),
+        [],
+      );
+      return Response.json({ disputes });
+    }
+
+    if (action === "tickets") {
+      const limit = Math.min(Number(body.limit) || 30, 100);
+      const [bySession, byPhone] = await Promise.all([
+        sessionId ? db.entities.SupportTicket.filter({ session_id: sessionId }, "-created_date", limit).catch(() => []) : [],
+        phone ? db.entities.SupportTicket.filter({ customer_phone: phone }, "-created_date", limit).catch(() => []) : [],
+      ]);
+      const tickets = [...(bySession || []), ...(byPhone || [])].reduce(
+        (acc: any[], row: any) => (acc.some((x) => x.id === row.id) ? acc : [...acc, row]),
+        [],
+      );
+      return Response.json({ tickets });
+    }
+
+    if (action === "seller_disputes") {
+      const me = await base44.auth.me().catch(() => null);
+      const email = String(me?.email || "").trim();
+      if (!email) return Response.json({ disputes: [] });
+      const sellers = await db.entities.Seller.filter({ email }, "name", 5).catch(() => []);
+      const names = (sellers || []).map((s: any) => s.name).filter(Boolean);
+      if (!names.length) return Response.json({ disputes: [] });
+      const disputes = await db.entities.Dispute
+        .filter({ seller_name: { $in: names } }, "-created_date", 100)
+        .catch(() => []);
+      return Response.json({ disputes: disputes || [] });
+    }
+
+    if (action === "dispute_index") {
+      const rows = await db.entities.Dispute.list("-created_date", 500).catch(() => []);
+      return Response.json({
+        disputes: (rows || []).map((d: any) => ({ seller_name: d.seller_name || "", status: d.status || "" })),
+      });
+    }
+
     if (action === "signals") {
       const orderNumber = String(body.order_number || "").trim();
       const couponCode = String(body.coupon_code || "").trim();

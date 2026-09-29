@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { MessageSquareWarning, Paperclip, Send } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useActiveSeller } from '@/lib/seller';
+import { fetchSellerDisputes } from '@/lib/customerAccount';
 import OpsHeader from '@/components/ops/OpsHeader';
 import StatCard from '@/components/ops/StatCard';
 import StatusBadge from '@/components/StatusBadge';
@@ -39,7 +40,7 @@ export default function MerchantDisputes() {
   useEffect(() => {
     if (!seller && !user) return;
     Promise.all([
-      seller ? base44.entities.Dispute.filter({ seller_name: seller.name }, '-created_date', 100).catch(() => []) : [],
+      seller ? fetchSellerDisputes() : [],
       user ? base44.entities.Dispute.filter({ tenant_owner_email: user.email }, '-created_date', 100).catch(() => []) : [],
       base44.entities.SupportTicket.list('-created_date', 100).catch(() => []),
     ])

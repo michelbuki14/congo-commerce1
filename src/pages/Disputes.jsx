@@ -5,6 +5,7 @@ import { Gavel, ShieldCheck, AlertCircle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '@/components/StatusBadge';
 import { getProfile } from '@/lib/session';
+import { fetchMyDisputes } from '@/lib/customerAccount';
 import { formatUSD, formatDate } from '@/lib/format';
 import { emitEvent } from '@/lib/events';
 import { lookupOrder } from '@/lib/orderLookup';
@@ -39,7 +40,7 @@ export default function Disputes() {
   const [success, setSuccess] = useState('');
 
   const load = async (phone) => {
-    const rows = await base44.entities.Dispute.filter({ customer_phone: phone || '—' }, '-created_date', 30).catch(() => []);
+    const rows = await fetchMyDisputes({ phone: phone || '' });
     setDisputes(rows);
     setLoading(false);
   };

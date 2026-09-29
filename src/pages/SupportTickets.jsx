@@ -5,6 +5,7 @@ import { LifeBuoy, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import TicketThread from '@/components/support/TicketThread';
 import { getProfile, getSessionId, uid } from '@/lib/session';
+import { fetchMyTickets } from '@/lib/customerAccount';
 import { formatDateTime } from '@/lib/format';
 
 export default function SupportTickets() {
@@ -44,7 +45,7 @@ export default function SupportTickets() {
   const [success, setSuccess] = useState('');
 
   const load = async () => {
-    const rows = await base44.entities.SupportTicket.filter({ session_id: sessionId }, '-created_date', 30).catch(() => []);
+    const rows = await fetchMyTickets({ sessionId });
     setTickets(rows);
     setLoading(false);
   };

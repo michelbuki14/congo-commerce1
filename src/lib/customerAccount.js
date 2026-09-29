@@ -43,3 +43,33 @@ export async function fetchRiskSignals({ phone = '', sessionId = '', couponCode 
     order_number: orderNumber,
   }).catch(() => ({}));
 }
+
+/** This device's return requests (by session or buyer phone). */
+export async function fetchMyReturns({ sessionId = getSessionId(), phone = '', limit = 30 } = {}) {
+  const data = await call({ action: 'returns', session_id: sessionId, phone, limit }).catch(() => ({}));
+  return data.returns || [];
+}
+
+/** This device's disputes (by session or buyer phone). */
+export async function fetchMyDisputes({ sessionId = getSessionId(), phone = '', limit = 30 } = {}) {
+  const data = await call({ action: 'disputes', session_id: sessionId, phone, limit }).catch(() => ({}));
+  return data.disputes || [];
+}
+
+/** This device's support tickets (by session or buyer phone). */
+export async function fetchMyTickets({ sessionId = getSessionId(), phone = '', limit = 30 } = {}) {
+  const data = await call({ action: 'tickets', session_id: sessionId, phone, limit }).catch(() => ({}));
+  return data.tickets || [];
+}
+
+/** Disputes filed against the shops the signed-in user owns. */
+export async function fetchSellerDisputes() {
+  const data = await call({ action: 'seller_disputes' }).catch(() => ({}));
+  return data.disputes || [];
+}
+
+/** Per-shop dispute counts for the public ratings page — no case contents. */
+export async function fetchDisputeIndex() {
+  const data = await call({ action: 'dispute_index' }).catch(() => ({}));
+  return data.disputes || [];
+}

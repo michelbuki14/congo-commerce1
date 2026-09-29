@@ -1,6 +1,6 @@
 import { base44 } from '@/api/base44Client';
 import { getProfile, uid } from '@/lib/session';
-import { fetchMyOrder, fetchMyOrders } from '@/lib/customerAccount';
+import { fetchMyOrder, fetchMyOrders, fetchMyReturns } from '@/lib/customerAccount';
 
 /**
  * Customer return initiation: which orders may be returned, and how a request is
@@ -47,7 +47,7 @@ export async function findOrderByNumber(number) {
 
 export async function loadMyReturns(phone, limit = 30) {
   if (!phone) return [];
-  return base44.entities.Return.filter({ customer_phone: phone }, '-created_date', limit).catch(() => []);
+  return fetchMyReturns({ phone, limit });
 }
 
 /**
