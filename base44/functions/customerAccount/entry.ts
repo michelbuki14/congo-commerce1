@@ -126,16 +126,19 @@ export default async function (req: Request) {
     }
 
     if (action === "wallet") {
-      // The account's own wallet, by the email it is held under. Wallets created
-      // by the device session before an account existed are still reachable from
-      // that device, but only while they carry no owner email.
-      const [byEmail, bySession] = await Promise.all([
+      // The account's own wallet — found by the email it is held under, or by
+      // the account that created it. A device session id is never accepted as a
+      // key: it is a caller-supplied string that anyone who guesses it could
+      // repeat, so it proves nothing and may not open a wallet. Every wallet a
+      // real flow creates carries the owner's email (checkout, refunds), so
+      // nothing legitimate is lost by ignoring it.
+      const [byEmail, byOwner] = await Promise.all([
         email ? db.entities.Wallet.filter({ owner_type: "customer", owner_email: user.email }).catch(() => []) : [],
-        sessionId ? db.entities.Wallet.filter({ owner_type: "customer", owner_id: sessionId }).catch(() => []) : [],
+        user.id ? db.entities.Wallet.filter({ owner_type: "customer", created_by_id: user.id }).catch(() => []) : [],
       ]);
       const wallet =
         (byEmail || []).find((w: any) => w.status !== "frozen") ||
-        (bySession || []).find((w: any) => !String(w.owner_email || "").trim()) ||
+        (byOwner || []).find((w: any) => w.status !== "frozen") ||
         null;
       if (!wallet) return Response.json({ wallet: null, transactions: [] });
       const transactions = await db.entities.WalletTransaction
