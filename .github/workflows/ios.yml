@@ -62,13 +62,20 @@ jobs:
       - name: Sync iOS shell
         run: npx cap sync ios
 
+      - name: Verify iOS project
+        run: |
+          test -f ios/App/App.xcodeproj/project.pbxproj
+          test -f ios/App/CapApp-SPM/Package.swift
+          xcodebuild -project ios/App/App.xcodeproj -list
+
       - name: Build iOS app (unsigned)
         run: >
           xcodebuild
-          -workspace ios/App/App.xcworkspace
+          -project ios/App/App.xcodeproj
           -scheme App
           -configuration Release
           -destination 'generic/platform=iOS'
           -derivedDataPath build
           CODE_SIGNING_ALLOWED=NO
+          CODE_SIGNING_REQUIRED=NO
           build
