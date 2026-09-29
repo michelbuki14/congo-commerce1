@@ -9,6 +9,7 @@ import { formatDate, formatUSD } from '@/lib/format';
 import { emitEvent } from '@/lib/events';
 import { lookupOrder } from '@/lib/orderLookup';
 import { returnEligibility, loadMyReturns } from '@/lib/returns';
+import { openReturn } from '@/lib/customerAccount';
 import { RETURN_COPY } from '@/lib/returnCopy';
 
 export default function Returns() {
@@ -71,28 +72,16 @@ export default function Returns() {
         return;
       }
       const item = (order.items || []).find((entry) => entry.title === form.product_title) || order.items?.[0];
-      await base44.entities.Return.create({
-        return_number: `RET-${uid('').slice(1, 7).toUpperCase()}`,
-        order_id: order?.id || '',
-        order_number: form.order_number.trim().toUpperCase(),
-        customer_name: profile.name || 'Client',
-        customer_phone: form.phone.trim(),
-        product_id: item?.product_id || '',
-        product_title: item?.title || '',
+      await openReturn({
+        orderNumber: form.order_number.trim().toUpperCase(),
+        phone: form.phone.trim(),
         reason: form.reason,
         description: form.description.trim(),
-        refund_amount_usd: expected,
-        status: 'requested',
-        tenant_id: order.tenant_id || '',
-        tenant_owner_email: order.tenant_owner_email || '',
-      });
-      await base44.entities.Notification.create({
-        title: 'Nouvelle demande de retour',
-        message: `${profile.name || 'Un client'} demande un retour sur ${form.order_number.trim().toUpperCase()}.`,
-        type: 'order',
-        audience: 'admin',
-        order_number: form.order_number.trim().toUpperCase(),
-        is_demo: true,
+        items: [{
+          product_id: item?.product_id || '',
+          product_title: item?.title || '',
+          refund_amount_usd: expected,
+        }],
       });
       emitEvent('return_requested', {
         category: 'order',

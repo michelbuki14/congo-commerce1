@@ -5,7 +5,7 @@ import { Gavel, ShieldCheck, AlertCircle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '@/components/StatusBadge';
 import { getProfile } from '@/lib/session';
-import { fetchMyDisputes } from '@/lib/customerAccount';
+import { fetchMyDisputes, openDispute } from '@/lib/customerAccount';
 import { formatUSD, formatDate } from '@/lib/format';
 import { emitEvent } from '@/lib/events';
 import { lookupOrder } from '@/lib/orderLookup';
@@ -66,24 +66,11 @@ export default function Disputes() {
     try {
       const number = form.order_number.trim().toUpperCase();
       const { order } = await lookupOrder(number, form.phone);
-      await base44.entities.Dispute.create({
-        order_number: number,
-        customer_name: profile.name || 'Client',
-        customer_phone: form.phone || profile.phone || '',
-        seller_name: order?.items?.[0]?.seller_name || '',
+      await openDispute({
+        orderNumber: number,
+        phone: form.phone || profile.phone || '',
         type: form.type,
         description: form.description,
-        amount_usd: order?.total_usd || 0,
-        status: 'open',
-        priority: 'normal',
-      });
-      await base44.entities.Notification.create({
-        title: 'Nouveau litige ouvert',
-        message: `${profile.name || 'Un client'} ouvre un litige sur ${number}.`,
-        type: 'order',
-        audience: 'admin',
-        order_number: number,
-        is_demo: true,
       });
       emitEvent('dispute_opened', {
         category: 'risk',

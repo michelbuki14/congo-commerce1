@@ -5,7 +5,7 @@ import { RotateCcw, ShieldCheck, AlertCircle, CheckCircle2 } from 'lucide-react'
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '@/components/StatusBadge';
 import { getProfile, uid } from '@/lib/session';
-import { fetchMyOrders } from '@/lib/customerAccount';
+import { fetchMyOrders, openReturn } from '@/lib/customerAccount';
 import { loadMyReturns } from '@/lib/returns';
 import { formatUSD, formatDate } from '@/lib/format';
 import { RETURN_COPY } from '@/lib/returnCopy';
@@ -45,10 +45,7 @@ export default function ReturnsPortal() {
   useEffect(() => {
     (async () => {
       setOrders(await fetchMyOrders({ limit: 20 }));
-      const mine = await base44.entities.Return
-        .filter({ customer_phone: profile.phone || '—' }, '-created_date', 30)
-        .catch(() => []);
-      setReturns(mine);
+      setReturns(await loadMyReturns(profile.phone || ''));
       setLoading(false);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -67,34 +64,22 @@ export default function ReturnsPortal() {
     }
     setSubmitting(true);
     try {
+      const byOrder = {};
       for (const key of selected) {
         const [orderId, index] = key.split('::');
         const order = orders.find((o) => o.id === orderId);
         const item = order?.items?.[Number(index)];
-        if (!item) continue;
-        await base44.entities.Return.create({
-          return_number: `RET-${uid('').slice(1, 7).toUpperCase()}`,
-          order_id: order.id,
-          order_number: order.order_number,
-          customer_name: profile.name || 'Client',
-          customer_phone: profile.phone || '',
+        if (!order || !item) continue;
+        byOrder[order.order_number] = byOrder[order.order_number] || [];
+        byOrder[order.order_number].push({
           product_id: item.product_id || '',
           product_title: item.title || '',
-          reason,
-          description,
-          refund_amount_usd: item.line_total_usd || 0,
-          status: 'requested',
-          tenant_id: order.tenant_id || '',
-          tenant_owner_email: order.tenant_owner_email || '',
+          refund_amount_usd: Number(item.line_total_usd) || 0,
         });
       }
-      await base44.entities.Notification.create({
-        title: 'Nouvelle demande de retour',
-        message: `${profile.name || 'Un client'} demande le retour de ${selected.length} article(s).`,
-        type: 'order',
-        audience: 'admin',
-        is_demo: true,
-      });
+      for (const [orderNumber, items] of Object.entries(byOrder)) {
+        await openReturn({ orderNumber, phone: profile.phone || '', reason, description, items });
+      }
       setMessage(t('returnsPortal.requestCovers', { count: selected.length }));
       setReturns(await loadMyReturns(profile.phone || ''));
       setSelected([]);

@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RotateCcw, AlertCircle } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
 import StatusBadge from '@/components/StatusBadge';
-import { getProfile, uid } from '@/lib/session';
+import { openReturn, fetchMyReturns } from '@/lib/customerAccount';
+import { getProfile } from '@/lib/session';
 import { formatUSD, formatDate } from '@/lib/format';
 
 export default function RefundPanel() {
@@ -32,8 +32,7 @@ export default function RefundPanel() {
   const [success, setSuccess] = useState('');
 
   const load = async (phone) => {
-    const rows = await base44.entities.Return.filter({ customer_phone: phone || '—' }, '-created_date', 30).catch(() => []);
-    setReturns(rows);
+    setReturns(await fetchMyReturns({ phone }));
     setLoading(false);
   };
 
@@ -53,27 +52,12 @@ export default function RefundPanel() {
     setSubmitting(true);
     try {
       const number = form.order_number.trim().toUpperCase();
-      const orderRows = await base44.entities.Order.filter({ order_number: number }).catch(() => []);
-      const order = orderRows[0];
-      await base44.entities.Return.create({
-        return_number: `RET-${uid('').slice(1, 7).toUpperCase()}`,
-        order_id: order?.id || '',
-        order_number: number,
-        customer_name: profile.name || 'Client',
-        customer_phone: form.phone || profile.phone || '',
-        product_title: form.product_title || order?.items?.[0]?.title || '',
+      await openReturn({
+        orderNumber: number,
+        phone: form.phone || profile.phone || '',
         reason: form.reason,
         description: form.description,
-        refund_amount_usd: order?.total_usd || 0,
-        status: 'requested',
-      });
-      await base44.entities.Notification.create({
-        title: 'Nouvelle demande de remboursement',
-        message: `${profile.name || 'Un client'} demande un remboursement sur ${number}.`,
-        type: 'order',
-        audience: 'admin',
-        order_number: number,
-        is_demo: true,
+        items: [{ product_title: form.product_title }],
       });
       setSuccess(t('refundPanel.refundSent'));
       setForm({ ...form, order_number: '', product_title: '', description: '' });

@@ -1,5 +1,6 @@
 import { base44 } from '@/api/base44Client';
 import { round2 } from '@/lib/format';
+import { sendCaseMessage as postCaseMessage, setCaseStatus } from '@/lib/customerAccount';
 
 /**
  * Shared logic for the dispute resolution portal: the mediation thread, the
@@ -52,37 +53,25 @@ export async function sendCaseMessage({ dispute, ticket, body, file, author, act
     file_uri: fileUri || undefined,
     attachment_name: name || undefined,
   };
-  if (ticket) {
-    return base44.entities.SupportTicket.update(ticket.id, { messages: [...(ticket.messages || []), entry], status: 'open' });
-  }
-  return base44.entities.SupportTicket.create({
-    ticket_number: `DR-${Date.now().toString(36).toUpperCase()}`,
-    subject: `Résolution de litige — ${dispute.order_number}`,
-    category: 'order',
-    status: 'open',
-    priority: 'high',
-    order_number: dispute.order_number,
-    customer_name: dispute.customer_name || '',
-    customer_phone: dispute.customer_phone || '',
-    assigned_to: author === 'admin' ? 'mediation' : 'vendeur',
-    messages: [entry],
+  return postCaseMessage({
+    orderNumber: dispute.order_number,
+    ticketId: ticket?.id || '',
+    body,
+    author,
+    authorName: actorName,
+    resolution,
+    fileUri,
+    attachmentName: name,
   });
 }
 
-export async function setDisputeStatus({ dispute, status, note, reviewer }) {
-  const updated = await base44.entities.Dispute.update(dispute.id, {
+export async function setDisputeStatus({ dispute, status, note }) {
+  const updated = await setCaseStatus({
+    orderNumber: dispute.order_number,
     status,
-    admin_notes: note ?? dispute.admin_notes ?? '',
+    note: note ?? dispute.admin_notes ?? '',
   });
-  await base44.entities.AuditLog.create({
-    action: `dispute.${status}`,
-    actor: reviewer?.role === 'admin' ? 'admin' : 'mediation',
-    entity: 'Dispute',
-    entity_id: dispute.id,
-    reference: dispute.order_number,
-    severity: status === 'resolved_seller' ? 'warning' : 'info',
-    details: { amount_usd: dispute.amount_usd, reviewer: reviewer?.email || '' },
-  });
+  if (!updated) throw new Error('Mise à jour du litige impossible.');
   return updated;
 }
 

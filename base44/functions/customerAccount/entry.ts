@@ -19,6 +19,15 @@ function err(message: string, status = 400) {
 
 const digits = (value: any) => String(value || "").replace(/\D/g, "");
 
+/** True when the order belongs to this device session or the buyer phone. */
+const ownsOrder = (order: any, sessionId: string, phone: string) =>
+  (!!sessionId && String(order?.session_id || "") === sessionId) ||
+  (!!phone &&
+    [order?.customer_phone, order?.payment_phone].filter(Boolean).map(digits).includes(digits(phone)));
+
+const ref = (prefix: string) =>
+  `${prefix}-${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).slice(2, 5).toUpperCase()}`;
+
 export default async function (req: Request) {
   try {
     if (req.method !== "POST") return err("Method not allowed", 405);
@@ -182,11 +191,238 @@ export default async function (req: Request) {
       if (!email) return Response.json({ disputes: [] });
       const sellers = await db.entities.Seller.filter({ email }, "name", 5).catch(() => []);
       const names = (sellers || []).map((s: any) => s.name).filter(Boolean);
-      if (!names.length) return Response.json({ disputes: [] });
-      const disputes = await db.entities.Dispute
-        .filter({ seller_name: { $in: names } }, "-created_date", 100)
+      const [byTenant, byName] = await Promise.all([
+        db.entities.Dispute.filter({ tenant_owner_email: email }, "-created_date", 100).catch(() => []),
+        names.length
+          ? db.entities.Dispute.filter({ seller_name: { $in: names } }, "-created_date", 100).catch(() => [])
+          : [],
+      ]);
+      const disputes = [...(byTenant || []), ...(byName || [])].reduce(
+        (acc: any[], d: any) => (acc.some((x) => x.id === d.id) ? acc : [...acc, d]),
+        [],
+      );
+      return Response.json({ disputes });
+    }
+
+    if (action === "seller_threads") {
+      const me = await base44.auth.me().catch(() => null);
+      const email = String(me?.email || "").trim();
+      const isAdmin = String(me?.role || "") === "admin";
+      if (isAdmin) {
+        const all = await db.entities.SupportTicket.list("-created_date", 100).catch(() => []);
+        return Response.json({ tickets: all || [] });
+      }
+      if (!email) return Response.json({ tickets: [] });
+      const sellers = await db.entities.Seller.filter({ email }, "name", 5).catch(() => []);
+      const names = (sellers || []).map((s: any) => s.name).filter(Boolean);
+      const [byTenant, byName] = await Promise.all([
+        db.entities.Dispute.filter({ tenant_owner_email: email }, "-created_date", 100).catch(() => []),
+        names.length
+          ? db.entities.Dispute.filter({ seller_name: { $in: names } }, "-created_date", 100).catch(() => [])
+          : [],
+      ]);
+      const orderNumbers = [...new Set([...(byTenant || []), ...(byName || [])].map((d: any) => d.order_number).filter(Boolean))];
+      if (!orderNumbers.length) return Response.json({ tickets: [] });
+      const tickets = await db.entities.SupportTicket
+        .filter({ order_number: { $in: orderNumbers } }, "-created_date", 100)
         .catch(() => []);
-      return Response.json({ disputes: disputes || [] });
+      return Response.json({ tickets: tickets || [] });
+    }
+
+    if (action === "create_dispute") {
+      const orderNumber = String(body.order_number || "").trim().toUpperCase();
+      if (!orderNumber) return err("Numéro de commande requis.");
+      const rows = await db.entities.Order.filter({ order_number: orderNumber }).catch(() => []);
+      const order = rows?.[0];
+      if (!order || !ownsOrder(order, sessionId, phone)) return err("Commande introuvable.", 404);
+
+      const dispute = await db.entities.Dispute.create({
+        tenant_id: order.tenant_id || "",
+        tenant_owner_email: order.tenant_owner_email || "",
+        order_number: orderNumber,
+        customer_name: order.customer_name || "Client",
+        customer_phone: phone || order.customer_phone || "",
+        seller_name: order.items?.[0]?.seller_name || "",
+        type: String(body.type || "not_received"),
+        description: String(body.description || ""),
+        amount_usd: Number(order.total_usd) || 0,
+        status: "open",
+        priority: "normal",
+      });
+      await db.entities.Notification.create({
+        tenant_id: order.tenant_id || "",
+        tenant_owner_email: order.tenant_owner_email || "",
+        title: "Nouveau litige ouvert",
+        message: `${order.customer_name || "Un client"} ouvre un litige sur ${orderNumber}.`,
+        type: "order",
+        audience: "admin",
+        order_number: orderNumber,
+      }).catch(() => null);
+      return Response.json({ dispute });
+    }
+
+    if (action === "create_return") {
+      const orderNumber = String(body.order_number || "").trim().toUpperCase();
+      if (!orderNumber) return err("Numéro de commande requis.");
+      const rows = await db.entities.Order.filter({ order_number: orderNumber }).catch(() => []);
+      const order = rows?.[0];
+      if (!order || !ownsOrder(order, sessionId, phone)) return err("Commande introuvable.", 404);
+
+      const items = Array.isArray(body.items) && body.items.length
+        ? body.items
+        : [{
+            product_id: body.product_id || "",
+            product_title: body.product_title || "",
+            refund_amount_usd: Number(body.refund_amount_usd) || 0,
+          }];
+
+      const created = [];
+      for (const item of items) {
+        created.push(await db.entities.Return.create({
+          tenant_id: order.tenant_id || "",
+          tenant_owner_email: order.tenant_owner_email || "",
+          return_number: ref("RET"),
+          order_id: order.id,
+          order_number: orderNumber,
+          customer_name: order.customer_name || "Client",
+          customer_phone: phone || order.customer_phone || "",
+          product_id: item.product_id || "",
+          product_title: item.product_title || "",
+          reason: String(body.reason || "not_received"),
+          description: String(body.description || ""),
+          refund_amount_usd: Number(item.refund_amount_usd) || 0,
+          status: "requested",
+        }));
+      }
+      await db.entities.Notification.create({
+        tenant_id: order.tenant_id || "",
+        tenant_owner_email: order.tenant_owner_email || "",
+        title: "Nouvelle demande de retour",
+        message: `${order.customer_name || "Un client"} demande le retour de ${created.length} article(s) sur ${orderNumber}.`,
+        type: "order",
+        audience: "admin",
+        order_number: orderNumber,
+      }).catch(() => null);
+      return Response.json({ returns: created });
+    }
+
+    if (action === "create_ticket") {
+      const subject = String(body.subject || "").trim();
+      const message = String(body.message || "").trim();
+      if (!subject || !message) return err("Objet et message requis.");
+      const name = String(body.name || "").trim() || "Client";
+      const category = String(body.category || "order");
+      const ticket = await db.entities.SupportTicket.create({
+        ticket_number: ref("TCK"),
+        subject,
+        category,
+        status: "open",
+        priority: category === "payment" ? "high" : "normal",
+        customer_name: name,
+        customer_email: String(body.email || "").trim(),
+        customer_phone: phone,
+        order_number: String(body.order_number || "").trim().toUpperCase(),
+        session_id: sessionId,
+        messages: [{ author: "customer", name, body: message, at: new Date().toISOString() }],
+      });
+      await db.entities.Notification.create({
+        title: "Nouveau ticket support",
+        message: `${name} — ${subject} (${ticket.ticket_number})`,
+        type: "system",
+        audience: "admin",
+        order_number: ticket.order_number || "",
+      }).catch(() => null);
+      return Response.json({ ticket });
+    }
+
+    if (action === "append_ticket_message") {
+      const ticketId = String(body.ticket_id || "").trim();
+      const text = String(body.message || "").trim();
+      if (!ticketId || !text) return err("Message requis.");
+      const ticket = await db.entities.SupportTicket.get(ticketId).catch(() => null);
+      if (!ticket) return err("Ticket introuvable.", 404);
+      const owns =
+        (!!sessionId && String(ticket.session_id || "") === sessionId) ||
+        (!!phone && !!ticket.customer_phone && digits(ticket.customer_phone) === digits(phone));
+      if (!owns) return err("Ticket introuvable.", 404);
+      const updated = await db.entities.SupportTicket.update(ticket.id, {
+        messages: [
+          ...(ticket.messages || []),
+          { author: "customer", name: ticket.customer_name || "Client", body: text, at: new Date().toISOString() },
+        ],
+        status: "open",
+      });
+      return Response.json({ ticket: updated });
+    }
+
+    if (action === "case_message" || action === "set_dispute_status") {
+      const me = await base44.auth.me().catch(() => null);
+      const email = String(me?.email || "").trim();
+      const isAdmin = String(me?.role || "") === "admin";
+      const orderNumber = String(body.order_number || "").trim().toUpperCase();
+      if (!orderNumber) return err("Commande requise.");
+      const rows = await db.entities.Dispute.filter({ order_number: orderNumber }).catch(() => []);
+      const dispute = rows?.[0];
+      if (!dispute) return err("Litige introuvable.", 404);
+
+      let allowed = isAdmin || (!!email && String(dispute.tenant_owner_email || "") === email);
+      if (!allowed && email) {
+        const sellers = await db.entities.Seller.filter({ email }, "name", 5).catch(() => []);
+        allowed = (sellers || []).some((s: any) => s.name && s.name === dispute.seller_name);
+      }
+      if (!allowed) return err("Accès refusé.", 403);
+
+      if (action === "set_dispute_status") {
+        const status = String(body.status || "").trim();
+        if (!status) return err("Statut requis.");
+        const updated = await db.entities.Dispute.update(dispute.id, {
+          status,
+          admin_notes: body.note !== undefined ? String(body.note) : dispute.admin_notes || "",
+        });
+        await db.entities.AuditLog.create({
+          action: `dispute.${status}`,
+          actor: isAdmin ? "admin" : "mediation",
+          entity: "Dispute",
+          entity_id: dispute.id,
+          reference: orderNumber,
+          severity: status === "resolved_seller" ? "warning" : "info",
+          details: { amount_usd: dispute.amount_usd, reviewer: email },
+        }).catch(() => null);
+        return Response.json({ dispute: updated });
+      }
+
+      const entry = {
+        author: String(body.author || (isAdmin ? "admin" : "seller")),
+        author_name: String(body.author_name || ""),
+        body: String(body.body || ""),
+        resolution: String(body.resolution || ""),
+        at: new Date().toISOString(),
+        file_uri: body.file_uri || undefined,
+        attachment_name: body.attachment_name || undefined,
+      };
+      const ticketId = String(body.ticket_id || "").trim();
+      if (ticketId) {
+        const ticket = await db.entities.SupportTicket.get(ticketId).catch(() => null);
+        if (!ticket) return err("Fil introuvable.", 404);
+        const updated = await db.entities.SupportTicket.update(ticket.id, {
+          messages: [...(ticket.messages || []), entry],
+          status: "open",
+        });
+        return Response.json({ ticket: updated });
+      }
+      const ticket = await db.entities.SupportTicket.create({
+        ticket_number: ref("DR"),
+        subject: `Résolution de litige — ${orderNumber}`,
+        category: "order",
+        status: "open",
+        priority: "high",
+        order_number: orderNumber,
+        customer_name: dispute.customer_name || "",
+        customer_phone: dispute.customer_phone || "",
+        assigned_to: isAdmin ? "mediation" : "vendeur",
+        messages: [entry],
+      });
+      return Response.json({ ticket });
     }
 
     if (action === "dispute_index") {

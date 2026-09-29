@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Send, User, Headphones } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { replyToTicket } from '@/lib/customerAccount';
+import { getProfile } from '@/lib/session';
 import { formatDateTime } from '@/lib/format';
 
 export default function TicketThread({ ticket, onReplied }) {
@@ -17,8 +18,7 @@ export default function TicketThread({ ticket, onReplied }) {
     if (!reply.trim()) return;
     setSending(true);
     try {
-      const next = [...messages, { author: 'customer', name: ticket.customer_name || 'Client', body: reply.trim(), at: new Date().toISOString() }];
-      const updated = await base44.entities.SupportTicket.update(ticket.id, { messages: next, status: 'open' });
+      const updated = await replyToTicket({ ticketId: ticket.id, message: reply.trim(), phone: getProfile().phone || '' });
       setReply('');
       onReplied(updated);
     } catch {

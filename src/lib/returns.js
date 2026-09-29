@@ -1,6 +1,5 @@
-import { base44 } from '@/api/base44Client';
-import { getProfile, uid } from '@/lib/session';
-import { fetchMyOrder, fetchMyOrders, fetchMyReturns } from '@/lib/customerAccount';
+import { getProfile } from '@/lib/session';
+import { fetchMyOrder, fetchMyOrders, fetchMyReturns, openReturn } from '@/lib/customerAccount';
 
 /**
  * Customer return initiation: which orders may be returned, and how a request is
@@ -55,27 +54,29 @@ export async function loadMyReturns(phone, limit = 30) {
  * reason, so two items of the same order can be returned for different motives.
  */
 export async function submitReturns({ orders, selection, description, customer }) {
-  const created = [];
+  const byOrder = {};
   for (const [key, value] of Object.entries(selection)) {
     const [orderId, index] = key.split('::');
     const order = orders.find((o) => o.id === orderId);
     const item = order?.items?.[Number(index)];
     if (!order || !item) continue;
-    created.push(await base44.entities.Return.create({
-      return_number: `RET-${uid('').slice(1, 7).toUpperCase()}`,
-      order_id: order.id,
-      order_number: order.order_number,
-      customer_name: customer.name || 'Client',
-      customer_phone: customer.phone || '',
+    byOrder[order.order_number] = byOrder[order.order_number] || [];
+    byOrder[order.order_number].push({
       product_id: item.product_id || '',
       product_title: item.title || '',
       reason: value.reason,
-      description,
       refund_amount_usd: Number(item.line_total_usd) || 0,
-      status: 'requested',
-      tenant_id: order.tenant_id || '',
-      tenant_owner_email: order.tenant_owner_email || '',
-    }));
+    });
+  }
+
+  const created = [];
+  for (const [orderNumber, items] of Object.entries(byOrder)) {
+    created.push(...(await openReturn({
+      orderNumber,
+      phone: customer?.phone || '',
+      description,
+      items,
+    })));
   }
   return created;
 }
