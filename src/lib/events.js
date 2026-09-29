@@ -1,14 +1,7 @@
 import { base44 } from '@/api/base44Client';
 
-/**
- * Client side of the event spine. Call `emitEvent` from the flow that already
- * performs the action — the platform then records the event and reacts to it
- * (notification to the right person, automated step, audit trail).
- *
- * Emission never blocks the user's action: a failure to record an event is
- * swallowed here and logged on the server side.
- */
-
+/** Used by the platform event dispatcher. Browser-side only — server functions
+ *  call their own inline version with the asServiceRole client. */
 export const EVENT_CATEGORIES = {
   order: 'Commandes',
   seller: 'Vendeurs',
@@ -34,8 +27,11 @@ export const EVENT_LABELS = {
   risk_flagged: 'Risque détecté',
 };
 
-export function emitEvent(name, options = {}) {
-  return base44.functions
+/** Emit a platform event. Accepts an optional Base44 client so server functions
+ *  can pass the asServiceRole / db client instead of the browser client. */
+export function emitEvent(client, name, options = {}) {
+  const db = client || base44;
+  return db.functions
     .invoke('dispatchPlatformEvent', {
       name,
       category: options.category || '',

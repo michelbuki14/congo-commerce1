@@ -179,7 +179,7 @@ export default function Checkout() {
     setSubmitting(true);
     saveProfile(profile);
     try {
-      const result = await placeOrder({
+      const result = await placeOrder(base44, {
         items,
         profile,
         delivery: {
@@ -195,10 +195,13 @@ export default function Checkout() {
         paymentPhone: chargePhone,
         consent,
       });
-      if (activeProvider?.hostedCheckout) {
-        const res = await base44.functions.invoke('create-checkout', { productId: result.order.order_number });
+      // Hosted checkout (card) is now handled inside the server function — it
+      // returns redirectUrl when the provider requires a redirect. The client-side
+      // create-checkout call is removed: prices and splits are locked down
+      // server-side, so no separate client-side step is needed.
+      if (result.redirectUrl) {
         clear();
-        window.location.href = res.data.redirectUrl;
+        window.location.href = result.redirectUrl;
         return;
       }
       clear();

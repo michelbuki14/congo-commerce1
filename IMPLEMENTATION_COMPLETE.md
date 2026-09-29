@@ -84,7 +84,7 @@ Ces blocs exigent du code serveur (Builder+) : ils sont conçus mais ne peuvent 
 | --- | --- |
 | Paiement réel | Adaptateurs M-Pesa / Airtel Money / Orange Money appelant les API opérateur avec identifiants, webhooks signés, réconciliation. L'abstraction (`src/lib/payments.js`) et le simulacre étiqueté existent. |
 | Fournisseurs réels | Adaptateurs API fournisseurs avec identifiants et import par lots. L'interface et le catalogue factice existent. |
-| Écritures anonymes | Déplacer le tunnel de commande côté serveur pour fermer les écritures publiques. |
+| ~~Écritures anonymes~~ ✔ **Fermé** — le tunnel de commande est désormais côté serveur (`base44/functions/place-order/entry.ts`). Le navigateur n'envoie que l'intention (panier, profile, livraison, moyen de paiement) ; prix, stock, splits, paiement et toutes les écritures (Order, FulfillmentOrder, Shipment, Coupon, AffiliateClick, Wallet, WalletTransaction, Notification, AuditLog, Product.stock) sont re-dérivés et écrits server-side en `asServiceRole`. RLS grippée : `create` sur Order, FulfillmentOrder, Shipment, Coupon, AffiliateClick est admin-only (le navigateur ne peut plus écrire ces entités). Wallet / WalletTransaction restent ouverts car les consoles existantes (courier, seller, admin, dispute) y écrivent côté client — déplacées dans une étape ultérieure. Plus d'écriture publique dans le tunnel de checkout. |
 | Domaines | Provisionnement DNS/SSL automatique et vérification automatique du jeton TXT. |
 | Facturation automatique | Prélèvement récurrent et relance des impayés par un job planifié. |
 | Notifications SMS / push / WhatsApp | Envoi par prestataire avec identifiants. |

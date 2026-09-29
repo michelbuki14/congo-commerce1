@@ -43,7 +43,7 @@ export default function CustomerLoyalty() {
       const record = await redeemReward({ reward, customer: profile, sessionId });
       setRedemptions((prev) => [record, ...prev]);
       setFlash(`Récompense obtenue — présentez le code ${record.coupon_code} au moment du paiement.`);
-      emitEvent('loyalty_redeemed', {
+      emitEvent(base44, 'loyalty_redeemed', {
         category: 'account',
         source: 'LoyaltyRedemption',
         reference: record.coupon_code,

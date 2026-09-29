@@ -62,7 +62,11 @@ export default function AdminNotifications() {
   const sendWhatsApp = (record) => {
     const href = whatsAppHref(record);
     if (href) window.open(href, '_blank', 'noopener');
-    return markNotificationSent(record, 'whatsapp');
+    return markNotificationSent(base44, record, 'whatsapp');
+  };
+
+  const sendSms = (record) => {
+    return markNotificationSent(base44, record, 'sms');
   };
 
   if (loading) return <div className="h-64 animate-pulse rounded-2xl bg-secondary" />;
@@ -127,7 +131,7 @@ export default function AdminNotifications() {
                 <button
                   type="button"
                   disabled={busy === r.id}
-                  onClick={() => run(r.id, () => deliverEmail(r))}
+                  onClick={() => run(r.id, () => deliverEmail(base44, r))}
                   className="flex items-center gap-1 rounded-full bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-50"
                 >
                   <Mail className="h-3.5 w-3.5" /> {r.attempts ? "Renvoyer l'e-mail" : "Envoyer l'e-mail"}
@@ -146,7 +150,7 @@ export default function AdminNotifications() {
               {r.customer_phone && (
                 <a
                   href={smsHref(r)}
-                  onClick={() => markNotificationSent(r, 'sms')}
+                  onClick={() => markNotificationSent(base44, r, 'sms')}
                   className="flex items-center gap-1 rounded-full bg-secondary px-3.5 py-1.5 text-xs font-semibold"
                 >
                   <Smartphone className="h-3.5 w-3.5" /> SMS

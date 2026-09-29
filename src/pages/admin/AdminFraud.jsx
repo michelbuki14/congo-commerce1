@@ -30,7 +30,7 @@ export default function AdminFraud() {
       if (me?.email) setReviewer(me.email);
       const [rows, ruleRows] = await Promise.all([
         base44.entities.FraudEvent.list('-created_date', 100).catch(() => []),
-        loadFraudRules(),
+        loadFraudRules(base44),
       ]);
       setEvents(rows);
       setRules(ruleRows);
@@ -41,7 +41,7 @@ export default function AdminFraud() {
   const handleReview = async (event, status) => {
     setBusyId(event.id);
     try {
-      const updated = await reviewFraudEvent(event, status, { reviewer });
+      const updated = await reviewFraudEvent(base44, event, status, { reviewer });
       setEvents((prev) => prev.map((e) => (e.id === event.id ? { ...e, ...updated } : e)));
     } finally {
       setBusyId(null);
@@ -51,7 +51,7 @@ export default function AdminFraud() {
   const handleSaveRule = async (rule) => {
     setSavingId(rule.id || rule.code);
     try {
-      const saved = await saveFraudRule(rule);
+      const saved = await saveFraudRule(base44, rule);
       setRules((prev) => {
         const exists = prev.some((r) => r.id === saved.id);
         return exists ? prev.map((r) => (r.id === saved.id ? saved : r)) : [...prev, saved];
@@ -123,7 +123,7 @@ export default function AdminFraud() {
         />
       )}
 
-      {tab === 'simulate' && <FraudRiskSimulator onSimulate={evaluateRisk} />}
+      {tab === 'simulate' && <FraudRiskSimulator onSimulate={(input) => evaluateRisk(base44, input)} />}
 
       <p className="text-[11px] text-muted-foreground">
         Chaque commande est évaluée automatiquement au moment du paiement : un score supérieur à zéro crée un dossier ici, sans

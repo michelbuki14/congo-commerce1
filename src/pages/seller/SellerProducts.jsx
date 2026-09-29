@@ -103,7 +103,7 @@ export default function SellerProducts() {
       } else {
         const created = await base44.entities.Product.create({ ...payload, slug: form.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') });
         base44.analytics.track({ eventName: 'seller_product_published' });
-        emitEvent('product_published', {
+        emitEvent(base44, 'product_published', {
           category: 'catalogue',
           source: 'Product',
           sourceId: created.id,
@@ -128,7 +128,7 @@ export default function SellerProducts() {
     const next = p.status === 'published' ? 'archived' : 'published';
     const updated = await base44.entities.Product.update(p.id, { status: next });
     setProducts((prev) => prev.map((x) => (x.id === p.id ? updated : x)));
-    emitEvent(next === 'published' ? 'product_published' : 'product_archived', {
+    emitEvent(base44, next === 'published' ? 'product_published' : 'product_archived', {
       category: 'catalogue',
       source: 'Product',
       sourceId: p.id,

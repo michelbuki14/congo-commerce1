@@ -90,7 +90,7 @@ export default function OrderReturns() {
         type: 'order',
         audience: 'admin',
       });
-      emitEvent('return_requested', {
+      emitEvent(base44, 'return_requested', {
         category: 'order',
         source: 'Return',
         reference: created.map((r) => r.order_number).join(', '),

@@ -106,7 +106,7 @@ export default function SellerApplication() {
         audience: 'admin',
       });
       saveSellerApplication(record);
-      emitEvent('seller_applied', {
+      emitEvent(base44, 'seller_applied', {
         category: 'seller',
         source: 'SellerApplication',
         reference: form.shop_name,

@@ -68,7 +68,7 @@ export default function Returns() {
         order_number: form.order_number.trim().toUpperCase(),
         is_demo: true,
       });
-      emitEvent('return_requested', {
+      emitEvent(base44, 'return_requested', {
         category: 'order',
         source: 'Return',
         reference: form.order_number.trim().toUpperCase(),

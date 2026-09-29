@@ -73,7 +73,7 @@ export default function Disputes() {
         order_number: number,
         is_demo: true,
       });
-      emitEvent('dispute_opened', {
+      emitEvent(base44, 'dispute_opened', {
         category: 'risk',
         source: 'Dispute',
         reference: number,

@@ -62,7 +62,7 @@ export default function BulkImport() {
           products_count: (Number(seller.products_count) || 0) + created.length,
         }).catch(() => {});
       }
-      emitEvent('products_bulk_imported', {
+      emitEvent(base44, 'products_bulk_imported', {
         category: 'catalogue',
         source: 'BulkImport',
         reference: fileName,
