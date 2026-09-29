@@ -2,9 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { RotateCcw, ShieldCheck, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
 import StatusBadge from '@/components/StatusBadge';
-import { getProfile, uid } from '@/lib/session';
+import { getProfile } from '@/lib/session';
 import { fetchMyOrders, openReturn } from '@/lib/customerAccount';
 import { loadMyReturns } from '@/lib/returns';
 import { formatUSD, formatDate } from '@/lib/format';
@@ -48,7 +47,7 @@ export default function ReturnsPortal() {
       setReturns(await loadMyReturns(profile.phone || ''));
       setLoading(false);
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   const toggle = (key) => {

@@ -43,7 +43,7 @@ export default function SellerWallet() {
   useEffect(() => {
     if (loadingSeller) return;
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [seller, loadingSeller]);
 
   const submitWithdrawal = async (e) => {

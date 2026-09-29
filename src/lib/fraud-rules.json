@@ -1,0 +1,92 @@
+{
+  "RULES_SEED": [
+    {
+      "code": "SELF_REFERRAL",
+      "label": "Auto-référence détectée",
+      "description": "Le client utilise sa propre offre de parrainage pour se référer lui-même.",
+      "signal": "self_referral",
+      "threshold": 1,
+      "score": 15,
+      "action": "review",
+      "active": true,
+      "sort_order": 10
+    },
+    {
+      "code": "HIGH_VALUE_FIRST_ORDER",
+      "label": "Première commande de haute valeur",
+      "description": "Une première commande dépassant 500 USD sans historique.",
+      "signal": "high_value_first_order",
+      "threshold": 500,
+      "score": 20,
+      "action": "review",
+      "active": true,
+      "sort_order": 20
+    },
+    {
+      "code": "MULTIPLE_ORDERS_SAME_PHONE",
+      "label": "Multiples commandes avec un même numéro",
+      "description": "Trois commandes ou plus avec le même numéro de téléphone en 24h.",
+      "signal": "multiple_orders_same_phone",
+      "threshold": 3,
+      "score": 25,
+      "action": "review",
+      "active": true,
+      "sort_order": 30
+    },
+    {
+      "code": "RAPID_CLICKS",
+      "label": "Clics suspects en période courte",
+      "description": "Plus de 30 clics d'ajout au panier en moins de 60 secondes.",
+      "signal": "rapid_clicks",
+      "threshold": 30,
+      "score": 10,
+      "action": "review",
+      "active": true,
+      "sort_order": 40
+    },
+    {
+      "code": "WRONG_WEIGHT",
+      "label": "Poids de commande incohérent",
+      "description": "Le poids total des produits n'est pas cohérent avec le type de produit.",
+      "signal": "wrong_weight",
+      "threshold": 1,
+      "score": 15,
+      "action": "review",
+      "active": true,
+      "sort_order": 50
+    },
+    {
+      "code": "INVALID_TELCO_PREFIX",
+      "label": "Indicatif téléphonique invalide",
+      "description": "Le numéro de téléphone n'appartient à aucun opérateur connu.",
+      "signal": "invalid_telco_prefix",
+      "threshold": 1,
+      "score": 20,
+      "action": "block",
+      "active": true,
+      "sort_order": 60
+    },
+    {
+      "code": "HIGH_CONCENTRATION",
+      "label": "Concentration élevée d'achats depuis une IP",
+      "description": "Une adresse IP a généré plus de 10 commandes en 1h.",
+      "signal": "high_ip_concentration",
+      "threshold": 10,
+      "score": 30,
+      "action": "block",
+      "active": true,
+      "sort_order": 70
+    },
+    {
+      "code": "REPEAT_ADDRESS",
+      "label": "Adresse de livraison suspecte",
+      "description": "L'adresse de livraison a déjà servi pour plusieurs commandes frauduleuses.",
+      "signal": "repeat_fraud_address",
+      "threshold": 1,
+      "score": 35,
+      "action": "block",
+      "active": true,
+      "sort_order": 80
+    }
+  ]
+}

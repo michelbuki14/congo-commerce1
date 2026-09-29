@@ -10,7 +10,7 @@ import { RETURN_REASON_LABELS } from '../src/lib/returns.js';
 
 function hasKey(key) {
   const parts = key.split('.');
-  // eslint-disable-next-line no-unused-vars
+   
   let node = translations.fr;
   for (const p of parts) {
     node = node?.[p];

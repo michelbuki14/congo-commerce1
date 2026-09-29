@@ -52,7 +52,7 @@ export default function OrderTracking() {
 
   useEffect(() => {
     if (initial) lookup(initial);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   const updates = shipments

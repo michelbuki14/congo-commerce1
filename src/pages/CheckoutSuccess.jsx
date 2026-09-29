@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { CheckCircle2, Wallet, MapPin, Truck, Package, Clock } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
 import { Image } from '@/components/ui/image';
 import StatusBadge from '@/components/StatusBadge';
 import { getProfile, getOrderIds } from '@/lib/session';

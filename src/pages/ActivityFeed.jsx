@@ -50,7 +50,7 @@ export default function ActivityFeed() {
       }));
       setItems([...purchases, ...revs].sort((a, b) => new Date(b.date) - new Date(a.date)).concat(trend));
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, []);
 
   const shown = (items || []).filter((i) => tab === 'all' || i.type === tab);

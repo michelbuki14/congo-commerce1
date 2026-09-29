@@ -1,0 +1,39 @@
+{
+  "name": "ApiKey",
+  "type": "object",
+  "properties": {
+    "tenant_id": { "type": "string" },
+    "tenant_name": { "type": "string" },
+    "owner_email": { "type": "string" },
+    "name": { "type": "string" },
+    "key_prefix": { "type": "string" },
+    "key_hash": { "type": "string" },
+    "scopes": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": []
+    },
+    "rate_limit_rph": { "type": "number", "default": 300 },
+    "rate_limit_rpm": { "type": "number", "default": 60 },
+    "active": { "type": "boolean", "default": true },
+    "last_used_at": { "type": "string" },
+    "created_at": { "type": "string", "default": "{{timestamp}}" },
+    "expires_at": { "type": "string" },
+    "description": { "type": "string", "maxLength": 1000 }
+  },
+  "required": ["tenant_id", "name", "key_prefix", "key_hash"],
+  "rls": {
+    "read": {
+      "user_condition": { "role": "admin" }
+    },
+    "create": {
+      "user_condition": { "role": "admin" }
+    },
+    "update": {
+      "user_condition": { "role": "admin" }
+    },
+    "delete": {
+      "user_condition": { "role": "admin" }
+    }
+  }
+}

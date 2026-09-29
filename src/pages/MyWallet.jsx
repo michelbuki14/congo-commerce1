@@ -42,7 +42,7 @@ export default function MyWallet() {
 
   useEffect(() => {
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   const submit = async (e) => {

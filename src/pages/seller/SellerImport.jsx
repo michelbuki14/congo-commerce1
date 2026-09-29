@@ -52,7 +52,7 @@ export default function SellerImport() {
 
   useEffect(() => {
     if (suppliers.length) runSearch();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [suppliers]);
 
   const preview = useMemo(() => {

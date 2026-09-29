@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { RotateCcw, ShieldCheck, AlertCircle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '@/components/StatusBadge';
-import { getProfile, uid } from '@/lib/session';
+import { getProfile } from '@/lib/session';
 import { formatDate, formatUSD } from '@/lib/format';
 import { emitEvent } from '@/lib/events';
 import { lookupOrder } from '@/lib/orderLookup';
@@ -39,7 +39,7 @@ export default function Returns() {
 
   useEffect(() => {
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   const submit = async (e) => {

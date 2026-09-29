@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { Image as ImageIcon, Package } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { toast } from '@/components/ui/use-toast';
-import { formatDateTime } from '@/lib/format';
 
 /**
  * Origin-warehouse receiving for international goods.

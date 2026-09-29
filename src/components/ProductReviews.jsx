@@ -28,7 +28,7 @@ export default function ProductReviews({ product, onChanged }) {
 
   useEffect(() => {
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [product.id]);
 
   // The right to review is read from this device's own orders — never assumed.
