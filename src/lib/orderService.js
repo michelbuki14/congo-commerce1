@@ -1,5 +1,6 @@
 import { base44 } from '@/api/base44Client';
 import { getPricingConfig } from './config';
+import { intlFee, intlLines, intlWeightKg } from './intlDelivery';
 import { round2, usdToCdf } from './format';
 import { getSessionId, rememberOrder, getReferralCode } from './session';
 import { notifyFulfillmentStatus } from './orderNotifications';
@@ -59,7 +60,7 @@ export async function findCoupon(code) {
   return coupon;
 }
 
-export async function buildCheckoutQuote({ items, deliveryFee = 0, coupon = null, pricingConfig }) {
+export async function buildCheckoutQuote({ items, deliveryFee = 0, coupon = null, pricingConfig, intlOption = null }) {
   const cfg = pricingConfig || getPricingConfig();
   const lines = await loadCartLines(items);
   const subtotal = round2(lines.reduce((s, l) => s + l.line_total_usd, 0));
@@ -67,7 +68,17 @@ export async function buildCheckoutQuote({ items, deliveryFee = 0, coupon = null
 
   const threshold = Number(cfg.free_shipping_threshold_usd) || 0;
   const freeShipping = coupon?.type === 'free_shipping' || (threshold > 0 && subtotal - discount >= threshold);
-  const shipping = freeShipping ? 0 : round2(deliveryFee);
+
+  // Local delivery and the international leg are priced apart: the local fee
+  // only applies when the cart holds local goods, and the local free-shipping
+  // threshold never waives international freight.
+  const imports = intlLines(lines);
+  const intlWeight = intlWeightKg(lines);
+  const localShipping = lines.some((l) => l.product.source_type === 'local_seller') && !freeShipping
+    ? round2(deliveryFee)
+    : 0;
+  const intlShipping = imports.length ? intlFee(intlOption, intlWeight) : 0;
+  const shipping = round2(localShipping + intlShipping);
 
   const total = round2(Math.max(0, subtotal - discount) + shipping);
   return {
@@ -75,6 +86,9 @@ export async function buildCheckoutQuote({ items, deliveryFee = 0, coupon = null
     subtotal,
     discount,
     shipping,
+    localShipping,
+    intlShipping,
+    intlWeight,
     freeShipping,
     total,
     total_cdf: usdToCdf(total),
@@ -112,6 +126,7 @@ export async function placeOrder({ items, profile, delivery, couponCode, payment
         zone_id: delivery?.zone_id || '',
         pickup_point_id: delivery?.pickup_point_id || '',
         address: delivery?.address || profile?.address || '',
+        intl_option_id: delivery?.intl_option_id || '',
         notes: delivery?.notes || '',
       },
       couponCode: couponCode || '',

@@ -9,6 +9,26 @@ const intlShipment = {
   fr: {
     status: {
       AWAITING_CUSTOMER_APPROVAL: 'Validation client requise',
+      PACKING: 'Emballage en cours',
+    },
+    intlDelivery: {
+      title: 'Livraison internationale',
+      helper:
+        'Votre commande contient des articles importés ({{weight}} kg). Notre propre équipe de livraison les achemine jusqu’à votre ville — tarif international, distinct de la livraison locale.',
+      eta: 'Délai estimé : {{eta}}',
+    },
+    intlPacking: {
+      tab: 'Emballage & remise',
+      helper:
+        'Le client a validé la photo prise à l’entrepôt. Emballez la marchandise, puis remettez le colis à notre équipe de livraison internationale.',
+      loading: 'Chargement…',
+      empty: 'Aucun colis international à emballer.',
+      service: 'Service choisi par le client',
+      itemsCount: '{{count}} article(s)',
+      submit: 'Colis emballé — remettre à notre équipe',
+      sending: 'Remise…',
+      sent: 'Colis emballé et remis à notre équipe de livraison.',
+      failed: 'La remise a échoué. Réessayez.',
     },
     originReceiving: {
       tab: 'Réception internationale',
@@ -50,6 +70,26 @@ const intlShipment = {
   en: {
     status: {
       AWAITING_CUSTOMER_APPROVAL: 'Client approval required',
+      PACKING: 'Packing',
+    },
+    intlDelivery: {
+      title: 'International delivery',
+      helper:
+        'Your order contains imported items ({{weight}} kg). Our own delivery team carries them to your city — an international tariff, separate from local delivery.',
+      eta: 'Estimated: {{eta}}',
+    },
+    intlPacking: {
+      tab: 'Packing & hand-over',
+      helper:
+        'The customer approved the photo taken at the warehouse. Pack the goods, then hand the parcel to our international delivery team.',
+      loading: 'Loading…',
+      empty: 'No international parcel to pack.',
+      service: 'Service the customer chose',
+      itemsCount: '{{count}} item(s)',
+      submit: 'Parcel packed — hand to our team',
+      sending: 'Handing over…',
+      sent: 'Parcel packed and handed to our delivery team.',
+      failed: 'The hand-over failed. Try again.',
     },
     originReceiving: {
       tab: 'International receiving',

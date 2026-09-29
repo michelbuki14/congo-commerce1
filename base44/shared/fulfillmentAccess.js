@@ -5,8 +5,12 @@ export const STATUS_FLOW = ['PENDING', 'CONFIRMED', 'PROCESSING', 'READY_FOR_PIC
  * warehouse in its own country, we photograph the goods for the customer, and
  * only once the customer approves do we ship to the destination. There is no
  * local courier leg at the origin, so the pickup steps do not apply.
+ *
+ * The approval does not dispatch the parcel: it releases it to our packing
+ * bench, and packing is what hands it to our own delivery team (PACKING →
+ * IN_TRANSIT).
  */
-export const INTL_STATUS_FLOW = ['PENDING', 'CONFIRMED', 'PROCESSING', 'AWAITING_CUSTOMER_APPROVAL', 'IN_TRANSIT', 'OUT_FOR_DELIVERY', 'DELIVERED'];
+export const INTL_STATUS_FLOW = ['PENDING', 'CONFIRMED', 'PROCESSING', 'AWAITING_CUSTOMER_APPROVAL', 'PACKING', 'IN_TRANSIT', 'OUT_FOR_DELIVERY', 'DELIVERED'];
 
 export const COURIER_NEXT = { PENDING: 'PICKED_UP', CONFIRMED: 'PICKED_UP', PROCESSING: 'PICKED_UP', READY_FOR_PICKUP: 'PICKED_UP', PICKED_UP: 'IN_TRANSIT', IN_TRANSIT: 'OUT_FOR_DELIVERY' };
 export const TERMINAL = ['DELIVERED', 'FAILED', 'RETURNED', 'CANCELLED'];

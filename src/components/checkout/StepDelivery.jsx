@@ -1,8 +1,9 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { MapPin, Store, Truck, Split } from 'lucide-react';
+import { MapPin, Store, Truck, Split, Plane } from 'lucide-react';
 import { getCities } from '@/lib/config';
 import { formatUSD } from '@/lib/format';
+import { intlFee } from '@/lib/intlDelivery';
 
 const FIELD = 'h-11 w-full rounded-lg border border-border bg-background px-3 text-sm';
 
@@ -18,6 +19,11 @@ export default function StepDelivery({
   notes,
   setNotes,
   groups,
+  showIntl,
+  intlOptions,
+  setIntlOptionId,
+  selectedIntlOption,
+  intlWeight,
 }) {
   const { t } = useTranslation();
   return (
@@ -129,6 +135,35 @@ export default function StepDelivery({
         aria-label={t('checkout.notesPlaceholder')}
         className={FIELD}
       />
+
+      {showIntl && !!intlOptions.length && (
+        <div className="space-y-2 rounded-xl bg-secondary/50 p-3">
+          <h3 className="flex items-center gap-2 text-xs font-bold">
+            <Plane className="h-3.5 w-3.5 text-primary" /> {t('intlDelivery.title')}
+          </h3>
+          <p className="text-[11px] text-muted-foreground">
+            {t('intlDelivery.helper', { weight: intlWeight })}
+          </p>
+          {intlOptions.map((o) => (
+            <button
+              key={o.id}
+              type="button"
+              onClick={() => setIntlOptionId(o.id)}
+              aria-pressed={selectedIntlOption?.id === o.id}
+              className={`flex min-h-[56px] w-full items-center gap-3 rounded-xl border p-3 text-left ${
+                selectedIntlOption?.id === o.id ? 'border-primary bg-primary/5' : 'border-border bg-card'
+              }`}
+            >
+              <Plane className="h-4 w-4 shrink-0 text-primary" />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold">{o.label}</p>
+                <p className="text-[11px] text-muted-foreground">{o.eta_days}</p>
+              </div>
+              <span className="shrink-0 text-xs font-semibold">{formatUSD(intlFee(o, intlWeight))}</span>
+            </button>
+          ))}
+        </div>
+      )}
 
       {!!groups.length && (
         <div className="space-y-2 rounded-xl bg-secondary/50 p-3">

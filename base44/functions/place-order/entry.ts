@@ -30,7 +30,19 @@ const DEFAULTS = {
   vat_rate: 16,
   vat_enabled: true,
   usd_to_cdf_rate: 2800,
+  intl_delivery_options: [
+    { id: "ccx_standard", label: "Standard", base_usd: 12, per_kg_usd: 6, eta_days: "15-20 jours" },
+    { id: "ccx_express", label: "Express", base_usd: 26, per_kg_usd: 13, eta_days: "7-12 jours" },
+  ],
 };
+
+/**
+ * Our own delivery team carries the international leg. Local orders go to a
+ * partner courier; imports never do — the goods land in our own origin
+ * warehouse, the customer approves the photo, we pack, and our team flies the
+ * parcel to its destination on its own per-kilo tariff.
+ */
+const INTL_CARRIER = { id: "ccx", name: "Congo Commerce Express", code: "CCX" };
 
 const PAYMENT_METHODS: Record<string, { name: string; kind: string; requiresPhone: boolean }> = {
   mpesa: { name: "M-Pesa", kind: "mobile_money", requiresPhone: true },
@@ -158,40 +170,24 @@ export default async function (req: Request) {
       }
     }
 
-    // ---- 4. Delivery fee recomputed from zones/points, never the client ----
-    let shipping = 0;
+    // ---- 4. Local delivery fee recomputed from zones/points, never the client
+    // Only the local part is resolved here. The international leg is priced on
+    // its own tariff, from the packed weight of the import lines, which is only
+    // known once the fulfillment plan is built below.
+    let localDeliveryFee = 0;
     let pickupPoint: any = null;
     if (delivery.method === "pickup_point") {
       if (!delivery.pickup_point_id) return err("Point de retrait invalide.");
       pickupPoint = await db.entities.PickupPoint.get(delivery.pickup_point_id).catch(() => null);
       if (!pickupPoint) return err("Point de retrait invalide.");
-      shipping = round2(pickupPoint.fee_usd);
+      localDeliveryFee = round2(pickupPoint.fee_usd);
     } else {
       const zones = await db.entities.DeliveryZone.filter({ active: true }).catch(() => []);
       const city = String(profile.city || "").trim();
       const zone = (zones || []).find((z: any) => city && z.city === city)
         || (delivery.zone_id ? (zones || []).find((z: any) => z.id === delivery.zone_id) : null)
         || (zones || [])[0];
-      shipping = zone ? round2(zone.fee_usd) : round2(pricing.local_logistics_usd);
-    }
-    const threshold = Number(pricing.free_shipping_threshold_usd) || 0;
-    const freeShipping = coupon?.type === "free_shipping" || (threshold > 0 && subtotal - discount >= threshold);
-    if (freeShipping) shipping = 0;
-    const total = round2(Math.max(0, subtotal - discount) + shipping);
-
-    // ---- 5. VAT split (TTC display) + continuous invoice number ------------
-    const vatRate = Number(pricing.vat_rate) || 0;
-    const totalHt = vatRate > 0 ? round2(total / (1 + vatRate / 100)) : total;
-    const vatAmount = round2(total - totalHt);
-    const year = new Date().getFullYear();
-    const counterRows = await db.entities.PlatformSetting.filter({ key: "invoice_counter" }).catch(() => []);
-    const counter = counterRows?.[0];
-    const prevSeq = counter?.value?.year === year ? Number(counter.value.seq) || 0 : 0;
-    const invoiceValue = { year, seq: prevSeq + 1 };
-    if (counter) {
-      await db.entities.PlatformSetting.update(counter.id, { value: invoiceValue });
-    } else {
-      await db.entities.PlatformSetting.create({ key: "invoice_counter", label: "Compteur de factures", group: "compliance", value: invoiceValue });
+      localDeliveryFee = zone ? round2(zone.fee_usd) : round2(pricing.local_logistics_usd);
     }
 
     // ---- 6. Unique order number (collision retry, not blind trust) ---------
@@ -253,6 +249,46 @@ export default async function (req: Request) {
 
     if (plan.some((p) => p.source_type === "local_seller" && !p.pick)) {
       return err("Aucun transporteur ne dessert cette ville pour le moment.", 409);
+    }
+
+    // ---- 8b. International leg: our own delivery team, on its own tariff ----
+    // The customer picks the service level at checkout; the price is recomputed
+    // here from the option table, so the browser never sets its own freight.
+    const intlGroups = plan.filter((p) => p.source_type === "international_supplier");
+    let intlOption: any = null;
+    if (intlGroups.length) {
+      const options = Array.isArray(pricing.intl_delivery_options) && pricing.intl_delivery_options.length
+        ? pricing.intl_delivery_options
+        : DEFAULTS.intl_delivery_options;
+      intlOption = options.find((o: any) => String(o?.id) === String(delivery.intl_option_id || "")) || null;
+      if (!intlOption) return err("Choisissez un mode de livraison internationale.");
+    }
+    const intlFeeFor = (weight: number) =>
+      round2(Number(intlOption?.base_usd || 0) + Number(intlOption?.per_kg_usd || 0) * Math.max(0, Number(weight) || 0));
+    const intlShipping = round2(intlGroups.reduce((s, p) => s + intlFeeFor(p.weight), 0));
+
+    // Local and international delivery are billed apart: the local fee only
+    // applies when the cart actually holds local goods, and the local
+    // free-shipping threshold never waives international freight.
+    const hasLocal = plan.some((p) => p.source_type === "local_seller");
+    const threshold = Number(pricing.free_shipping_threshold_usd) || 0;
+    const freeShipping = coupon?.type === "free_shipping" || (threshold > 0 && subtotal - discount >= threshold);
+    const shipping = round2((hasLocal && !freeShipping ? localDeliveryFee : 0) + intlShipping);
+    const total = round2(Math.max(0, subtotal - discount) + shipping);
+
+    // ---- 8c. VAT split (TTC display) + continuous invoice number ----------
+    const vatRate = Number(pricing.vat_rate) || 0;
+    const totalHt = vatRate > 0 ? round2(total / (1 + vatRate / 100)) : total;
+    const vatAmount = round2(total - totalHt);
+    const year = new Date().getFullYear();
+    const counterRows = await db.entities.PlatformSetting.filter({ key: "invoice_counter" }).catch(() => []);
+    const counter = counterRows?.[0];
+    const prevSeq = counter?.value?.year === year ? Number(counter.value.seq) || 0 : 0;
+    const invoiceValue = { year, seq: prevSeq + 1 };
+    if (counter) {
+      await db.entities.PlatformSetting.update(counter.id, { value: invoiceValue });
+    } else {
+      await db.entities.PlatformSetting.create({ key: "invoice_counter", label: "Compteur de factures", group: "compliance", value: invoiceValue });
     }
 
     // ---- 9. Payment outcome — decided here, never asserted by the browser --
@@ -337,6 +373,7 @@ export default async function (req: Request) {
 
     const fulfillmentPayloads = plan.map((p) => {
       const isLocal = p.source_type === "local_seller";
+      const isIntl = p.source_type === "international_supplier";
       const tracking = isLocal
         ? `${p.pick.courier.code}-${orderNum.replaceAll("-", "")}-${p.index + 1}`
         : "";
@@ -354,15 +391,21 @@ export default async function (req: Request) {
           line_total_usd: l.line_total_usd, supplier_cost_usd: l.line_cost_usd,
         })),
         subtotal_usd: p.sub,
-        shipping_usd: isLocal ? round2(p.pick?.fee || 0) : 0,
+        shipping_usd: isLocal ? round2(p.pick?.fee || 0) : isIntl ? intlFeeFor(p.weight) : 0,
         supplier_cost_usd: p.cost, seller_payout_usd: p.sellerPayout,
         creator_commission_usd: p.creatorCommission, platform_revenue_usd: p.platformRevenue,
         status: "PENDING",
-        courier_id: isLocal ? p.pick.courier.id : "",
-        courier_name: isLocal ? p.pick.courier.name : "",
+        courier_id: isLocal ? p.pick.courier.id : isIntl ? INTL_CARRIER.id : "",
+        courier_name: isLocal ? p.pick.courier.name : isIntl ? INTL_CARRIER.name : "",
         courier_email: isLocal ? courierEmailOf(p.pick.courier) : "",
         tracking_number: tracking,
-        estimated_delivery: isLocal ? p.pick?.courier.eta || "2-4 jours" : (p.lines[0]?.product?.estimated_delivery || "18 jours"),
+        estimated_delivery: isLocal
+          ? p.pick?.courier.eta || "2-4 jours"
+          : isIntl
+            ? intlOption?.eta_days || "18 jours"
+            : (p.lines[0]?.product?.estimated_delivery || "18 jours"),
+        intl_delivery_option: isIntl ? String(intlOption?.id || "") : "",
+        intl_delivery_label: isIntl ? String(intlOption?.label || "") : "",
         payout_released: false,
       };
     });
@@ -502,6 +545,7 @@ export default async function (req: Request) {
         payment_status: paymentStatus, payment_verified: paymentVerified,
         fulfillments: plan.length, affiliate_code: creator?.referral_code || null,
         invoice_number: formatInvoice(year, invoiceValue.seq), vat_usd: vatAmount,
+        intl_delivery_option: intlOption?.id || null, intl_shipping_usd: intlShipping,
       },
     });
 

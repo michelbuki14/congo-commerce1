@@ -6,6 +6,7 @@ import { base44 } from '@/api/base44Client';
 import { useCart } from '@/lib/cart';
 import { useCurrency } from '@/lib/currency';
 import { loadPlatformConfig } from '@/lib/config';
+import { findIntlOption, getIntlOptions, intlWeightKg } from '@/lib/intlDelivery';
 import { listPaymentProviders } from '@/lib/payments';
 import { buildCheckoutQuote, findCoupon, placeOrder } from '@/lib/orderService';
 import { getProfile, saveProfile } from '@/lib/session';
@@ -32,6 +33,7 @@ export default function Checkout() {
   const [profile, setProfile] = useState(getProfile());
   const [deliveryMethod, setDeliveryMethod] = useState('home_delivery');
   const [pickupPointId, setPickupPointId] = useState('');
+  const [intlOptionId, setIntlOptionId] = useState('');
   const [notes, setNotes] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('mpesa');
   const [payPhone, setPayPhone] = useState(() => getProfile().phone || '');
@@ -72,6 +74,13 @@ export default function Checkout() {
     ? Number(selectedPickup?.fee_usd || 0)
     : Number(selectedZone?.fee_usd || 0);
 
+  // Imported goods never ride a partner courier: our own delivery team carries
+  // them, on its own tariff, and the customer picks the service level here.
+  const intlOptions = getIntlOptions();
+  const selectedIntlOption = findIntlOption(intlOptionId) || intlOptions[0] || null;
+  const hasIntl = (quote?.lines || []).some((l) => l.product.source_type === 'international_supplier');
+  const intlWeight = intlWeightKg(quote?.lines || []);
+
   useEffect(() => {
     if (!items.length) {
       setLoadingQuote(false);
@@ -79,7 +88,7 @@ export default function Checkout() {
     }
     let alive = true;
     setLoadingQuote(true);
-    buildCheckoutQuote({ items, deliveryFee, coupon })
+    buildCheckoutQuote({ items, deliveryFee, coupon, intlOption: selectedIntlOption })
       .then((q) => {
         if (alive) setQuote(q);
       })
@@ -92,7 +101,7 @@ export default function Checkout() {
     return () => {
       alive = false;
     };
-  }, [items, deliveryFee, coupon]);
+  }, [items, deliveryFee, coupon, selectedIntlOption?.id]);
 
   const groups = useMemo(() => {
     if (!quote?.lines?.length) return [];
@@ -191,6 +200,7 @@ export default function Checkout() {
           address: profile.address,
           pickup_point_id: selectedPickup?.id || '',
           pickup_point_name: selectedPickup?.name || '',
+          intl_option_id: hasIntl ? selectedIntlOption?.id || '' : '',
           notes,
         },
         couponCode: coupon?.code || '',
@@ -225,6 +235,11 @@ export default function Checkout() {
       notes,
       setNotes,
       groups,
+      showIntl: hasIntl,
+      intlOptions,
+      setIntlOptionId,
+      selectedIntlOption,
+      intlWeight,
     },
     {
       providers,

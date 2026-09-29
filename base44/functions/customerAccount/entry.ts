@@ -82,11 +82,11 @@ export default async function (req: Request) {
       if (fulfillment.source_type !== "international_supplier") return err("Confirmation non requise.", 409);
       if (fulfillment.status !== "AWAITING_CUSTOMER_APPROVAL") return err("Cette expédition est déjà confirmée.", 409);
 
-      // The customer's approval is what releases the international leg: the goods
-      // leave our origin warehouse for the destination only from here.
+      // The approval does not dispatch the parcel: it releases it to our own
+      // packing bench. Packing is the hand-over point to our delivery team.
       const now = new Date().toISOString();
       const updated = await db.entities.FulfillmentOrder.update(fulfillment.id, {
-        status: "IN_TRANSIT",
+        status: "PACKING",
         customer_approved_at: now,
         customer_approved_by: phone || sessionId,
       });
@@ -94,7 +94,7 @@ export default async function (req: Request) {
         tenant_id: fulfillment.tenant_id || order.tenant_id || "",
         tenant_owner_email: fulfillment.tenant_owner_email || order.tenant_owner_email || "",
         title: `Expédition confirmée (${order.order_number})`,
-        message: `Vous avez validé la marchandise réceptionnée à ${fulfillment.origin_warehouse || "notre entrepôt"}. Votre colis part vers ${order.city || "votre destination"}.`,
+        message: `Vous avez validé la marchandise réceptionnée à ${fulfillment.origin_warehouse || "notre entrepôt"}. Nous emballons votre colis avant de le remettre à notre équipe de livraison vers ${order.city || "votre destination"}.`,
         type: "order",
         audience: "customer",
         order_number: order.order_number,
