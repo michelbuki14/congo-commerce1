@@ -5,13 +5,9 @@ import DashboardNav from '@/components/DashboardNav';
 import { ADMIN_LINKS } from '@/lib/navLinks';
 import { formatDateTime } from '@/lib/format';
 import { deliverEmail, markNotificationSent, smsHref, whatsAppHref } from '@/lib/orderNotifications';
+import { useTranslation } from 'react-i18next';
 
-const TABS = [
-  { id: 'queued', label: 'À envoyer' },
-  { id: 'failed', label: 'Échecs' },
-  { id: 'sent', label: 'Envoyés' },
-  { id: 'skipped', label: 'Sans contact' },
-];
+const TAB_IDS = ['queued', 'failed', 'sent', 'skipped'];
 
 const STYLES = {
   queued: 'bg-amber-100 text-amber-900',
@@ -20,14 +16,10 @@ const STYLES = {
   skipped: 'bg-slate-200 text-slate-700',
 };
 
-const LABELS = {
-  queued: 'À envoyer',
-  sent: 'Envoyé',
-  failed: 'Échec',
-  skipped: 'Sans contact',
-};
-
 export default function AdminNotifications() {
+  const { t } = useTranslation();
+  const TABS = TAB_IDS.map((id) => ({ id, label: t(`adminNotifications.tab_${id}`) }));
+  const LABELS = { queued: t('adminNotifications.tab_queued'), sent: t('adminNotifications.sent'), failed: t('adminNotifications.failed'), skipped: t('adminNotifications.tab_skipped') };
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('queued');
@@ -73,31 +65,29 @@ export default function AdminNotifications() {
 
   return (
     <div className="space-y-5 pb-8">
-      <DashboardNav title="Notifications client" links={ADMIN_LINKS} />
+      <DashboardNav title={t('adminNotifications.title')} links={ADMIN_LINKS} />
 
       <section className="rounded-2xl border border-border bg-card p-4">
         <p className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-          <Send className="h-4 w-4 text-primary" /> Suivi de commande
+          <Send className="h-4 w-4 text-primary" /> {t('adminNotifications.tracking')}
         </p>
-        <p className="mt-1 text-2xl font-black">{counts.sent || 0} message(s) envoyé(s)</p>
+        <p className="mt-1 text-2xl font-black">{t('adminNotifications.sentCount', { count: counts.sent || 0 })}</p>
         <p className="mt-1 text-[11px] text-muted-foreground">
-          Chaque changement de statut — confirmation d'achat, préparation, expédition, livraison — génère
-          automatiquement un message. Les clients avec un e-mail le reçoivent par e-mail ; les autres attendent
-          ici une relance WhatsApp ou SMS en un clic.
+          {t('adminNotifications.description')}
         </p>
       </section>
 
       <div className="flex flex-wrap gap-2">
-        {TABS.map((t) => (
+        {TABS.map((tx) => (
           <button
-            key={t.id}
+            key={tx.id}
             type="button"
-            onClick={() => setTab(t.id)}
+            onClick={() => setTab(tx.id)}
             className={`rounded-full px-3.5 py-1.5 text-xs font-semibold ${
-              tab === t.id ? 'bg-primary text-primary-foreground' : 'bg-secondary'
+              tab === tx.id ? 'bg-primary text-primary-foreground' : 'bg-secondary'
             }`}
           >
-            {t.label} ({counts[t.id] || 0})
+            {tx.label} ({counts[tx.id] || 0})
           </button>
         ))}
       </div>
@@ -111,7 +101,7 @@ export default function AdminNotifications() {
                   {r.label} · {r.order_number}
                 </p>
                 <p className="text-[11px] text-muted-foreground">
-                  {r.customer_name || 'Client'} · {r.customer_email || r.customer_phone || 'aucun contact'} ·{' '}
+                  {r.customer_name || t('adminNotifications.customer')} · {r.customer_email || r.customer_phone || t('adminNotifications.noContact')} ·{' '}
                   {formatDateTime(r.created_date)}
                 </p>
               </div>
@@ -134,7 +124,7 @@ export default function AdminNotifications() {
                   onClick={() => run(r.id, () => deliverEmail(base44, r))}
                   className="flex items-center gap-1 rounded-full bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-50"
                 >
-                  <Mail className="h-3.5 w-3.5" /> {r.attempts ? "Renvoyer l'e-mail" : "Envoyer l'e-mail"}
+                  <Mail className="h-3.5 w-3.5" /> {r.attempts ? t('adminNotifications.resendEmail') : t('adminNotifications.sendEmail')}
                 </button>
               )}
               {r.customer_phone && (
@@ -161,7 +151,7 @@ export default function AdminNotifications() {
         ))}
         {!visible.length && (
           <p className="rounded-xl border border-dashed border-border bg-card p-6 text-center text-xs text-muted-foreground">
-            Aucun message dans cette catégorie.
+            {t('adminNotifications.empty')}
           </p>
         )}
       </div>

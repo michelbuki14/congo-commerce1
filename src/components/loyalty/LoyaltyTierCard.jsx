@@ -1,8 +1,10 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Sparkles, Trophy } from 'lucide-react';
 
 /** Membership tier, points balance and progress to the next level. */
 export default function LoyaltyTierCard({ summary }) {
+  const { t } = useTranslation();
   const { tier, next, balance, pending, missingToNext, progress, lifetimeUsd, affordable } = summary;
 
   return (
@@ -10,10 +12,10 @@ export default function LoyaltyTierCard({ summary }) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="flex items-center gap-2 text-sm font-bold">
-            <Trophy className="h-4 w-4 text-primary" /> Statut {tier.name}
+            <Trophy className="h-4 w-4 text-primary" /> {t('loyaltyTierCard.status', { tier: t(tier.nameKey) })}
           </p>
           <p className="text-[11px] text-muted-foreground">
-            {tier.multiplier > 1 ? `Points multipliés par ${tier.multiplier} sur vos commandes.` : 'Niveau de départ : 10 points par dollar dépensé.'}
+            {tier.multiplier > 1 ? t('loyaltyTierCard.multiplier', { multi: tier.multiplier }) : t('loyaltyTierCard.starter')}
           </p>
         </div>
         <span className={`rounded-full px-3 py-1 text-[11px] font-bold ${tier.badge}`}>{tier.code}</span>
@@ -21,10 +23,10 @@ export default function LoyaltyTierCard({ summary }) {
 
       <div className="grid grid-cols-2 gap-2.5 md:grid-cols-4">
         {[
-          { label: 'Points disponibles', value: balance.toLocaleString('fr-FR') },
-          { label: 'Points en attente', value: pending.toLocaleString('fr-FR') },
-          { label: 'Récompenses accessibles', value: String(affordable) },
-          { label: 'Total acheté', value: `$${lifetimeUsd.toFixed(2)}` },
+          { label: t('loyaltyTierCard.availPoints'), value: balance.toLocaleString('fr-FR') },
+          { label: t('loyaltyTierCard.pendingPoints'), value: pending.toLocaleString('fr-FR') },
+          { label: t('loyaltyTierCard.rewards'), value: String(affordable) },
+          { label: t('loyaltyTierCard.totalSpent'), value: `$${lifetimeUsd.toFixed(2)}` },
         ].map((stat) => (
           <div key={stat.label} className="rounded-xl bg-secondary/60 p-3">
             <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{stat.label}</p>
@@ -36,8 +38,8 @@ export default function LoyaltyTierCard({ summary }) {
       {next ? (
         <div>
           <div className="flex items-center justify-between text-[11px]">
-            <span className="font-semibold">Prochain niveau : {next.name}</span>
-            <span className="text-muted-foreground">encore {missingToNext.toLocaleString('fr-FR')} points</span>
+            <span className="font-semibold">{t('loyaltyTierCard.nextLevel', { name: next.name })}</span>
+            <span className="text-muted-foreground">{t('loyaltyTierCard.pointsToGo', { count: missingToNext.toLocaleString('fr-FR') })}</span>
           </div>
           <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-secondary">
             <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${Math.round(progress * 100)}%` }} />
@@ -45,12 +47,12 @@ export default function LoyaltyTierCard({ summary }) {
         </div>
       ) : (
         <p className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
-          <Sparkles className="h-3.5 w-3.5" /> Vous êtes au niveau le plus élevé — merci de votre fidélité.
+          <Sparkles className="h-3.5 w-3.5" /> {t('loyaltyTierCard.maxLevel')}
         </p>
       )}
 
       <ul className="space-y-1 text-[11px] text-muted-foreground">
-        {tier.perks.map((perk) => (
+        {t(tier.perksKey, { returnObjects: true }).map((perk) => (
           <li key={perk}>• {perk}</li>
         ))}
       </ul>

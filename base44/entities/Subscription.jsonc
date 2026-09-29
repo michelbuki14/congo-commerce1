@@ -67,6 +67,10 @@
     "last_payment_at": {
       "type": "string"
     },
+    "dunning_attempts": {
+      "type": "number",
+      "default": 0
+    },
     "notes": {
       "type": "string"
     }

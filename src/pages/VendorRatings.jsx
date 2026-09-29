@@ -1,11 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { base44 } from '@/api/base44Client';
 import { BadgeCheck, Search, ShieldCheck } from 'lucide-react';
 import InfoPage, { InfoSection } from '@/components/InfoPage';
 import SellerRatingCard from '@/components/ratings/SellerRatingCard';
 import { RATING_SORTS, buildSellerMetrics, marketplaceStats, sortMetrics } from '@/lib/vendorRatings';
+import { fetchDisputeIndex } from '@/lib/customerAccount';
 
 export default function VendorRatings() {
+  const { t } = useTranslation();
   const [metrics, setMetrics] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState('trust');
@@ -16,7 +19,7 @@ export default function VendorRatings() {
       const [sellers, reviews, disputes] = await Promise.all([
         base44.entities.Seller.filter({ status: 'active' }, 'name', 100).catch(() => []),
         base44.entities.Review.list('-created_date', 300).catch(() => []),
-        base44.entities.Dispute.list('-created_date', 200).catch(() => []),
+        fetchDisputeIndex(),
       ]);
       setMetrics(buildSellerMetrics({ sellers, reviews, disputes }));
       setLoading(false);
@@ -35,16 +38,16 @@ export default function VendorRatings() {
   return (
     <InfoPage
       icon={BadgeCheck}
-      title="Vendeurs & avis"
-      subtitle="Les performances de chaque boutique sont calculées à partir des avis publiés, des commandes livrées et des litiges enregistrés. Rien n'est déclaratif : tout vient des commandes réelles."
+      title={t('vendorRatings.title')}
+      subtitle={t('vendorRatings.subtitle')}
     >
-      <InfoSection title="Le marché en un coup d'œil">
+      <InfoSection title={t('vendorRatings.marketTitle')}>
         <div className="grid grid-cols-2 gap-2.5 md:grid-cols-4">
           {[
-            { label: 'Boutiques actives', value: stats.sellers },
-            { label: 'Boutiques vérifiées', value: stats.verified },
-            { label: 'Note moyenne', value: stats.avgRating ? stats.avgRating.toFixed(1) : '—' },
-            { label: 'Litiges ouverts', value: stats.openDisputes },
+            { label: t('vendorRatings.statShops'), value: stats.sellers },
+            { label: t('vendorRatings.statVerified'), value: stats.verified },
+            { label: t('vendorRatings.statAvg'), value: stats.avgRating ? stats.avgRating.toFixed(1) : '—' },
+            { label: t('vendorRatings.statOpenDisputes'), value: stats.openDisputes },
           ].map((stat) => (
             <div key={stat.label} className="rounded-xl bg-secondary/60 p-3">
               <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{stat.label}</p>
@@ -53,7 +56,7 @@ export default function VendorRatings() {
           ))}
         </div>
         <p className="mt-2 text-[11px] text-muted-foreground">
-          {stats.reviews} avis publiés · {stats.orders} commandes livrées cumulées par les boutiques listées.
+          {t('vendorRatings.marketLine', { reviews: stats.reviews, orders: stats.orders })}
         </p>
       </InfoSection>
 
@@ -64,7 +67,7 @@ export default function VendorRatings() {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Rechercher une boutique…"
+              placeholder={t('vendorRatings.searchPh')}
               className="h-11 w-full rounded-full border border-border bg-card pl-9 pr-3 text-sm"
             />
           </div>
@@ -76,7 +79,7 @@ export default function VendorRatings() {
                 onClick={() => setSortBy(sort.id)}
                 className={`rounded-full px-3.5 py-1.5 text-xs font-semibold ${sortBy === sort.id ? 'bg-primary text-primary-foreground' : 'border border-border bg-card'}`}
               >
-                {sort.label}
+                {t(sort.labelKey)}
               </button>
             ))}
           </div>
@@ -90,19 +93,19 @@ export default function VendorRatings() {
           </div>
         ) : (
           <p className="rounded-2xl border border-dashed border-border bg-card p-6 text-center text-xs text-muted-foreground">
-            Aucune boutique ne correspond à cette recherche.
+            {t('vendorRatings.noMatch')}
           </p>
         )}
       </section>
 
-      <InfoSection title="Comment le score de confiance est calculé">
+      <InfoSection title={t('vendorRatings.howTitle')}>
         <ul className="space-y-1.5">
           <li className="flex items-start gap-1.5">
-            <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0" /> <span><strong>Note des avis (55 %)</strong> — moyenne des avis publiés, hors avis masqués.</span>
+            <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0" /> <span><strong>{t('vendorRatings.howReviewsTitle')}</strong> {t('vendorRatings.howReviewsText')}</span>
           </li>
-          <li>• <strong>Litiges (30 %)</strong> — part des commandes ayant donné lieu à un litige ouvert ou résolu.</li>
-          <li>• <strong>Volume (15 %)</strong> — commandes livrées, plafonnées à 50 pour éviter qu'un gros vendeur écrase les autres.</li>
-          <li>• Une boutique sans avis est plafonnée à 70/100 : la confiance se gagne avec des commandes réelles.</li>
+          <li>• <strong>{t('vendorRatings.howDisputesTitle')}</strong> {t('vendorRatings.howDisputesText')}</li>
+          <li>• <strong>{t('vendorRatings.howVolumeTitle')}</strong> {t('vendorRatings.howVolumeText')}</li>
+          <li>{t('vendorRatings.howNoReview')}</li>
         </ul>
       </InfoSection>
     </InfoPage>

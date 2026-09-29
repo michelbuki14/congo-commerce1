@@ -5,9 +5,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { formatDate, formatUSD } from '@/lib/format';
 import { cancelSubscription, changePlan, renewSubscription, settleInvoice, subscriptionLabel } from '@/lib/saas';
 import { planByCode } from '@/lib/plans';
+import { useTranslation } from 'react-i18next';
 
 /** Platform-admin subscription desk: change plan, renew, cancel, settle invoices. */
 export default function SubscriptionPanel({ subscriptions, plans, onChange }) {
+  const { t } = useTranslation();
   const [busyId, setBusyId] = useState('');
   const [error, setError] = useState('');
 
@@ -18,7 +20,7 @@ export default function SubscriptionPanel({ subscriptions, plans, onChange }) {
       await action();
       onChange();
     } catch (e) {
-      setError(e?.message || 'Opération impossible.');
+      setError(e?.message || t('subscriptionPanel.opFailed'));
     } finally {
       setBusyId('');
     }
@@ -33,13 +35,13 @@ export default function SubscriptionPanel({ subscriptions, plans, onChange }) {
     <Card>
       <CardContent className="space-y-3 p-5">
         <div>
-          <h2 className="font-heading text-base font-bold">Abonnements</h2>
-          <p className="text-sm text-muted-foreground">Changer de formule, encaisser une échéance ou résilier un compte client.</p>
+          <h2 className="font-heading text-base font-bold">{t('subscriptionPanel.title')}</h2>
+          <p className="text-sm text-muted-foreground">{t('subscriptionPanel.subtitle')}</p>
         </div>
         {error && <p className="text-sm text-destructive">{error}</p>}
 
         <div className="space-y-2">
-          {subscriptions.length === 0 && <p className="text-sm text-muted-foreground">Aucun abonnement.</p>}
+          {subscriptions.length === 0 && <p className="text-sm text-muted-foreground">{t('subscriptionPanel.empty')}</p>}
           {subscriptions.map((row) => {
             const plan = planByCode(plans, row.plan_code);
             return (
@@ -47,9 +49,8 @@ export default function SubscriptionPanel({ subscriptions, plans, onChange }) {
                 <div className="min-w-[200px]">
                   <p className="text-sm font-semibold">{row.tenant_name || row.tenant_id}</p>
                   <p className="text-xs text-muted-foreground">
-                    {plan.name} · {row.billing_cycle === 'yearly' ? 'annuel' : 'mensuel'} · {subscriptionLabel(row.status)}
-                    {' · '}fin de période {formatDate(row.current_period_end)}
-                    {row.cancel_at_period_end ? ' · résiliation programmée' : ''}
+                    {t('subscriptionPanel.rowMeta', { plan: plan.name, cycle: row.billing_cycle === 'yearly' ? t('subscriptionPanel.yearly') : t('subscriptionPanel.monthly'), status: subscriptionLabel(row.status), end: formatDate(row.current_period_end) })}
+                    {row.cancel_at_period_end ? t('subscriptionPanel.cancelScheduled') : ''}
                   </p>
                 </div>
                 <p className="text-sm font-semibold">{formatUSD(row.amount_usd)}</p>
@@ -63,7 +64,7 @@ export default function SubscriptionPanel({ subscriptions, plans, onChange }) {
                     {plans.map((p) => <option key={p.code} value={p.code}>{p.name}</option>)}
                   </select>
                   <Button size="sm" variant="outline" disabled={busyId === row.id} onClick={() => run(row, () => renewSubscription(row, plan, row.billing_cycle))}>
-                    Encaisser & prolonger
+                    {t('subscriptionPanel.renew')}
                   </Button>
                   <Button
                     size="sm"
@@ -75,10 +76,10 @@ export default function SubscriptionPanel({ subscriptions, plans, onChange }) {
                       await base44.entities.Subscription.update(row.id, { status: 'active' });
                     })}
                   >
-                    Régulariser l’impayé
+                    {t('subscriptionPanel.regularize')}
                   </Button>
                   <Button size="sm" variant="ghost" disabled={busyId === row.id} onClick={() => run(row, () => cancelSubscription(row, true))}>
-                    Résilier
+                    {t('subscriptionPanel.cancel')}
                   </Button>
                 </div>
               </div>

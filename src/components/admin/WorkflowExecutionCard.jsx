@@ -11,6 +11,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { formatDateTime } from '@/lib/format';
+import { useTranslation } from 'react-i18next';
 
 export const STATUS_STYLES = {
   PENDING: 'bg-secondary text-foreground',
@@ -32,6 +33,7 @@ const STEP_ICONS = {
 };
 
 export default function WorkflowExecutionCard({ execution, steps, expanded, onToggle, onRetry, onCancel, busy }) {
+  const { t } = useTranslation();
   const [decision, setDecision] = useState('');
   const status = String(execution.status || '');
   const canRetry = ['FAILED', 'WAITING', 'RETRYING', 'CANCELLED'].includes(status);
@@ -43,14 +45,13 @@ export default function WorkflowExecutionCard({ execution, steps, expanded, onTo
         <div className="min-w-0">
           <p className="text-sm font-bold">
             {execution.workflow_name || execution.workflow_code}
-            {execution.dead_letter && <span className="ml-2 text-[10px] font-bold text-destructive">LETTRE MORTE</span>}
+            {execution.dead_letter && <span className="ml-2 text-[10px] font-bold text-destructive">{t('workflowExecutionCard.deadLetter')}</span>}
           </p>
           <p className="truncate text-[11px] text-muted-foreground">
-            {execution.execution_number} · {execution.trigger_reference || 'sans référence'} · {formatDateTime(execution.created_date)}
+            {execution.execution_number} · {execution.trigger_reference || t('workflowExecutionCard.noReference')} · {formatDateTime(execution.created_date)}
           </p>
           <p className="text-[11px] text-muted-foreground">
-            Étape {execution.current_step || '—'} · {execution.completed_steps || 0}/{execution.total_steps || 0} ·{' '}
-            {execution.attempts || 1} tentative(s) · {((execution.duration_ms || 0) / 1000).toFixed(1)} s
+            {t('workflowExecutionCard.progress', { step: execution.current_step || '—', done: execution.completed_steps || 0, total: execution.total_steps || 0, attempts: execution.attempts || 1, seconds: ((execution.duration_ms || 0) / 1000).toFixed(1) })}
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
@@ -73,10 +74,10 @@ export default function WorkflowExecutionCard({ execution, steps, expanded, onTo
       {expanded && (
         <div className="mt-3 space-y-2">
           <div className="grid gap-1.5 rounded-xl bg-secondary/60 p-3 text-[11px] text-muted-foreground md:grid-cols-2">
-            <span>Enseigne : {execution.tenant_id || '—'}</span>
-            <span>Déclencheur : {execution.trigger}</span>
-            <span>Clé d’idempotence : {execution.idempotency_key || '—'}</span>
-            <span>Prochaine relance : {execution.next_retry_at ? formatDateTime(execution.next_retry_at) : '—'}</span>
+            <span>{t('workflowExecutionCard.tenant', { id: execution.tenant_id || '—' })}</span>
+            <span>{t('workflowExecutionCard.trigger', { trigger: execution.trigger })}</span>
+            <span>{t('workflowExecutionCard.idempotencyKey', { key: execution.idempotency_key || '—' })}</span>
+            <span>{t('workflowExecutionCard.nextRetry', { when: execution.next_retry_at ? formatDateTime(execution.next_retry_at) : '—' })}</span>
           </div>
 
           <ul className="space-y-1.5">
@@ -88,20 +89,20 @@ export default function WorkflowExecutionCard({ execution, steps, expanded, onTo
                   <div className="min-w-0 flex-1">
                     <p className="text-[11px] font-semibold">
                       {step.label || step.name}
-                      {!step.critical && <span className="ml-1.5 text-[10px] font-normal text-muted-foreground">non critique</span>}
+                      {!step.critical && <span className="ml-1.5 text-[10px] font-normal text-muted-foreground">{t('workflowExecutionCard.nonCritical')}</span>}
                     </p>
                     <p className="text-[10px] text-muted-foreground">
-                      {step.status} · {step.attempts || 0}/{step.max_attempts || 0} tentative(s) · {step.duration_ms || 0} ms
+                      {t('workflowExecutionCard.stepMeta', { status: step.status, attempts: step.attempts || 0, max: step.max_attempts || 0, duration: step.duration_ms || 0 })}
                     </p>
                     {step.error && <p className="text-[10px] text-destructive">{step.error}</p>}
                     {step.compensation_error && (
-                      <p className="text-[10px] text-amber-700">Annulation incomplète : {step.compensation_error}</p>
+                      <p className="text-[10px] text-amber-700">{t('workflowExecutionCard.compensationError', { error: step.compensation_error })}</p>
                     )}
                   </div>
                 </li>
               );
             })}
-            {!(steps || []).length && <li className="text-[11px] text-muted-foreground">Aucune étape enregistrée.</li>}
+            {!(steps || []).length && <li className="text-[11px] text-muted-foreground">{t('workflowExecutionCard.noSteps')}</li>}
           </ul>
         </div>
       )}
@@ -114,7 +115,7 @@ export default function WorkflowExecutionCard({ execution, steps, expanded, onTo
                 <input
                   value={decision}
                   onChange={(e) => setDecision(e.target.value)}
-                  placeholder="Décision (approve / reject)"
+                  placeholder={t('workflowExecutionCard.decisionPlaceholder')}
                   className="h-9 w-52 rounded-lg border border-border bg-background px-2.5 text-xs"
                 />
               )}
@@ -124,7 +125,7 @@ export default function WorkflowExecutionCard({ execution, steps, expanded, onTo
                 onClick={() => onRetry(decision ? { decision } : {})}
                 className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-50"
               >
-                <PlayCircle className="h-3.5 w-3.5" /> {status === 'WAITING' ? 'Reprendre' : 'Relancer'}
+                <PlayCircle className="h-3.5 w-3.5" /> {status === 'WAITING' ? t('workflowExecutionCard.resume') : t('workflowExecutionCard.retry')}
               </button>
             </>
           )}
@@ -135,7 +136,7 @@ export default function WorkflowExecutionCard({ execution, steps, expanded, onTo
               onClick={onCancel}
               className="inline-flex items-center gap-1.5 rounded-full border border-border px-4 py-2 text-xs font-semibold disabled:opacity-50"
             >
-              <XCircle className="h-3.5 w-3.5" /> Annuler
+              <XCircle className="h-3.5 w-3.5" /> {t('workflowExecutionCard.cancel')}
             </button>
           )}
         </div>

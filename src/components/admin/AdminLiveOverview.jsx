@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ShoppingBag, Users } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { base44 } from '@/api/base44Client';
 import { formatUSD, timeAgo } from '@/lib/format';
 import StatusBadge from '@/components/StatusBadge';
@@ -11,6 +12,7 @@ const PAYMENT_ORDER = ['PAID', 'PENDING', 'AUTHORIZED', 'FAILED', 'REFUNDED', 'P
  * status breakdown. Refreshes itself whenever an order or shipment changes.
  */
 export default function AdminLiveOverview() {
+  const { t } = useTranslation();
   const [orders, setOrders] = useState(null);
   const [fulfillments, setFulfillments] = useState([]);
   const [updatedAt, setUpdatedAt] = useState(null);
@@ -56,13 +58,13 @@ export default function AdminLiveOverview() {
   return (
     <section className="rounded-2xl border border-border bg-card p-4">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-sm font-bold">Suivi en direct</h2>
+        <h2 className="text-sm font-bold">{t('adminLiveOverview.title')}</h2>
         <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
           <span className="relative flex h-2 w-2">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-75" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
           </span>
-          Mis à jour {timeAgo(updatedAt)}
+          {t('adminLiveOverview.updated', { ago: timeAgo(updatedAt) })}
         </span>
       </div>
 
@@ -70,20 +72,20 @@ export default function AdminLiveOverview() {
         <div className="rounded-xl border border-border p-3.5">
           <ShoppingBag className="h-4 w-4 text-primary" />
           <p className="mt-1.5 text-lg font-bold">{formatUSD(sales)}</p>
-          <p className="text-[11px] text-muted-foreground">Ventes totales · {live.length} commande(s)</p>
+          <p className="text-[11px] text-muted-foreground">{t('adminLiveOverview.totalSales', { count: live.length })}</p>
         </div>
         <div className="rounded-xl border border-border p-3.5">
           <Users className="h-4 w-4 text-primary" />
           <p className="mt-1.5 text-lg font-bold">{formatUSD(commissions)}</p>
           <p className="text-[11px] text-muted-foreground">
-            Commissions créateurs · {commissioned.length} expédition(s)
+            {t('adminLiveOverview.creatorCommissions', { count: commissioned.length })}
           </p>
         </div>
       </div>
 
       <div className="mt-4">
         <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-          Statut des paiements
+          {t('adminLiveOverview.paymentStatus')}
         </p>
         <div className="space-y-1.5">
           {byStatus.map((r) => (
@@ -92,11 +94,11 @@ export default function AdminLiveOverview() {
               className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border px-3 py-2"
             >
               <StatusBadge status={r.status} />
-              <span className="text-[11px] text-muted-foreground">{r.count} commande(s)</span>
+              <span className="text-[11px] text-muted-foreground">{t('adminLiveOverview.orderCount', { count: r.count })}</span>
               <span className="text-sm font-semibold">{formatUSD(r.amount)}</span>
             </div>
           ))}
-          {!byStatus.length && <p className="text-xs text-muted-foreground">Aucun paiement enregistré.</p>}
+          {!byStatus.length && <p className="text-xs text-muted-foreground">{t('adminLiveOverview.noPayments')}</p>}
         </div>
       </div>
     </section>

@@ -1,5 +1,6 @@
 import { base44 } from '@/api/base44Client';
 import { emitEvent } from './events';
+import { fetchRiskSignals } from '@/lib/customerAccount';
 
 /** FRAUD & RISK ENGINE
  *
@@ -29,8 +30,6 @@ export const RISK_BANDS = [
   { level: 'medium', min: 30 },
   { level: 'low', min: 0 },
 ];
-
-export const LEVEL_LABELS = { low: 'Faible', medium: 'Moyen', high: 'Élevé', critical: 'Critique' };
 
 export function riskLevel(score) {
   return RISK_BANDS.find((b) => (Number(score) || 0) >= b.min)?.level || 'low';
@@ -70,22 +69,36 @@ export function scoreSignals(signals, rules) {
 export async function collectSignals(client, { amountUsd = 0, sessionId = '', phone = '', couponCode = '', affiliateCode = '', orderNumber = '' }) {
   const db = client || base44;
   const signals = [];
-  const byPhone = phone ? await db.entities.Order.filter({ customer_phone: phone }, '-created_date', 50).catch(() => []) : [];
-  const bySession = sessionId ? await db.entities.Order.filter({ session_id: sessionId }, '-created_date', 50).catch(() => []) : [];
-  const prior = byPhone.filter((o) => o.order_number !== orderNumber);
-  const priorSession = bySession.filter((o) => o.order_number !== orderNumber);
+  // Order history is read directly from the DB when the caller has access (server
+  // function / admin), or through the server's aggregate API when the caller is a
+  // browser without tenant-level read access. The risk desk never sees other
+  // customers' record contents — only the counts used for scoring.
+  let byPhone = [];
+  let bySession = [];
+  let prior = [];
+  let priorSession = [];
+  if (phone) {
+    byPhone = await db.entities.Order.filter({ customer_phone: phone }, '-created_date', 50).catch(() => []);
+    prior = byPhone.filter((o) => o.order_number !== orderNumber);
+  }
+  if (sessionId) {
+    bySession = await db.entities.Order.filter({ session_id: sessionId }, '-created_date', 50).catch(() => []);
+    priorSession = bySession.filter((o) => o.order_number !== orderNumber);
+  }
+
+
 
   if (amountUsd > 0) signals.push({ signal: 'high_value', value: amountUsd });
   if (phone) {
-    signals.push({ signal: 'phone_velocity', value: prior.length + 1 });
-    signals.push({ signal: 'shared_phone', value: new Set(prior.map((o) => o.customer_email).filter(Boolean)).size });
-    signals.push({ signal: 'failed_payments', value: prior.filter((o) => o.payment_status === 'FAILED').length });
-    signals.push({ signal: 'refund_abuse', value: prior.filter((o) => ['REFUNDED', 'PARTIALLY_REFUNDED'].includes(o.payment_status)).length });
+    signals.push({ signal: 'phone_velocity', value: prior + 1 });
+    signals.push({ signal: 'shared_phone', value: Number(history.shared_phone) || 0 });
+    signals.push({ signal: 'failed_payments', value: Number(history.failed_payments) || 0 });
+    signals.push({ signal: 'refund_abuse', value: Number(history.refunds) || 0 });
   }
-  if (sessionId) signals.push({ signal: 'session_velocity', value: priorSession.length + 1 });
+  if (sessionId) signals.push({ signal: 'session_velocity', value: priorSession + 1 });
 
   if (couponCode && phone) {
-    signals.push({ signal: 'coupon_abuse', value: prior.filter((o) => o.coupon_code === couponCode).length + 1 });
+    signals.push({ signal: 'coupon_abuse', value: (Number(history.coupon_count) || 0) + 1 });
   }
   if (affiliateCode && sessionId) {
     const clicks = await db.entities.AffiliateClick.filter({ session_id: sessionId, referral_code: affiliateCode }).catch(() => []);

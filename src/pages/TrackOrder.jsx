@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Package, Truck, CheckCircle2, Circle } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { useTranslation } from 'react-i18next';
+import { Search, Package, Truck, CheckCircle2, Circle, Warehouse } from 'lucide-react';
 import StatusBadge from '@/components/StatusBadge';
+import IntlApprovalCard from '@/components/tracking/IntlApprovalCard';
 import { getOrderIds, getProfile } from '@/lib/session';
+import { lookupOrder } from '@/lib/orderLookup';
 import { formatUSD, formatDate } from '@/lib/format';
-import { SHIPMENT_STATUS_FLOW, SHIPMENT_STATUS_LABELS } from '@/lib/logistics';
+import { SHIPMENT_STATUS_FLOW, SHIPMENT_STATUS_LABELS, INTL_TRACKING_FLOW } from '@/lib/logistics';
 
 export default function TrackOrder() {
+  const { t } = useTranslation();
   const [number, setNumber] = useState('');
   const [phone, setPhone] = useState(getProfile().phone || '');
   const [order, setOrder] = useState(null);
@@ -16,36 +19,29 @@ export default function TrackOrder() {
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState('');
   const history = getOrderIds();
+  // An international import waiting on the buyer's go-ahead gets the photo card
+  // instead of the courier step tracker — there is no courier leg at the origin.
+  const awaitingApproval = fulfillments.filter(
+    (f) => f.source_type === 'international_supplier' && f.status === 'AWAITING_CUSTOMER_APPROVAL',
+  );
+  const trackedFulfillments = fulfillments.filter((f) => !awaitingApproval.includes(f));
 
   const lookup = async (e) => {
     e.preventDefault();
     setError('');
     setOrder(null);
     if (!number.trim()) {
-      setError('Entrez votre numéro de commande.');
+      setError(t('trackOrder.orderNumberRequired'));
       return;
     }
     setSearching(true);
     try {
-      const rows = await base44.entities.Order.filter({ order_number: number.trim().toUpperCase() });
-      const found = rows[0];
-      if (!found) {
-        setError('Aucune commande trouvée avec ce numéro.');
-        return;
-      }
-      if (phone.trim() && found.customer_phone && !found.customer_phone.includes(phone.trim().slice(-6))) {
-        setError('Le téléphone ne correspond pas à cette commande.');
-        return;
-      }
-      const [f, s] = await Promise.all([
-        base44.entities.FulfillmentOrder.filter({ order_id: found.id }, 'fulfillment_number', 50),
-        base44.entities.Shipment.filter({ order_number: found.order_number }, '-created_date', 50),
-      ]);
-      setOrder(found);
-      setFulfillments(f);
-      setShipments(s);
-    } catch {
-      setError('Impossible de récupérer la commande pour le moment.');
+      const data = await lookupOrder(number.trim().toUpperCase(), phone.trim() || getProfile().phone);
+      setOrder(data.order);
+      setFulfillments(data.fulfillments || []);
+      setShipments(data.shipments || []);
+    } catch (e) {
+      setError(e.message || t('trackOrder.lookupFailed'));
     } finally {
       setSearching(false);
     }
@@ -56,16 +52,12 @@ export default function TrackOrder() {
     setSearching(true);
     setError('');
     try {
-      const rows = await base44.entities.Order.filter({ order_number: orderNumber });
-      const found = rows[0];
-      if (!found) return;
-      const [f, s] = await Promise.all([
-        base44.entities.FulfillmentOrder.filter({ order_id: found.id }, 'fulfillment_number', 50),
-        base44.entities.Shipment.filter({ order_number: found.order_number }, '-created_date', 50),
-      ]);
-      setOrder(found);
-      setFulfillments(f);
-      setShipments(s);
+      const data = await lookupOrder(orderNumber, phone.trim() || getProfile().phone);
+      setOrder(data.order);
+      setFulfillments(data.fulfillments || []);
+      setShipments(data.shipments || []);
+    } catch (e) {
+      setError(e.message || t('trackOrder.lookupFailed'));
     } finally {
       setSearching(false);
     }
@@ -73,20 +65,20 @@ export default function TrackOrder() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-5 pb-8">
-      <h1 className="text-lg font-bold md:text-xl">Suivre ma commande</h1>
+      <h1 className="text-lg font-bold md:text-xl">{t('trackOrder.title')}</h1>
 
       <form onSubmit={lookup} className="space-y-3 rounded-2xl border border-border bg-card p-4">
         <div className="grid gap-3 md:grid-cols-2">
           <input
             value={number}
             onChange={(e) => setNumber(e.target.value.toUpperCase())}
-            placeholder="Numéro de commande (CC-…)"
+            placeholder={t('trackOrder.orderNumberPh')}
             className="h-11 rounded-lg border border-border bg-background px-3 text-sm"
           />
           <input
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            placeholder="Téléphone (optionnel)"
+            placeholder={t('trackOrder.phonePh')}
             className="h-11 rounded-lg border border-border bg-background px-3 text-sm"
           />
         </div>
@@ -96,13 +88,13 @@ export default function TrackOrder() {
           disabled={searching}
           className="flex w-full items-center justify-center gap-2 rounded-full bg-primary py-3 text-sm font-bold text-primary-foreground disabled:opacity-50"
         >
-          <Search className="h-4 w-4" /> {searching ? 'Recherche…' : 'Rechercher'}
+          <Search className="h-4 w-4" /> {searching ? t('trackOrder.searching') : t('trackOrder.search')}
         </button>
       </form>
 
       {!!history.length && !order && (
         <section className="rounded-2xl border border-border bg-card p-4">
-          <h2 className="mb-2 text-sm font-bold">Commandes de cet appareil</h2>
+          <h2 className="mb-2 text-sm font-bold">{t('trackOrder.deviceOrders')}</h2>
           <div className="space-y-2">
             {history.map((h) => (
               <button
@@ -138,31 +130,51 @@ export default function TrackOrder() {
               </div>
             </div>
             <p className="mt-3 text-sm">
-              Total : <span className="font-bold text-primary">{formatUSD(order.total_usd)}</span> · {order.payment_method}
+              {t('trackOrder.totalLabel')} <span className="font-bold text-primary">{formatUSD(order.total_usd)}</span> · {order.payment_method}
             </p>
           </section>
 
-          {fulfillments.map((f) => {
+          {awaitingApproval.map((f) => (
+            <IntlApprovalCard
+              key={f.id}
+              fulfillment={f}
+              order={order}
+              phone={phone}
+              onConfirmed={(updated) =>
+                setFulfillments((prev) => prev.map((x) => (x.id === updated.id ? { ...x, ...updated } : x)))
+              }
+            />
+          ))}
+
+          {trackedFulfillments.map((f) => {
             const shipment = shipments.find((s) => s.fulfillment_order_id === f.id);
-            const currentIndex = SHIPMENT_STATUS_FLOW.indexOf(f.status);
-            const steps = SHIPMENT_STATUS_FLOW.slice(0, 8);
+            const isIntl = f.source_type === 'international_supplier';
+            // International imports never pass through a local courier pickup.
+            const steps = isIntl ? INTL_TRACKING_FLOW : SHIPMENT_STATUS_FLOW.slice(0, 8);
+            const currentIndex = steps.indexOf(f.status);
             return (
               <section key={f.id} className="rounded-2xl border border-border bg-card p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <p className="text-sm font-bold">{f.seller_name || f.supplier_name || 'Congo Commerce'}</p>
                     <p className="text-[11px] text-muted-foreground">
-                      {f.fulfillment_number} · {f.source_type === 'international_supplier' ? 'Import international' : 'Local RDC'}
+                      {f.fulfillment_number} · {f.source_type === 'international_supplier' ? t('trackOrder.importIntl') : t('trackOrder.localDrc')}
                     </p>
                   </div>
                   <StatusBadge status={f.status} />
                 </div>
 
-                {f.tracking_number && (
-                  <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Truck className="h-3.5 w-3.5" /> {f.courier_name} · {f.tracking_number}
-                  </p>
-                )}
+                <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+                  {isIntl ? (
+                    <>
+                      <Warehouse className="h-3.5 w-3.5" /> {f.origin_warehouse || t('intlApproval.warehouse')}
+                    </>
+                  ) : (
+                    <>
+                      <Truck className="h-3.5 w-3.5" /> {f.courier_name || t('orderTracking.carrierFallback')} · {f.tracking_number ? t('orderTracking.trackingNo', { number: f.tracking_number }) : t('orderTracking.trackingPending')}
+                    </>
+                  )}
+                </p>
 
                 <div className="mt-3 space-y-2">
                   {steps.map((step, i) => {
@@ -179,7 +191,7 @@ export default function TrackOrder() {
                           <Circle className="h-4 w-4 shrink-0 text-muted-foreground/40" />
                         )}
                         <span className={`text-xs ${done ? 'font-semibold' : 'text-muted-foreground'}`}>
-                          {SHIPMENT_STATUS_LABELS[step]}
+                          {t(SHIPMENT_STATUS_LABELS[step] || 'status.UNKNOWN')}
                         </span>
                       </div>
                     );
@@ -201,7 +213,7 @@ export default function TrackOrder() {
           })}
 
           <Link to={`/order/${order.order_number}`} className="block rounded-full border border-border bg-card py-3 text-center text-sm font-semibold">
-            Voir le détail complet
+            {t('trackOrder.viewDetails')}
           </Link>
         </>
       )}

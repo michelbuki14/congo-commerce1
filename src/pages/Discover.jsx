@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Heart, Share2, ShoppingBag, Plus, BadgeCheck, Play, Volume2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Image } from '@/components/ui/image';
@@ -8,6 +10,7 @@ import { getLikedContent, getReferralCode, toggleLikedContent } from '@/lib/sess
 import { compactNumber } from '@/lib/format';
 
 export default function Discover() {
+  const { t } = useTranslation();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [liked, setLiked] = useState([]);
@@ -48,7 +51,7 @@ export default function Discover() {
         await navigator.share({ title: content.title, url });
       } else {
         await navigator.clipboard.writeText(url);
-        flash('Lien copié');
+        flash(t('discover.linkCopied'));
       }
       await base44.entities.Content.update(content.id, { shares_count: (content.shares_count || 0) + 1 });
       setItems((prev) => prev.map((c) => (c.id === content.id ? { ...c, shares_count: (c.shares_count || 0) + 1 } : c)));
@@ -62,9 +65,9 @@ export default function Discover() {
     try {
       const product = await base44.entities.Product.get(content.product_id);
       addItem(product, 1);
-      flash('Ajouté au panier');
+      flash(t('discover.addedToCart'));
     } catch {
-      flash('Article indisponible');
+      flash(t('discover.unavailable'));
     }
   };
 
@@ -75,8 +78,8 @@ export default function Discover() {
   if (!items.length) {
     return (
       <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
-        <p className="font-semibold">Aucune vidéo pour le moment</p>
-        <p className="mt-1 text-sm text-muted-foreground">Les contenus des créateurs apparaîtront ici.</p>
+        <p className="font-semibold">{t('discover.emptyTitle')}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{t('discover.emptyDesc')}</p>
       </div>
     );
   }
@@ -95,13 +98,16 @@ export default function Discover() {
             <div key={c.id} className="relative mb-3 h-full w-full snap-start overflow-hidden rounded-2xl bg-foreground">
               <Image src={c.media_url || c.thumbnail_url} alt={c.title} className="h-full w-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/40" />
+              {c.product_id && (
+                <Link to={`/product/${c.product_id}`} aria-label={c.product_title || c.title} className="absolute inset-0 z-10" />
+              )}
 
               <div className="absolute left-3 top-3 flex items-center gap-1 rounded-full bg-black/40 px-2 py-1 text-[10px] font-semibold text-white backdrop-blur">
                 {c.media_type === 'video' ? <Play className="h-3 w-3" /> : <Volume2 className="h-3 w-3" />}
-                {c.media_type === 'video' ? 'Vidéo' : 'Photo produit'}
+                {c.media_type === 'video' ? t('discover.video') : t('discover.photo')}
               </div>
 
-              <div className="absolute bottom-28 left-3 right-16 text-white">
+              <div className="pointer-events-none absolute bottom-28 left-3 right-16 z-20 text-white">
                 <div className="mb-2 flex items-center gap-2">
                   <div className="h-8 w-8 overflow-hidden rounded-full border border-white/60 bg-white/20">
                     <Image src={c.creator_avatar} alt={c.creator_name} className="h-full w-full object-cover" />
@@ -119,7 +125,7 @@ export default function Discover() {
               </div>
 
               {/* Action rail */}
-              <div className="absolute bottom-28 right-3 flex flex-col items-center gap-4 text-white">
+              <div className="absolute bottom-28 right-3 z-20 flex flex-col items-center gap-4 text-white">
                 <button type="button" onClick={() => like(c)} className="flex flex-col items-center gap-1">
                   <Heart className={`h-6 w-6 ${isLiked ? 'fill-primary text-primary' : ''}`} />
                   <span className="text-[10px] font-semibold">{compactNumber(c.likes_count || 0)}</span>
@@ -130,25 +136,27 @@ export default function Discover() {
                 </button>
                 <button type="button" onClick={() => add(c)} className="flex flex-col items-center gap-1">
                   <ShoppingBag className="h-6 w-6" />
-                  <span className="text-[10px] font-semibold">Panier</span>
+                  <span className="text-[10px] font-semibold">{t('discover.cart')}</span>
                 </button>
               </div>
 
               {/* Product bar */}
               {c.product_id && (
-                <div className="absolute bottom-3 left-3 right-3 flex items-center gap-2 rounded-xl bg-white/95 p-2 backdrop-blur">
-                  <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-secondary">
-                    <Image src={c.product_image} alt={c.product_title} className="h-full w-full object-cover" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[11px] font-semibold text-foreground">{c.product_title}</p>
-                    <p className="text-xs font-bold text-primary">{format(c.product_price_usd)}</p>
-                  </div>
+                <div className="absolute bottom-3 left-3 right-3 z-20 flex items-center gap-2 rounded-xl bg-white/95 p-2 backdrop-blur">
+                  <Link to={`/product/${c.product_id}`} className="flex min-w-0 flex-1 items-center gap-2 rounded-lg" aria-label={c.product_title || c.title}>
+                    <span className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-secondary">
+                      <Image src={c.product_image} alt={c.product_title} className="h-full w-full object-cover" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[11px] font-semibold text-foreground">{c.product_title}</span>
+                      <span className="block text-xs font-bold text-primary">{format(c.product_price_usd)}</span>
+                    </span>
+                  </Link>
                   <button
                     type="button"
                     onClick={() => add(c)}
                     className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground"
-                    aria-label="Ajouter au panier"
+                    aria-label={t('discover.addToCart')}
                   >
                     <Plus className="h-4 w-4" />
                   </button>

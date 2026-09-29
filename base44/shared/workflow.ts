@@ -1,5 +1,6 @@
 import { WORKFLOWS, definitionSummary, workflowByCode, workflowForEvent } from './workflowDefinitions.ts';
 import { executionNumber, newEventId, notify, recordAudit } from './workflowSupport.ts';
+import { assertWorkflowAdmin, validateWorkflowDecision } from './workflowGuards.ts';
 
 /**
  * WORKFLOW ENGINE
@@ -339,7 +340,7 @@ async function runSteps(base44, params) {
       ctx.results[step.name] = result;
 
       if (result.waiting) {
-        await base44.asServiceRole.entities.WorkflowStep.update(row.id, { status: 'COMPLETED', output: result }).catch(() => null);
+        await base44.asServiceRole.entities.WorkflowStep.update(row.id, { status: 'PENDING', completed_at: '', output: result });
         const finished = await finish(base44, { execution, def, meta, ctx, status: 'WAITING', reason: result.reason });
         return { ...finished, waiting: true, reason: result.reason };
       }
@@ -403,8 +404,11 @@ async function runSteps(base44, params) {
 export async function startWorkflow(base44, options = {}) {
   const def = workflowByCode(options.code);
   if (!def) return { ok: false, error: `Workflow inconnu : ${options.code}` };
+  // All workflows perform service-role writes, even those without admin_only metadata.
+  await assertWorkflowAdmin(base44);
 
   const input = options.input && typeof options.input === 'object' ? { ...options.input } : {};
+  validateWorkflowDecision(input);
   const tenantId = String(options.tenantId || input.tenant_id || '');
   const tenantOwnerEmail = String(options.tenantOwnerEmail || input.tenant_owner_email || '');
   const reference = String(
@@ -473,15 +477,20 @@ export async function resumeExecution(base44, executionId, options = {}) {
   }
   const def = workflowByCode(execution.workflow_code);
   if (!def) return { ok: false, error: `Workflow inconnu : ${execution.workflow_code}` };
+  await assertWorkflowAdmin(base44);
+  const input = { ...(execution.input || {}), ...(options.inputPatch || {}) };
+  validateWorkflowDecision(input);
 
   const stepRows = await base44.asServiceRole.entities.WorkflowStep
     .filter({ execution_id: execution.id }, 'step_index', 100)
     .catch(() => []);
-  const done = stepRows.filter((s) => s.status === 'COMPLETED' || s.status === 'SKIPPED').map((s) => s.step_index);
+  // Legacy waiting steps were marked COMPLETED: their output still requires a decision.
+  const done = stepRows.filter((s) =>
+    (s.status === 'COMPLETED' || s.status === 'SKIPPED') && !s.output?.waiting
+  ).map((s) => s.step_index);
   let startIndex = 0;
   while (done.includes(startIndex) && startIndex < def.steps.length) startIndex += 1;
 
-  const input = { ...(execution.input || {}), ...(options.inputPatch || {}) };
   const attempts = Number(execution.attempts || 1) + 1;
 
   const updated = await base44.asServiceRole.entities.WorkflowExecution.update(execution.id, {

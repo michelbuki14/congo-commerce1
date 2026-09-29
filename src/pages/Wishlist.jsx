@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Heart, Share2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import ProductGrid from '@/components/ProductGrid';
@@ -27,6 +28,7 @@ function decodeIds(value) {
 }
 
 export default function Wishlist() {
+  const { t } = useTranslation();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sharedView, setSharedView] = useState(false);
@@ -56,10 +58,10 @@ export default function Wishlist() {
     const url = `${window.location.origin}/wishlist?wl=${encodeURIComponent(encodeIds(ids))}`;
     try {
       if (navigator.share) {
-        await navigator.share({ title: 'Ma liste de favoris', url });
+        await navigator.share({ title: t('wishlist.shareTitle'), url });
       } else {
         await navigator.clipboard.writeText(url);
-        setToast('Lien copié');
+        setToast(t('wishlist.linkCopied'));
         setTimeout(() => setToast(''), 1800);
       }
     } catch {
@@ -79,14 +81,14 @@ export default function Wishlist() {
         </div>
       )}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-lg font-bold md:text-xl">Mes favoris</h1>
+        <h1 className="text-lg font-bold md:text-xl">{t('wishlist.title')}</h1>
         {!!products.length && (
           <button
             type="button"
             onClick={shareList}
             className="inline-flex items-center gap-1.5 rounded-full border border-border px-3.5 py-1.5 text-xs font-semibold"
           >
-            <Share2 className="h-3.5 w-3.5" /> Partager ma liste
+            <Share2 className="h-3.5 w-3.5" /> {t('wishlist.shareList')}
           </button>
         )}
       </div>
@@ -96,10 +98,10 @@ export default function Wishlist() {
         emptyState={
           <EmptyState
             icon={Heart}
-            title="Aucun favori"
-            description="Touchez le cœur sur un article pour le retrouver ici, même avec une connexion faible."
+            title={t('wishlist.emptyTitle')}
+            description={t('wishlist.emptyDesc')}
             actionTo="/"
-            actionLabel="Explorer les produits"
+            actionLabel={t('wishlist.emptyAction')}
           />
         }
       />

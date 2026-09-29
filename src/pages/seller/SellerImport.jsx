@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Search, Upload, Info, CheckCircle2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useActiveSeller } from '@/lib/seller';
@@ -10,16 +11,10 @@ import DashboardNav from '@/components/DashboardNav';
 import { Image } from '@/components/ui/image';
 import { formatUSD } from '@/lib/format';
 
-const LINKS = [
-  { to: '/seller', label: 'Tableau de bord', end: true },
-  { to: '/seller/products', label: 'Produits' },
-  { to: '/seller/orders', label: 'Commandes' },
-  { to: '/seller/import', label: 'Import fournisseur' },
-  { to: '/seller/wallet', label: 'Portefeuille' },
-  { to: '/seller/settings', label: 'Boutique' },
-];
+
 
 export default function SellerImport() {
+  const { t } = useTranslation();
   const { seller, loading: loadingSeller } = useActiveSeller();
   const [suppliers, setSuppliers] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -85,7 +80,7 @@ export default function SellerImport() {
 
   const writeDescription = async () => {
     if (!selected) return;
-    const text = await generateProductDescription({ title: draft.title, category: selected.category, attributes: selected.attributes });
+    const text = await generateProductDescription({ title: draft.title, category: selected.category, attributes: selected.attributes, sellerId: seller?.id });
     if (text) setDraft((d) => ({ ...d, description: text }));
   };
 
@@ -95,7 +90,7 @@ export default function SellerImport() {
     try {
       const supplier = suppliers.find((s) => s.id === selected.supplierId);
       const category = categories.find((c) => c.id === draft.category_id);
-      const tags = await suggestProductTags({ title: draft.title, description: draft.description });
+      const tags = await suggestProductTags({ title: draft.title, description: draft.description, sellerId: seller?.id });
       const product = await base44.entities.Product.create({
         tenant_id: seller.tenant_id || '',
         tenant_owner_email: seller.email || '',
@@ -131,7 +126,7 @@ export default function SellerImport() {
         products_count: (supplier.products_count || 0) + 1,
         last_sync_at: new Date().toISOString(),
       }).catch(() => {});
-      setDone(`« ${product.title} » publié à ${formatUSD(product.price_usd)}.`);
+      setDone(t('sellerImport.publishedMsg', { title: product.title, price: formatUSD(product.price_usd) }));
       setSelected(null);
     } finally {
       setPublishing(false);
@@ -142,24 +137,29 @@ export default function SellerImport() {
 
   return (
     <div className="space-y-5 pb-8">
-      <DashboardNav title="Import fournisseur" links={LINKS} />
+      <DashboardNav title={t('sellerImport.title')} links={[
+        { to: '/seller', label: t('sellerImport.navDashboard'), end: true },
+        { to: '/seller/products', label: t('sellerImport.navProducts') },
+        { to: '/seller/orders', label: t('sellerImport.navOrders') },
+        { to: '/seller/import', label: t('sellerImport.navImport') },
+        { to: '/seller/wallet', label: t('sellerImport.navWallet') },
+        { to: '/seller/settings', label: t('sellerImport.navShop') },
+      ]} />
 
       <div className="flex items-start gap-2 rounded-xl border border-sky-200 bg-sky-50 p-3 text-xs text-sky-900">
         <Info className="mt-0.5 h-4 w-4 shrink-0" />
         <p>
-          Les fournisseurs connectés ci-dessous utilisent des <strong>adaptateurs de démonstration</strong> (données simulées,
-          clairement isolées). Le catalogue et les prix réels proviendront de l'API du fournisseur une fois ses identifiants
-          configurés — sans modification du moteur de commande.
+          {t('sellerImport.demoNoteStart')} <strong>{t('sellerImport.demoNoteStrong')}</strong> {t('sellerImport.demoNoteEnd')}
         </p>
       </div>
 
       <div className="flex flex-wrap gap-2">
         {suppliers.map((s) => (
           <span key={s.id} className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold">
-            {s.name} · {s.type === 'international' ? 'International' : 'Entrepôt'} {s.is_mock ? '· démo' : ''}
+            {s.name} · {s.type === 'international' ? t('sellerImport.intl') : t('sellerImport.warehouse')} {s.is_mock ? t('sellerImport.demoTag') : ''}
           </span>
         ))}
-        {!suppliers.length && <p className="text-xs text-muted-foreground">Aucun fournisseur activé.</p>}
+        {!suppliers.length && <p className="text-xs text-muted-foreground">{t('sellerImport.noSuppliers')}</p>}
       </div>
 
       <form onSubmit={runSearch} className="flex gap-2">
@@ -168,12 +168,12 @@ export default function SellerImport() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Rechercher dans les catalogues fournisseurs…"
+            placeholder={t('sellerImport.searchPh')}
             className="h-11 w-full rounded-full border border-border bg-card pl-9 pr-3 text-sm"
           />
         </div>
         <button type="submit" className="rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground">
-          {searching ? '…' : 'Chercher'}
+          {searching ? t('sellerImport.searching') : t('sellerImport.search')}
         </button>
       </form>
 
@@ -200,22 +200,22 @@ export default function SellerImport() {
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{r.title}</p>
                 <p className="text-[11px] text-muted-foreground">
-                  {r.supplierName} · réf. {r.externalProductId} · stock {r.stock}
+                  {t('sellerImport.resultMeta', { supplier: r.supplierName, ref: r.externalProductId, stock: r.stock })}
                 </p>
-                <p className="text-xs font-bold">Coût fournisseur {formatUSD(r.supplierPrice)}</p>
+                <p className="text-xs font-bold">{t('sellerImport.supplierCost', { price: formatUSD(r.supplierPrice) })}</p>
               </div>
             </button>
           ))}
           {!results.length && !searching && (
             <p className="rounded-xl border border-dashed border-border bg-card p-6 text-center text-xs text-muted-foreground">
-              Lancez une recherche pour parcourir les catalogues fournisseurs.
+              {t('sellerImport.emptyResults')}
             </p>
           )}
         </div>
 
         {selected && (
           <div className="space-y-3 rounded-2xl border border-border bg-card p-4">
-            <h2 className="text-sm font-bold">Aperçu & publication</h2>
+            <h2 className="text-sm font-bold">{t('sellerImport.previewTitle')}</h2>
             <input
               value={draft.title}
               onChange={(e) => setDraft({ ...draft, title: e.target.value })}
@@ -228,20 +228,20 @@ export default function SellerImport() {
               className="w-full rounded-lg border border-border bg-background p-3 text-sm"
             />
             <button type="button" onClick={writeDescription} className="text-xs font-semibold text-primary">
-              Générer une description avec l'IA
+              {t('sellerImport.generateDesc')}
             </button>
             <select
               value={draft.category_id}
               onChange={(e) => setDraft({ ...draft, category_id: e.target.value })}
               className="h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"
             >
-              <option value="">Catégorie…</option>
+              <option value="">{t('sellerImport.categoryPh')}</option>
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
             </select>
             <div>
-              <label className="text-xs font-semibold text-muted-foreground">Marge appliquée : {draft.markup_percent}%</label>
+              <label className="text-xs font-semibold text-muted-foreground">{t('sellerImport.marginLabel', { value: draft.markup_percent })}</label>
               <input
                 type="range"
                 min="10"
@@ -254,13 +254,13 @@ export default function SellerImport() {
 
             {preview && (
               <div className="space-y-1 rounded-xl bg-secondary/50 p-3 text-xs">
-                <div className="flex justify-between"><span className="text-muted-foreground">Coût fournisseur</span><span>{formatUSD(preview.supplierPrice)}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Transport international</span><span>{formatUSD(preview.intlShipping)}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Importation</span><span>{formatUSD(preview.importCosts)}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Logistique locale</span><span>{formatUSD(preview.logistics)}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Marge</span><span>{formatUSD(preview.margin)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">{t('sellerImport.costRow')}</span><span>{formatUSD(preview.supplierPrice)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">{t('sellerImport.intlShipRow')}</span><span>{formatUSD(preview.intlShipping)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">{t('sellerImport.importRow')}</span><span>{formatUSD(preview.importCosts)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">{t('sellerImport.localRow')}</span><span>{formatUSD(preview.logistics)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">{t('sellerImport.marginRow')}</span><span>{formatUSD(preview.margin)}</span></div>
                 <div className="flex justify-between border-t border-border pt-1 text-sm font-bold">
-                  <span>Prix client</span><span className="text-primary">{formatUSD(preview.total)}</span>
+                  <span>{t('sellerImport.clientPrice')}</span><span className="text-primary">{formatUSD(preview.total)}</span>
                 </div>
               </div>
             )}
@@ -271,10 +271,10 @@ export default function SellerImport() {
               disabled={publishing}
               className="flex w-full items-center justify-center gap-2 rounded-full bg-primary py-3 text-sm font-bold text-primary-foreground disabled:opacity-50"
             >
-              <Upload className="h-4 w-4" /> {publishing ? 'Publication…' : 'Publier dans ma boutique'}
+              <Upload className="h-4 w-4" /> {publishing ? t('sellerImport.publishing') : t('sellerImport.publish')}
             </button>
             <p className="text-[11px] text-muted-foreground">
-              La référence fournisseur ({selected.externalProductId}) est conservée pour les synchronisations futures.
+              {t('sellerImport.refNote', { ref: selected.externalProductId })}
             </p>
           </div>
         )}

@@ -34,12 +34,12 @@ export default function PayoutRequests() {
       base44.entities.Creator.filter({ email: me.email }).catch(() => []),
     ]);
     const owners = [
-      ...sellers.map((s) => ({ type: 'seller', name: s.name })),
-      ...creators.map((c) => ({ type: 'creator', name: c.name })),
+      ...sellers.map((s) => ({ type: 'seller', id: s.id })),
+      ...creators.map((c) => ({ type: 'creator', id: c.id })),
     ];
     const found = (
       await Promise.all(
-        owners.map((o) => base44.entities.Wallet.filter({ owner_type: o.type, owner_name: o.name }).catch(() => [])),
+        owners.map((o) => base44.entities.Wallet.filter({ owner_type: o.type, owner_id: o.id }).catch(() => [])),
       )
     ).flat();
     setWallets(found);

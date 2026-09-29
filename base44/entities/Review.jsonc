@@ -24,6 +24,12 @@
     "customer_name": {
       "type": "string"
     },
+    "customer_email": {
+      "type": "string"
+    },
+    "customer_phone": {
+      "type": "string"
+    },
     "session_id": {
       "type": "string"
     },
@@ -61,7 +67,11 @@
     "rating"
   ],
   "rls": {
-    "create": null,
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
     "read": null,
     "update": {
       "user_condition": {

@@ -1,18 +1,20 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import StatusBadge from '@/components/StatusBadge';
 import { formatUSD, formatDate } from '@/lib/format';
 import { RETURN_REASONS } from '@/lib/returns';
 
 /** One delivered order with its items, each selectable with its own reason. */
 export default function ReturnOrderCard({ order, eligibility, selection, onToggle, onReason }) {
+  const { t } = useTranslation();
   return (
     <div className="rounded-xl border border-border p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <p className="text-sm font-semibold">{order.order_number}</p>
           <p className="text-[11px] text-muted-foreground">
-            {formatDate(order.created_date)} · {formatUSD(order.total_usd)} · {order.items?.length || 0} article(s)
+            {formatDate(order.created_date)} · {formatUSD(order.total_usd)} · {t('returnOrderCard.itemsLine', { count: order.items?.length || 0 })}
           </p>
         </div>
         <StatusBadge status={order.status} />
@@ -42,13 +44,13 @@ export default function ReturnOrderCard({ order, eligibility, selection, onToggl
               {picked ? (
                 <div className="mt-2 pl-7">
                   <label className="block text-[11px] font-semibold">
-                    Motif pour cet article
+                    {t('returnOrderCard.reasonForItem')}
                     <select
                       value={picked.reason}
                       onChange={(e) => onReason(key, e.target.value)}
                       className="mt-1 h-9 w-full rounded-lg border border-input bg-background px-2 text-xs"
                     >
-                      {RETURN_REASONS.map((r) => <option key={r.id} value={r.id}>{r.label}</option>)}
+                      {RETURN_REASONS.map((r) => <option key={r.id} value={r.id}>{t(r.labelKey)}</option>)}
                     </select>
                   </label>
                 </div>
@@ -60,7 +62,7 @@ export default function ReturnOrderCard({ order, eligibility, selection, onToggl
 
       {!eligibility.ok ? (
         <Link to="/support" className="mt-2 inline-block text-[11px] font-semibold text-primary">
-          Colis non reçu ? Ouvrir un ticket support
+          {t('returnOrderCard.notReceivedTicket')}
         </Link>
       ) : null}
     </div>

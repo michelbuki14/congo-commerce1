@@ -2,9 +2,11 @@ import React from 'react';
 import { Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { useTranslation } from 'react-i18next';
 import { PLAN_FEATURES, hasFeature, planAmountLabel } from '@/lib/plans';
 
-export default function PlanCard({ plan, cycle = 'monthly', current, onSelect, ctaLabel = 'Choisir ce plan', disabled = false }) {
+export default function PlanCard({ plan, cycle = 'monthly', current, onSelect, ctaLabel, disabled = false }) {
+  const { t } = useTranslation();
   const isCurrent = current && current === plan.code;
   return (
     <Card className={`flex h-full flex-col ${plan.highlighted ? 'border-primary ring-1 ring-primary' : ''}`}>
@@ -13,7 +15,7 @@ export default function PlanCard({ plan, cycle = 'monthly', current, onSelect, c
           <div className="flex items-start justify-between gap-2">
             <h3 className="font-heading text-lg font-bold">{plan.name}</h3>
             {plan.highlighted && (
-              <span className="shrink-0 rounded-full bg-primary px-2 py-0.5 text-[11px] font-semibold text-primary-foreground">Recommandé</span>
+              <span className="shrink-0 rounded-full bg-primary px-2 py-0.5 text-[11px] font-semibold text-primary-foreground">{t('planCard.recommended')}</span>
             )}
           </div>
           <p className="mt-1 text-sm text-muted-foreground">{plan.description}</p>
@@ -22,15 +24,15 @@ export default function PlanCard({ plan, cycle = 'monthly', current, onSelect, c
         <div>
           <p className="text-2xl font-bold">{planAmountLabel(plan, cycle)}</p>
           <p className="text-xs text-muted-foreground">
-            {plan.code === 'ENTERPRISE' ? 'tarif négocié' : cycle === 'yearly' ? 'par an' : 'par mois'}
-            {' · '}commission {plan.commission_rate}%
+            {plan.code === 'ENTERPRISE' ? t('planCard.negotiated') : cycle === 'yearly' ? t('planCard.perYear') : t('planCard.perMonth')}
+            {' · '}{t('planCard.commission', { rate: plan.commission_rate })}
           </p>
         </div>
 
         <ul className="space-y-1.5 border-y border-border py-3 text-sm">
-          <li>{plan.product_limit.toLocaleString('fr-FR')} produits</li>
-          <li>{plan.store_limit} boutique(s) · {plan.seller_limit} vendeur(s)</li>
-          <li>{plan.member_limit} membre(s) d’équipe</li>
+          <li>{t('planCard.products', { count: plan.product_limit.toLocaleString('fr-FR') })}</li>
+          <li>{t('planCard.storesSellers', { stores: plan.store_limit, sellers: plan.seller_limit })}</li>
+          <li>{t('planCard.members', { count: plan.member_limit })}</li>
         </ul>
 
         <ul className="flex-1 space-y-1.5 text-sm">
@@ -47,7 +49,7 @@ export default function PlanCard({ plan, cycle = 'monthly', current, onSelect, c
 
         {onSelect && (
           <Button onClick={() => onSelect(plan)} disabled={disabled || isCurrent} className="w-full">
-            {isCurrent ? 'Plan actuel' : ctaLabel}
+            {isCurrent ? t('planCard.currentPlan') : (ctaLabel || t('planCard.choose'))}
           </Button>
         )}
       </CardContent>

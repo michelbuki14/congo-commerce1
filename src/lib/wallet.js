@@ -1,38 +1,31 @@
 import { base44 } from '@/api/base44Client';
-import { round2 } from '@/lib/format';
+
+/** UI labels (French) → server method ids. */
+export const WITHDRAWAL_METHOD_IDS = {
+  'M-Pesa': 'mpesa',
+  'Airtel Money': 'airtel',
+  'Orange Money': 'orange',
+  'Virement bancaire': 'bank',
+  mpesa: 'mpesa',
+  airtel: 'airtel',
+  orange: 'orange',
+  bank: 'bank',
+};
 
 /**
- * Debits a wallet and books a PAYOUT ledger entry that the admin team settles
- * from the payouts console (approve = paid, refuse = amount credited back).
+ * Debits a wallet through the `request-withdrawal` server function, which
+ * enforces ownership, an allowlisted method, and available-balance coverage.
  * Returns the updated wallet.
  */
-export async function requestWithdrawal({ wallet, amount, method, ownerType, ownerName }) {
-  const value = round2(Number(amount) || 0);
-  const updated = await base44.entities.Wallet.update(wallet.id, {
-    balance_usd: round2((wallet.balance_usd || 0) - value),
-    lifetime_debit_usd: round2((wallet.lifetime_debit_usd || 0) + value),
-  });
-  await base44.entities.WalletTransaction.create({
+export async function requestWithdrawal({ wallet, amount, method, account }) {
+  const res = await base44.functions.invoke('request-withdrawal', {
     wallet_id: wallet.id,
-    owner_type: ownerType || wallet.owner_type,
-    owner_name: ownerName || wallet.owner_name,
-    type: 'PAYOUT',
-    direction: 'debit',
-    amount_usd: value,
-    balance_after_usd: updated.balance_usd,
-    currency: 'USD',
-    description: `Retrait vers ${method}`,
-    reference: `WD-${Date.now().toString(36).toUpperCase()}`,
-    status: 'pending',
+    amount,
+    method: WITHDRAWAL_METHOD_IDS[method] || String(method || '').toLowerCase(),
+    account: account || '',
   });
-  await base44.entities.AuditLog.create({
-    action: 'wallet.withdrawal_requested',
-    actor: ownerType || wallet.owner_type,
-    entity: 'Wallet',
-    entity_id: wallet.id,
-    reference: ownerName || wallet.owner_name,
-    severity: 'info',
-    details: { amount_usd: value, method },
-  });
-  return updated;
+  if (!res?.data?.wallet) {
+    throw new Error(res?.data?.error || 'Retrait impossible pour le moment.');
+  }
+  return res.data.wallet;
 }

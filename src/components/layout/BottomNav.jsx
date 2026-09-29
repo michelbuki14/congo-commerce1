@@ -1,23 +1,25 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Home, Compass, LayoutGrid, ShoppingBag, User } from 'lucide-react';
 import { useCart } from '@/lib/cart';
 
 const ITEMS = [
-  { label: 'Accueil', path: '/', icon: Home },
-  { label: 'Découvrir', path: '/discover', icon: Compass },
-  { label: 'Catégories', path: '/categories', icon: LayoutGrid },
-  { label: 'Panier', path: '/cart', icon: ShoppingBag, badge: true },
-  { label: 'Profil', path: '/profile', icon: User },
+  { key: 'nav.home', path: '/', icon: Home },
+  { key: 'nav.discover', path: '/discover', icon: Compass },
+  { key: 'nav.categories', path: '/categories', icon: LayoutGrid },
+  { key: 'nav.cart', path: '/cart', icon: ShoppingBag, badge: true },
+  { key: 'nav.profile', path: '/profile', icon: User },
 ];
 
 export default function BottomNav() {
+  const { t } = useTranslation();
   const location = useLocation();
   const { count } = useCart();
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card/95 backdrop-blur md:hidden">
-      <div className="grid grid-cols-5">
+      <div className="grid h-14 grid-cols-5 pb-0" style={{ marginBottom: 'env(safe-area-inset-bottom, 0px)' }}>
         {ITEMS.map((item) => {
           const Icon = item.icon;
           const active = item.path === '/' ? location.pathname === '/' : location.pathname.startsWith(item.path);
@@ -25,8 +27,9 @@ export default function BottomNav() {
             <Link
               key={item.path}
               to={item.path}
-              className={`relative flex flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition-colors ${
-                active ? 'text-primary' : 'text-muted-foreground'
+              aria-current={active ? 'page' : undefined}
+              className={`relative flex min-h-14 flex-col items-center justify-center gap-1 text-[11px] font-semibold transition-colors ${
+                active ? 'bg-primary/5 text-primary' : 'text-muted-foreground'
               }`}
             >
               <Icon className="h-5 w-5" strokeWidth={active ? 2.4 : 1.8} />
@@ -35,7 +38,7 @@ export default function BottomNav() {
                   {count}
                 </span>
               )}
-              {item.label}
+              {t(item.key)}
             </Link>
           );
         })}

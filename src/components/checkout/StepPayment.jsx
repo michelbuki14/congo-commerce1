@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Ticket } from 'lucide-react';
 import MobileMoneyField from '@/components/checkout/MobileMoneyField';
 
@@ -17,24 +18,26 @@ export default function StepPayment({
   coupon,
   couponMessage,
 }) {
+  const { t } = useTranslation();
   return (
     <>
       <section className="space-y-3 rounded-xl border border-border bg-card p-4">
-        <h2 className="text-sm font-bold">Moyen de paiement</h2>
+        <h2 className="text-sm font-bold">{t('checkout.payMethod')}</h2>
         <div className="space-y-2">
           {providers.map((p) => (
             <button
               key={p.id}
               type="button"
               onClick={() => setPaymentMethod(p.id)}
+              aria-pressed={paymentMethod === p.id}
               className={`flex min-h-[56px] w-full items-center gap-3 rounded-xl border p-3 text-left ${
                 paymentMethod === p.id ? 'border-primary bg-primary/5' : 'border-border'
               }`}
             >
               <span className={`h-5 w-5 shrink-0 rounded-full border-2 ${paymentMethod === p.id ? 'border-primary bg-primary' : 'border-border'}`} />
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold">{p.name}</p>
-                <p className="text-[11px] text-muted-foreground">{p.instructions}</p>
+                <p className="text-sm font-semibold">{t(p.nameKey)}</p>
+                <p className="text-[11px] text-muted-foreground">{t(p.instructionsKey)}</p>
               </div>
               {p.feePercent > 0 && <span className="shrink-0 text-[11px] text-muted-foreground">{p.feePercent}%</span>}
             </button>
@@ -53,25 +56,25 @@ export default function StepPayment({
 
       <section className="space-y-2 rounded-xl border border-border bg-card p-4">
         <h2 className="flex items-center gap-2 text-sm font-bold">
-          <Ticket className="h-4 w-4 text-primary" /> Code promo
+          <Ticket className="h-4 w-4 text-primary" /> {t('checkout.couponTitle')}
         </h2>
         <div className="flex gap-2">
           <input
             value={couponInput}
             onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-            placeholder="Saisissez votre code"
+            placeholder={t('checkout.couponPlaceholder')}
             autoCapitalize="characters"
             className="h-11 min-w-0 flex-1 rounded-lg border border-border bg-background px-3 text-sm uppercase"
           />
           <button type="button" onClick={applyCoupon} className="min-h-[44px] shrink-0 rounded-lg bg-secondary px-4 text-sm font-semibold">
-            Appliquer
+            {t('checkout.apply')}
           </button>
         </div>
         {couponMessage && (
           <p className={`text-xs ${coupon ? 'text-emerald-600' : 'text-destructive'}`}>{couponMessage}</p>
         )}
         <Link to="/coupons" className="inline-block text-xs font-semibold text-primary">
-          Voir les codes disponibles
+          {t('checkout.viewCoupons')}
         </Link>
       </section>
     </>

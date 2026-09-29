@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { BadgeCheck, MapPin, Truck, UserPlus, UserCheck } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Image } from '@/components/ui/image';
@@ -11,6 +12,7 @@ import { compactNumber } from '@/lib/format';
 import { inTenantScope, resolveStorefrontScope, scopeRecords } from '@/lib/tenancy';
 
 export default function Store() {
+  const { t } = useTranslation();
   const { slug } = useParams();
   const [seller, setSeller] = useState(null);
   const [products, setProducts] = useState([]);
@@ -52,11 +54,11 @@ export default function Store() {
     const next = toggleFollowId(seller.id);
     const nowFollowing = next.includes(seller.id);
     setFollowing(nowFollowing);
-    const delta = nowFollowing ? 1 : -1;
-    const updated = await base44.entities.Seller.update(seller.id, {
-      followers_count: Math.max(0, (seller.followers_count || 0) + delta),
-    }).catch(() => null);
-    if (updated) setSeller(updated);
+    const user = await base44.auth.me().catch(() => null);
+    if (user) {
+      const response = await base44.functions.invoke('sellerProfile', { action: 'follow', seller_id: seller.id, follow: nowFollowing }).catch(() => null);
+      if (response?.data?.seller) setSeller(response.data.seller);
+    }
   };
 
   if (loading) {
@@ -73,7 +75,7 @@ export default function Store() {
   }
 
   if (notFound || !seller) {
-    return <EmptyState title="Boutique introuvable" description="Cette boutique n'existe plus ou a été suspendue." actionTo="/" actionLabel="Retour à l'accueil" />;
+    return <EmptyState title={t('store.notFound')} description={t('store.notFoundDesc')} actionTo="/" actionLabel={t('store.backHome')} />;
   }
 
   return (
@@ -94,8 +96,8 @@ export default function Store() {
               <span className="flex items-center gap-1">
                 <MapPin className="h-3 w-3" /> {seller.city}, {seller.country}
               </span>
-              <span>{compactNumber(seller.followers_count || 0)} abonnés</span>
-              <span>{products.length} articles</span>
+              <span>{t('store.followers', { count: compactNumber(seller.followers_count || 0) })}</span>
+              <span>{t('store.items', { count: products.length })}</span>
             </div>
           </div>
           <button
@@ -106,36 +108,36 @@ export default function Store() {
             }`}
           >
             {following ? <UserCheck className="h-3.5 w-3.5" /> : <UserPlus className="h-3.5 w-3.5" />}
-            {following ? 'Suivi' : 'Suivre'}
+            {following ? t('store.following') : t('store.follow')}
           </button>
         </div>
       </div>
 
       <div className="grid gap-3 md:grid-cols-3">
         <div className="rounded-xl border border-border bg-card p-3">
-          <p className="text-xs font-semibold text-muted-foreground">Note boutique</p>
+          <p className="text-xs font-semibold text-muted-foreground">{t('store.storeRating')}</p>
           <RatingStars rating={seller.rating || 0} count={seller.products_count || 0} size="md" />
         </div>
         <div className="rounded-xl border border-border bg-card p-3 md:col-span-2">
           <p className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
-            <Truck className="h-3.5 w-3.5" /> Livraison & retrait
+            <Truck className="h-3.5 w-3.5" /> {t('store.deliveryPickup')}
           </p>
-          <p className="mt-0.5 text-sm">{seller.delivery_info || 'Livraison à Kinshasa sous 2 à 4 jours, retrait en point relais disponible.'}</p>
+          <p className="mt-0.5 text-sm">{seller.delivery_info || t('store.defaultDelivery')}</p>
         </div>
       </div>
 
       {seller.description && (
         <section>
-          <h2 className="mb-1.5 text-base font-bold">À propos</h2>
+          <h2 className="mb-1.5 text-base font-bold">{t('store.about')}</h2>
           <p className="text-sm leading-relaxed text-muted-foreground">{seller.description}</p>
         </section>
       )}
 
       <section>
-        <h2 className="mb-3 text-base font-bold">Produits ({products.length})</h2>
+        <h2 className="mb-3 text-base font-bold">{t('store.products', { count: products.length })}</h2>
         <ProductGrid
           products={products}
-          emptyState={<EmptyState title="Aucun produit publié" description="Cette boutique n'a pas encore d'articles en ligne." />}
+          emptyState={<EmptyState title={t('store.noProducts')} description={t('store.noProductsDesc')} />}
         />
       </section>
     </div>

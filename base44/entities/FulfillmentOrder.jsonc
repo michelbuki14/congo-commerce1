@@ -36,6 +36,9 @@
     "seller_name": {
       "type": "string"
     },
+    "seller_email": {
+      "type": "string"
+    },
     "supplier_id": {
       "type": "string"
     },
@@ -78,6 +81,8 @@
         "PENDING",
         "CONFIRMED",
         "PROCESSING",
+        "AWAITING_CUSTOMER_APPROVAL",
+        "PACKING",
         "READY_FOR_PICKUP",
         "PICKED_UP",
         "IN_TRANSIT",
@@ -95,10 +100,38 @@
     "courier_name": {
       "type": "string"
     },
+    "courier_email": {
+      "type": "string"
+    },
     "tracking_number": {
       "type": "string"
     },
     "estimated_delivery": {
+      "type": "string"
+    },
+    "intl_delivery_option": {
+      "type": "string",
+      "description": "Service level the customer chose at checkout for our own international delivery team."
+    },
+    "intl_delivery_label": {
+      "type": "string",
+      "description": "Display name of that service level, copied at order time so the label survives a tariff change."
+    },
+    "origin_warehouse": {
+      "type": "string",
+      "description": "Our receiving warehouse in the supplier's country."
+    },
+    "origin_photo_url": {
+      "type": "string",
+      "description": "Photo of the goods taken at the origin warehouse and sent to the customer for approval."
+    },
+    "origin_received_at": {
+      "type": "string"
+    },
+    "customer_approved_at": {
+      "type": "string"
+    },
+    "customer_approved_by": {
       "type": "string"
     },
     "payout_released": {
@@ -115,9 +148,41 @@
     "fulfillment_number"
   ],
   "rls": {
-    "create": { "user_condition": { "role": "admin" } },
-    "read": null,
-    "update": null,
-    "delete": { "user_condition": { "role": "admin" } }
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "data.seller_email": "{{user.email}}"
+        },
+        {
+          "data.courier_email": "{{user.email}}"
+        },
+        {
+          "data.tenant_owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
   }
 }

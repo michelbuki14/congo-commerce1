@@ -1,7 +1,10 @@
 import { base44 } from '@/api/base44Client';
 import { getPricingConfig } from './config';
+import { intlFee, intlLines, intlWeightKg } from './intlDelivery';
 import { round2, usdToCdf } from './format';
+import { getSessionId, rememberOrder, getReferralCode } from './session';
 import { notifyFulfillmentStatus } from './orderNotifications';
+import { assessCheckoutRisk } from './fraud';
 import { emitEvent } from './events';
 
 /**
@@ -49,8 +52,8 @@ export function computeCouponDiscount(coupon, subtotal) {
 }
 
 export async function findCoupon(client, code) {
-  if (!code) return null;
   const db = client || base44;
+  if (!code) return null;
   const rows = await db.entities.Coupon.filter({ code: String(code).toUpperCase().trim() });
   const coupon = rows.find((c) => c.active !== false);
   if (!coupon) return null;
@@ -59,16 +62,26 @@ export async function findCoupon(client, code) {
   return coupon;
 }
 
-export async function buildCheckoutQuote(client, { items, deliveryFee = 0, coupon = null, pricingConfig }) {
+export async function buildCheckoutQuote(client, { items, deliveryFee = 0, coupon = null, pricingConfig, intlOption = null }) {
   const db = client || base44;
   const cfg = pricingConfig || getPricingConfig();
-  const lines = await loadCartLines(db, items);
+  const lines = await loadCartLines(items);
   const subtotal = round2(lines.reduce((s, l) => s + l.line_total_usd, 0));
   const discount = computeCouponDiscount(coupon, subtotal);
 
   const threshold = Number(cfg.free_shipping_threshold_usd) || 0;
   const freeShipping = coupon?.type === 'free_shipping' || (threshold > 0 && subtotal - discount >= threshold);
-  const shipping = freeShipping ? 0 : round2(deliveryFee);
+
+  // Local delivery and the international leg are priced apart: the local fee
+  // only applies when the cart holds local goods, and the local free-shipping
+  // threshold never waives international freight.
+  const imports = intlLines(lines);
+  const intlWeight = intlWeightKg(lines);
+  const localShipping = lines.some((l) => l.product.source_type === 'local_seller') && !freeShipping
+    ? round2(deliveryFee)
+    : 0;
+  const intlShipping = imports.length ? intlFee(intlOption, intlWeight) : 0;
+  const shipping = round2(localShipping + intlShipping);
 
   const total = round2(Math.max(0, subtotal - discount) + shipping);
   return {
@@ -76,6 +89,9 @@ export async function buildCheckoutQuote(client, { items, deliveryFee = 0, coupo
     subtotal,
     discount,
     shipping,
+    localShipping,
+    intlShipping,
+    intlWeight,
     freeShipping,
     total,
     total_cdf: usdToCdf(total),
@@ -83,217 +99,131 @@ export async function buildCheckoutQuote(client, { items, deliveryFee = 0, coupo
   };
 }
 
-/** Lazily creates or returns an existing wallet.
- * `db` — Base44 SDK client. Defaults to the module-level browser client
- * when omitted so browser callers (Checkout, Admin consoles) keep working.
- * The server function passes its `asServiceRole` client explicitly so
- * all writes bypass RLS.
- */
-async function getOrCreateWallet(client, ownerType, ownerName, ownerEmail, ownerId, tenant = {}) {
-  const rows = await db.entities.Wallet.filter({ owner_type: ownerType, owner_name: ownerName });
-  if (rows[0]) return rows[0];
-  return db.entities.Wallet.create({
-    tenant_id: tenant.tenant_id || '',
-    tenant_owner_email: tenant.tenant_owner_email || '',
-    owner_type: ownerType,
-    owner_name: ownerName,
-    owner_email: ownerEmail || '',
-    owner_id: ownerId || '',
-    balance_usd: 0,
-  });
-}
-
-/** Every balance change goes through here — a balance is never written directly.
- * `client` — Base44 SDK client. Defaults to the browser client for backward
- * compatibility; the server function passes its `asServiceRole` client.
- */
-async function postTransaction(client, wallet, payload) {
-  const db = client || base44;
-  const amount = round2(payload.amount);
-  if (amount <= 0) return null;
-  const isCredit = payload.direction !== 'debit';
-  const updated = await db.entities.Wallet.update(wallet.id, {
-    balance_usd: isCredit ? round2((wallet.balance_usd || 0) + amount) : round2((wallet.balance_usd || 0) - amount),
-    lifetime_credit_usd: isCredit ? round2((wallet.lifetime_credit_usd || 0) + amount) : wallet.lifetime_credit_usd || 0,
-    lifetime_debit_usd: isCredit ? wallet.lifetime_debit_usd || 0 : round2((wallet.lifetime_debit_usd || 0) + amount),
-    pending_usd: isCredit
-      ? round2((wallet.pending_usd || 0) + (payload.status === 'pending' ? amount : 0))
-      : wallet.pending_usd || 0,
-  });
-
-  const transaction = await db.entities.WalletTransaction.create({
-    wallet_id: wallet.id,
-    tenant_id: wallet.tenant_id || '',
-    tenant_owner_email: wallet.tenant_owner_email || '',
-    owner_type: wallet.owner_type,
-    owner_name: wallet.owner_name,
-    type: payload.type,
-    direction: isCredit ? 'credit' : 'debit',
-    amount_usd: amount,
-    amount_cdf: usdToCdf(amount),
-    balance_after_usd: updated.balance_usd,
-    currency: 'USD',
-    description: payload.description,
-    reference: payload.reference || '',
-    order_id: payload.orderId || '',
-    order_number: payload.orderNumber || '',
-    idempotency_key: payload.idempotencyKey || '',
-    status: payload.status || 'posted',
-  });
-
-  return { wallet: updated, transaction };
-}
-
 /**
  * MAIN COMMERCE ENGINE ENTRY POINT
- * Order → payment → split fulfillment → ledger. Idempotent per order number.
+ * Thin tunnel to the `place-order` server function: all money math, stock
+ * checks, coupon enforcement and ledger writes happen server-side. The browser
+ * only forwards identifiers and customer input, then runs the non-authoritative
+ * post-effects (fraud assessment, event emission, device order memory).
  */
 export async function placeOrder(client, { items, profile, delivery, couponCode, paymentMethodId, paymentPhone, consent }) {
   const db = client || base44;
-  const result = await db.functions.invoke('place-order', {
-    items,
+  const sessionId = getSessionId();
+  const affiliateCode = getReferralCode();
+  let data;
+  try {
+    const res = await db.functions.invoke('place-order', {
+      items: (items || []).map((i) => ({
+        product_id: i.product_id,
+        quantity: i.quantity,
+        variant: i.variant || null,
+      })),
+      profile: {
+        name: profile?.name || '',
+        phone: profile?.phone || '',
+        email: profile?.email || '',
+        city: profile?.city || '',
+        address: profile?.address || '',
+      },
+      delivery: {
+        method: delivery?.method,
+        zone_id: delivery?.zone_id || '',
+        pickup_point_id: delivery?.pickup_point_id || '',
+        address: delivery?.address || profile?.address || '',
+        intl_option_id: delivery?.intl_option_id || '',
+        notes: delivery?.notes || '',
+      },
+      couponCode: couponCode || '',
+      paymentMethodId,
+      paymentPhone: paymentPhone || profile?.phone || '',
+      affiliateCode,
+      sessionId,
+      consent: { terms: consent?.terms === true, marketing: consent?.marketing === true },
+    });
+    data = res?.data;
+  } catch (e) {
+    throw new Error(e?.data?.error || e?.error || e?.message || 'La commande a échoué. Réessayez.');
+  }
+  if (!data?.order?.order_number) {
+    throw new Error(data?.error || 'La commande a échoué. Réessayez.');
+  }
+  const finalOrder = data.order;
+
+  await assessCheckoutRisk({
+    order: finalOrder,
+    amountUsd: data?.quote?.total || finalOrder.total_usd,
+    sessionId,
     profile,
-    delivery,
-    couponCode,
-    paymentMethodId,
-    paymentPhone,
-    consent,
-  });
-  return result.data;
-}
+    couponCode: couponCode || '',
+    affiliateCode,
+  }).catch(() => null);
 
-/**
- * Called when a fulfillment reaches DELIVERED: releases the seller payout and
- * the creator commission that were parked as `pending` at checkout time.
- */
-export async function releaseFulfillmentPayout(client, fulfillment) {
-  const db = client || base44;
-  if (fulfillment.payout_released) return { released: false };
-  const pending = await db.entities.WalletTransaction.filter({
-    reference: fulfillment.fulfillment_number,
-    status: 'pending',
+  rememberOrder(finalOrder);
+
+  emitEvent(db, 'order_placed', {
+    category: 'order',
+    source: 'Order',
+    sourceId: finalOrder.id,
+    reference: finalOrder.order_number,
+    tenantId: finalOrder.tenant_id || '',
+    tenantOwnerEmail: finalOrder.tenant_owner_email || '',
+    description: `Commande ${finalOrder.order_number} — ${finalOrder.total_usd} USD`,
+    payload: {
+      total_usd: finalOrder.total_usd,
+      payment_status: finalOrder.payment_status,
+      city: profile?.city || '',
+    },
   });
 
-  for (const tx of pending) {
-    const wallets = await db.entities.Wallet.filter({ id: tx.wallet_id });
-    const wallet = wallets[0];
-    if (!wallet) continue;
-    await db.entities.WalletTransaction.update(tx.id, { status: 'posted' });
-    await db.entities.Wallet.update(wallet.id, {
-      pending_usd: Math.max(0, round2((wallet.pending_usd || 0) - tx.amount_usd)),
+  if (finalOrder.payment_status === 'PAID') {
+    emitEvent(db, 'order_paid', {
+      category: 'order',
+      source: 'Order',
+      sourceId: finalOrder.id,
+      reference: finalOrder.order_number,
+      tenantId: finalOrder.tenant_id || '',
+      tenantOwnerEmail: finalOrder.tenant_owner_email || '',
+      description: `Paiement confirmé pour ${finalOrder.order_number}`,
+      payload: { total_usd: finalOrder.total_usd },
     });
   }
 
-  await db.entities.FulfillmentOrder.update(fulfillment.id, { payout_released: true });
-  await db.entities.AuditLog.create({
-    action: 'payout.released',
-    actor: 'admin',
-    entity: 'FulfillmentOrder',
-    entity_id: fulfillment.id,
-    reference: fulfillment.fulfillment_number,
-    severity: 'info',
-    details: { seller_payout_usd: fulfillment.seller_payout_usd, transactions: pending.length },
-  });
-  emitEvent(db, 'payout_released', {
-    category: 'order',
-    source: 'FulfillmentOrder',
-    sourceId: fulfillment.id,
-    reference: fulfillment.order_number || fulfillment.fulfillment_number || '',
-    tenantId: fulfillment.tenant_id || '',
-    tenantOwnerEmail: fulfillment.tenant_owner_email || '',
-    description: `Versement libéré — ${fulfillment.fulfillment_number || ''}`,
-    payload: {
-      order_number: fulfillment.order_number || '',
-      fulfillment_number: fulfillment.fulfillment_number || '',
-      seller_payout_usd: fulfillment.seller_payout_usd || 0,
-      transactions: pending.length,
-    },
-  });
-  return { released: true, count: pending.length };
+  return {
+    order: finalOrder,
+    fulfillments: data.fulfillments || [],
+    payment: data.payment || { status: finalOrder.payment_status, verified: finalOrder.payment_verified },
+    quote: data.quote || null,
+  };
 }
 
+/** Persist delivery transitions on the server; never accept a browser-supplied balance or owner. */
 export async function advanceFulfillment(client, fulfillment, status) {
   const db = client || base44;
-  const updated = await db.entities.FulfillmentOrder.update(fulfillment.id, { status });
-  const shipments = await db.entities.Shipment.filter({ fulfillment_order_id: fulfillment.id });
-  if (shipments[0]) {
-    const events = [...(shipments[0].events || []), { status, label: status, at: new Date().toISOString() }];
-    await db.entities.Shipment.update(shipments[0].id, { status, events });
-  }
-  if (status === 'DELIVERED') {
-    await releaseFulfillmentPayout(db, updated);
-  }
+  const { data } = await db.functions.invoke('fulfillmentAction', { action: 'advance', fulfillment_id: fulfillment.id, status });
+  const updated = data.fulfillment;
   await notifyFulfillmentStatus(db, updated, status);
   emitEvent(db, status === 'DELIVERED' ? 'order_delivered' : 'fulfillment_status_changed', {
-    category: 'order',
-    source: 'FulfillmentOrder',
-    sourceId: updated.id,
-    reference: updated.order_number || '',
-    tenantId: updated.tenant_id || '',
+    category: 'order', source: 'FulfillmentOrder', sourceId: updated.id,
+    reference: updated.order_number || '', tenantId: updated.tenant_id || '',
     tenantOwnerEmail: updated.tenant_owner_email || '',
     description: `${updated.fulfillment_number || ''} → ${status}`,
-    payload: {
-      status,
-      label: status,
-      fulfillment_number: updated.fulfillment_number || '',
-    },
+    payload: { status, label: status, fulfillment_number: updated.fulfillment_number || '' },
   });
   return updated;
 }
 
-/** Courier accepts or declines an offered delivery job. */
 export async function respondToShipment(client, { shipment, accepted }) {
   const db = client || base44;
-  const events = [
-    ...(shipment.events || []),
-    {
-      status: shipment.status,
-      label: accepted ? 'Course acceptée par le transporteur' : 'Course refusée par le transporteur',
-      at: new Date().toISOString(),
-    },
-  ];
-  return db.entities.Shipment.update(shipment.id, {
-    courier_response: accepted ? 'accepted' : 'declined',
-    events,
-  });
+  const { data } = await db.functions.invoke('fulfillmentAction', { action: 'respond', shipment_id: shipment.id, accepted });
+  return data.shipment;
 }
 
-/** Pays the courier the delivery fee of a completed course. Ledger-only, never a direct balance write. */
-async function creditCourierEarnings(client, fulfillment) {
-  const db = client || base44;
-  const amount = round2(Number(fulfillment.shipping_usd) || 0);
-  if (amount <= 0 || !fulfillment.courier_name) return;
-  const wallet = await getOrCreateWallet(db, 'courier', fulfillment.courier_name, '', fulfillment.courier_id);
-  await postTransaction(db, wallet, {
-    type: 'PAYOUT',
-    direction: 'credit',
-    amount,
-    description: `Course livrée — ${fulfillment.fulfillment_number}`,
-    reference: fulfillment.fulfillment_number,
-    orderId: fulfillment.order_id || '',
-    orderNumber: fulfillment.order_number || '',
-    idempotencyKey: `courier:${fulfillment.fulfillment_number}`,
-  });
-}
-
-/**
- * Courier-side transition. Mirrors the shipment status onto its fulfillment order,
- * releases the seller payout on delivery, and credits the courier's earnings.
- */
 export async function courierUpdateShipment(client, { shipment, fulfillment, status, label, extra = {} }) {
   const db = client || base44;
-  const events = [
-    ...(shipment.events || []),
-    { status, label: label || status, at: new Date().toISOString() },
-  ];
-  await db.entities.Shipment.update(shipment.id, { status, events, ...extra });
-  if (fulfillment) {
-    await db.entities.FulfillmentOrder.update(fulfillment.id, { status });
-    if (status === 'DELIVERED' && shipment.status !== 'DELIVERED') {
-      await releaseFulfillmentPayout(db, fulfillment);
-      await creditCourierEarnings(db, fulfillment);
-    }
-    await notifyFulfillmentStatus(db, { ...fulfillment, status }, status);
-  }
+  const { data } = await db.functions.invoke('fulfillmentAction', {
+    action: 'courierAdvance', shipment_id: shipment.id, status, label,
+    delivered_to: extra.delivered_to, proof_of_delivery: extra.proof_of_delivery, pickup_code: extra.pickup_code,
+  });
+  await notifyFulfillmentStatus(db, data.fulfillment, status);
   return true;
 }

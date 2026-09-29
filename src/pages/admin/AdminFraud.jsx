@@ -7,14 +7,17 @@ import FraudReviewQueue from '@/components/fraud/FraudReviewQueue';
 import FraudRuleEditor from '@/components/fraud/FraudRuleEditor';
 import FraudRiskSimulator from '@/components/fraud/FraudRiskSimulator';
 import { evaluateRisk, loadFraudRules, reviewFraudEvent, saveFraudRule } from '@/lib/fraud';
+import { useTranslation } from 'react-i18next';
 
-const TABS = [
-  { id: 'queue', label: 'File de revue', icon: ListChecks },
-  { id: 'rules', label: 'Règles', icon: SlidersHorizontal },
-  { id: 'simulate', label: 'Testeur', icon: FlaskConical },
+const TAB_DEFS = [
+  { id: 'queue', icon: ListChecks },
+  { id: 'rules', icon: SlidersHorizontal },
+  { id: 'simulate', icon: FlaskConical },
 ];
 
 export default function AdminFraud() {
+  const { t } = useTranslation();
+  const TABS = TAB_DEFS.map((tx) => ({ ...tx, label: t(`adminFraud.tab_${tx.id}`) }));
   const [tab, setTab] = useState('queue');
   const [events, setEvents] = useState([]);
   const [rules, setRules] = useState([]);
@@ -79,14 +82,14 @@ export default function AdminFraud() {
 
   return (
     <div className="space-y-5 pb-8">
-      <DashboardNav title="Fraude & risques" links={ADMIN_LINKS} />
+      <DashboardNav title={t('adminFraud.title')} links={ADMIN_LINKS} />
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {[
-          { icon: ListChecks, label: 'À examiner', value: open.length },
-          { icon: ShieldAlert, label: 'Risque élevé', value: severe.length },
-          { icon: ShieldCheck, label: 'Blanchis', value: cleared.length },
-          { icon: ShieldAlert, label: 'Bloqués', value: blocked.length },
+          { icon: ListChecks, label: t('adminFraud.kpiQueue'), value: open.length },
+          { icon: ShieldAlert, label: t('adminFraud.kpiSevere'), value: severe.length },
+          { icon: ShieldCheck, label: t('adminFraud.kpiCleared'), value: cleared.length },
+          { icon: ShieldAlert, label: t('adminFraud.kpiBlocked'), value: blocked.length },
         ].map((k) => (
           <div key={k.label} className="rounded-xl border border-border bg-card p-3.5">
             <k.icon className="h-4 w-4 text-primary" />
@@ -97,16 +100,16 @@ export default function AdminFraud() {
       </div>
 
       <div className="flex gap-2 overflow-x-auto">
-        {TABS.map((t) => (
+        {TABS.map((tx) => (
           <button
-            key={t.id}
+            key={tx.id}
             type="button"
-            onClick={() => setTab(t.id)}
+            onClick={() => setTab(tx.id)}
             className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold ${
-              tab === t.id ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-card'
+              tab === tx.id ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-card'
             }`}
           >
-            <t.icon className="h-3.5 w-3.5" /> {t.label}
+            <tx.icon className="h-3.5 w-3.5" /> {tx.label}
           </button>
         ))}
       </div>
@@ -126,8 +129,7 @@ export default function AdminFraud() {
       {tab === 'simulate' && <FraudRiskSimulator onSimulate={(input) => evaluateRisk(base44, input)} />}
 
       <p className="text-[11px] text-muted-foreground">
-        Chaque commande est évaluée automatiquement au moment du paiement : un score supérieur à zéro crée un dossier ici, sans
-        jamais bloquer une commande déjà payée. Les seuils et les points sont configurables dans l'onglet Règles.
+        {t('adminFraud.footnote')}
       </p>
     </div>
   );

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Gift, Info } from 'lucide-react';
 import InfoPage, { InfoSection } from '@/components/InfoPage';
 import LoyaltyTierCard from '@/components/loyalty/LoyaltyTierCard';
@@ -11,6 +12,7 @@ import { formatDate } from '@/lib/format';
 import { base44 } from '@/api/base44Client';
 
 export default function CustomerLoyalty() {
+  const { t } = useTranslation();
   const sessionId = getSessionId();
   const profile = getProfile();
   const [orders, setOrders] = useState([]);
@@ -35,7 +37,7 @@ export default function CustomerLoyalty() {
     setError('');
     setFlash('');
     if (summary.balance < reward.points) {
-      setError('Solde de points insuffisant pour cette récompense.');
+      setError(t('customerLoyalty.insufficientBalance'));
       return;
     }
     setRedeeming(reward.code);
@@ -59,7 +61,7 @@ export default function CustomerLoyalty() {
         audience: 'customer',
       }).catch(() => {});
     } catch {
-      setError("L'échange n'a pas pu être enregistré. Réessayez.");
+      setError(t('customerLoyalty.redeemFailed'));
     } finally {
       setRedeeming('');
     }
@@ -70,8 +72,8 @@ export default function CustomerLoyalty() {
   return (
     <InfoPage
       icon={Gift}
-      title="Fidélité & récompenses"
-      subtitle="Vos points viennent de vos commandes livrées : 10 points par dollar dépensé. Échangez-les contre des bons, la livraison offerte ou des coffrets cadeaux."
+      title={t('customerLoyalty.title')}
+      subtitle={t('customerLoyalty.subtitle')}
     >
       <LoyaltyTierCard summary={summary} />
 
@@ -80,7 +82,7 @@ export default function CustomerLoyalty() {
 
       <RewardsCatalog balance={summary.balance} onRedeem={redeem} redeeming={redeeming} />
 
-      <InfoSection title="Historique de mes points">
+      <InfoSection title={t('customerLoyalty.historyTitle')}>
         {orders.length || redemptions.length ? (
           <div className="space-y-2">
             {[
@@ -88,7 +90,7 @@ export default function CustomerLoyalty() {
                 .filter((o) => o.status === 'DELIVERED' && o.payment_status !== 'REFUNDED')
                 .map((o) => ({
                   key: `order-${o.id}`,
-                  label: `Commande ${o.order_number}`,
+                  label: t('customerLoyalty.orderLine', { number: o.order_number }),
                   detail: formatDate(o.created_date),
                   points: `+${Math.round((Number(o.total_usd) || 0) * 10)}`,
                   positive: true,
@@ -114,37 +116,35 @@ export default function CustomerLoyalty() {
           </div>
         ) : (
           <p className="text-xs text-muted-foreground">
-            Aucun mouvement pour l'instant. Vos points apparaissent dès qu'une commande est livrée.
+            {t('customerLoyalty.noMovements')}
           </p>
         )}
         {summary.pending > 0 ? (
           <p className="mt-2 text-[11px] text-muted-foreground">
-            {summary.pending.toLocaleString('fr-FR')} points seront crédités à la livraison de vos commandes en cours.
+            {t('customerLoyalty.pendingPoints', { count: summary.pending.toLocaleString('fr-FR') })}
           </p>
         ) : null}
       </InfoSection>
 
-      <InfoSection title="Les niveaux de fidélité">
+      <InfoSection title={t('customerLoyalty.tiersTitle')}>
         <div className="space-y-2">
           {LOYALTY_TIERS.map((tier) => (
             <div key={tier.code} className={`rounded-xl border p-3 ${tier.code === summary.tier.code ? 'border-primary bg-primary/5' : 'border-border'}`}>
               <div className="flex items-center justify-between gap-2">
-                <p className="text-xs font-bold">{tier.name}</p>
-                <span className="text-[11px] text-muted-foreground">dès {tier.min_points.toLocaleString('fr-FR')} points</span>
+                <p className="text-xs font-bold">{t(tier.nameKey)}</p>
+                <span className="text-[11px] text-muted-foreground">{t('customerLoyalty.fromPoints', { count: tier.min_points.toLocaleString('fr-FR') })}</span>
               </div>
-              <p className="mt-0.5 text-[11px] text-muted-foreground">{tier.perks.join(' · ')}</p>
+              <p className="mt-0.5 text-[11px] text-muted-foreground">{t(tier.perksKey, { returnObjects: true }).join(' · ')}</p>
             </div>
           ))}
         </div>
       </InfoSection>
 
-      <InfoSection title="Bon à savoir">
+      <InfoSection title={t('customerLoyalty.goodToKnow')}>
         <p className="flex items-start gap-1.5">
           <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-          Les points suivent votre numéro de téléphone et cet appareil : renseignez le même numéro au paiement pour ne rien
-          perdre. Les commandes annulées ou remboursées ne rapportent pas de points, et les points échangés sont déduits
-          définitivement. Besoin d'aide sur un code ?{' '}
-          <Link to="/support-tickets" className="font-semibold text-primary">Écrivez au support</Link>.
+          {t('customerLoyalty.goodToKnowText')}{' '}
+          <Link to="/support-tickets" className="font-semibold text-primary">{t('customerLoyalty.supportLink')}</Link>.
         </p>
       </InfoSection>
     </InfoPage>

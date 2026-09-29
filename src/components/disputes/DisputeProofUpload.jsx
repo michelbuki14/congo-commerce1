@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Paperclip, FileCheck2, Loader2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
 /** Uploads a delivery proof to private storage and hands the file URI back. */
 export default function DisputeProofUpload({ dispute, onUploaded }) {
+  const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -17,7 +19,7 @@ export default function DisputeProofUpload({ dispute, onUploaded }) {
       const { file_uri } = await base44.integrations.Core.UploadPrivateFile({ file });
       await onUploaded(dispute, file_uri);
     } catch {
-      setError("L'envoi a échoué. Réessayez.");
+      setError(t('disputeProofUpload.uploadFailed'));
     } finally {
       setBusy(false);
     }
@@ -26,10 +28,7 @@ export default function DisputeProofUpload({ dispute, onUploaded }) {
   const view = async () => {
     setBusy(true);
     try {
-      const { signed_url } = await base44.integrations.Core.CreateFileSignedUrl({
-        file_uri: dispute.proof_of_delivery,
-        expires_in: 300,
-      });
+      const { data: { signed_url } } = await base44.functions.invoke('viewDeliveryProof', { kind: 'dispute', id: dispute.id });
       window.open(signed_url, '_blank', 'noopener');
     } finally {
       setBusy(false);
@@ -45,13 +44,13 @@ export default function DisputeProofUpload({ dispute, onUploaded }) {
           disabled={busy}
           className="flex items-center gap-1.5 rounded-full bg-emerald-100 px-3.5 py-1.5 text-xs font-semibold text-emerald-900 disabled:opacity-40"
         >
-          <FileCheck2 className="h-3.5 w-3.5" /> Preuve de livraison
+          <FileCheck2 className="h-3.5 w-3.5" /> {t('disputeProofUpload.proofLabel')}
         </button>
       ) : null}
 
       <label className="flex cursor-pointer items-center gap-1.5 rounded-full border border-border px-3.5 py-1.5 text-xs font-semibold">
         {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Paperclip className="h-3.5 w-3.5" />}
-        {dispute.proof_of_delivery ? 'Remplacer la preuve' : 'Joindre une preuve de livraison'}
+        {dispute.proof_of_delivery ? t('disputeProofUpload.replaceProof') : t('disputeProofUpload.attachProof')}
         <input type="file" accept="image/*,application/pdf" onChange={upload} disabled={busy} className="hidden" />
       </label>
 

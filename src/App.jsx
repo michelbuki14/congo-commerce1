@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Navigate, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
@@ -16,6 +16,8 @@ import AdminOnly from '@/components/AdminOnly';
 import { CartProvider } from '@/lib/cart';
 import { CurrencyProvider } from '@/lib/currency';
 import AppLayout from '@/components/layout/AppLayout';
+import Backoffice from '@/pages/Backoffice';
+import SalesIntelligence from '@/pages/admin/SalesIntelligence';
 
 // Customer
 import Home from '@/pages/Home';
@@ -81,7 +83,7 @@ import CustomerLoyalty from '@/pages/CustomerLoyalty';
 import VendorRatings from '@/pages/VendorRatings';
 import BulkImport from '@/pages/BulkImport';
 import NotificationSettings from '@/pages/NotificationSettings';
-import NewsletterSignup from '@/pages/NewsletterSignup';
+import NewsletterPreferences from '@/pages/NewsletterPreferences';
 import SavedAddresses from '@/pages/SavedAddresses';
 import ProductComparison from '@/pages/ProductComparison';
 import PartnerDirectory from '@/pages/PartnerDirectory';
@@ -200,8 +202,8 @@ const AuthenticatedApp = () => {
         <Route path="/returns" element={<Returns />} />
         <Route path="/returns-portal" element={<ReturnsPortal />} />
         <Route path="/order-returns" element={<OrderReturns />} />
-        <Route path="/vendor-onboarding" element={<SellerApplication />} />
-        <Route path="/seller-onboarding" element={<SellerApplication />} />
+        <Route path="/vendor-onboarding" element={<Navigate to="/seller-application" replace />} />
+        <Route path="/seller-onboarding" element={<Navigate to="/seller-application" replace />} />
         <Route path="/customer-loyalty" element={<CustomerLoyalty />} />
         <Route path="/vendor-ratings" element={<VendorRatings />} />
         <Route path="/product-comparison" element={<ProductComparison />} />
@@ -243,20 +245,20 @@ const AuthenticatedApp = () => {
           <Route path="/payout-requests" element={<PayoutRequests />} />
           <Route path="/dispute-resolution" element={<DisputeResolution />} />
           <Route path="/subscription-plans" element={<SubscriptionPlans />} />
-          <Route path="/payout-portal" element={<PayoutRequests />} />
-          <Route path="/courier-dashboard" element={<CourierConsole />} />
-          <Route path="/inventory-manager" element={<InventoryManagement />} />
-          <Route path="/creator-revenue" element={<CreatorDashboard />} />
-          <Route path="/tax-compliance" element={<TaxReports />} />
+          <Route path="/payout-portal" element={<Navigate to="/payout-requests" replace />} />
+          <Route path="/courier-dashboard" element={<Navigate to="/courier" replace />} />
+          <Route path="/inventory-manager" element={<Navigate to="/inventory-management" replace />} />
+          <Route path="/creator-revenue" element={<Navigate to="/creator" replace />} />
+          <Route path="/tax-compliance" element={<Navigate to="/tax-reports" replace />} />
           <Route path="/bulk-import" element={<BulkImport />} />
           <Route path="/notification-settings" element={<NotificationSettings />} />
-          <Route path="/newsletter-signup" element={<NewsletterSignup />} />
+          <Route path="/newsletter-signup" element={<NewsletterPreferences />} />
           <Route path="/saved-addresses" element={<SavedAddresses />} />
           <Route path="/user-profile" element={<UserProfile />} />
           <Route path="/payment-methods" element={<PaymentMethods />} />
           <Route path="/seller-reports" element={<SellerReports />} />
-          <Route path="/account-activity" element={<SecurityActivity />} />
-          <Route path="/tax-documents" element={<TaxReports />} />
+          <Route path="/account-activity" element={<Navigate to="/security-activity" replace />} />
+          <Route path="/tax-documents" element={<Navigate to="/tax-reports" replace />} />
           <Route path="/creator" element={<CreatorDashboard />} />
           <Route path="/courier" element={<CourierConsole />} />
 
@@ -326,6 +328,12 @@ const AuthenticatedApp = () => {
             <Route path="/logistics-hub" element={<LogisticsHub />} />
             <Route path="/workflow-monitor" element={<WorkflowMonitor />} />
           </Route>
+        </Route>
+      </Route>
+      <Route element={<RequireLogin />}>
+        <Route element={<AdminOnly />}>
+          <Route path="/backoffice" element={<Backoffice />} />
+          <Route path="/backoffice/sales" element={<SalesIntelligence />} />
         </Route>
       </Route>
       <Route path="/login" element={<Login />} />

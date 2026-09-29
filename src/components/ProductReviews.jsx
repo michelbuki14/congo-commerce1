@@ -3,6 +3,7 @@ import { Star, BadgeCheck, PackageCheck } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import RatingStars from './RatingStars';
 import { getProfile, getSessionId } from '@/lib/session';
+import { fetchMyOrders } from '@/lib/customerAccount';
 import { timeAgo } from '@/lib/format';
 
 /** Only an order that actually reached the customer unlocks a review. */
@@ -36,7 +37,7 @@ export default function ProductReviews({ product, onChanged }) {
     const check = async () => {
       const sessionId = getSessionId();
       const [orders, mine] = await Promise.all([
-        base44.entities.Order.filter({ session_id: sessionId }, '-created_date', 50).catch(() => []),
+        fetchMyOrders({ sessionId, limit: 50 }),
         base44.entities.Review.filter({ product_id: product.id, session_id: sessionId }).catch(() => []),
       ]);
       if (cancelled) return;
@@ -57,27 +58,23 @@ export default function ProductReviews({ product, onChanged }) {
     setSaving(true);
     setError('');
     try {
-      await base44.entities.Review.create({
+      const res = await base44.functions.invoke('submit-review', {
         product_id: product.id,
-        product_title: product.title,
-        seller_id: product.seller_id || '',
-        customer_name: name || 'Client Congo Commerce',
         rating,
         comment,
+        name: name || getProfile().name || '',
+        phone: getProfile().phone || '',
         session_id: getSessionId(),
-        order_number: entitlement.order.order_number,
-        verified_purchase: true,
       });
+      if (!res?.data?.review) throw new Error(res?.data?.error || "Avis refusé.");
+      if (res.data.product) onChanged?.(res.data.product);
       const all = await base44.entities.Review.filter({ product_id: product.id, status: 'published' }, '-created_date', 100);
-      const avg = all.length ? Math.round((all.reduce((s, r) => s + (r.rating || 0), 0) / all.length) * 10) / 10 : 0;
-      const updated = await base44.entities.Product.update(product.id, { rating: avg, reviews_count: all.length });
-      onChanged?.(updated);
       setReviews(all);
       setComment('');
       setOpen(false);
       setEntitlement((prev) => ({ ...prev, alreadyReviewed: true }));
     } catch (err) {
-      setError("Impossible d'enregistrer votre avis pour le moment.");
+      setError(err?.data?.error || err?.message || "Impossible d'enregistrer votre avis pour le moment.");
     } finally {
       setSaving(false);
     }

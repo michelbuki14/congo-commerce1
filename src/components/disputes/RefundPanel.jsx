@@ -1,27 +1,28 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { RotateCcw, AlertCircle } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
 import StatusBadge from '@/components/StatusBadge';
-import { getProfile, uid } from '@/lib/session';
+import { openReturn, fetchMyReturns } from '@/lib/customerAccount';
+import { getProfile } from '@/lib/session';
 import { formatUSD, formatDate } from '@/lib/format';
 
-const REASONS = [
-  { id: 'not_received', label: 'Article non reçu' },
-  { id: 'wrong_product', label: 'Mauvais article reçu' },
-  { id: 'damaged', label: 'Article endommagé' },
-  { id: 'not_as_described', label: 'Article non conforme' },
-  { id: 'missing_item', label: 'Article manquant' },
-  { id: 'changed_mind', label: "Changement d'avis" },
-];
-
-const STAGES = [
-  { id: 'requested', label: 'Demandé' },
-  { id: 'under_review', label: 'En examen' },
-  { id: 'approved', label: 'Approuvé' },
-  { id: 'refunded', label: 'Remboursé' },
-];
-
 export default function RefundPanel() {
+  const { t } = useTranslation();
+  const REASONS = [
+    { id: 'not_received', label: t('refundPanel.reasonNotReceived') },
+    { id: 'wrong_product', label: t('refundPanel.reasonWrongProduct') },
+    { id: 'damaged', label: t('refundPanel.reasonDamaged') },
+    { id: 'not_as_described', label: t('refundPanel.reasonNotAsDescribed') },
+    { id: 'missing_item', label: t('refundPanel.reasonMissingItem') },
+    { id: 'changed_mind', label: t('refundPanel.reasonChangedMind') },
+  ];
+
+  const STAGES = [
+    { id: 'requested', label: t('refundPanel.stageRequested') },
+    { id: 'under_review', label: t('refundPanel.stageUnderReview') },
+    { id: 'approved', label: t('refundPanel.stageApproved') },
+    { id: 'refunded', label: t('refundPanel.stageRefunded') },
+  ];
   const profile = getProfile();
   const [returns, setReturns] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -31,8 +32,7 @@ export default function RefundPanel() {
   const [success, setSuccess] = useState('');
 
   const load = async (phone) => {
-    const rows = await base44.entities.Return.filter({ customer_phone: phone || '—' }, '-created_date', 30).catch(() => []);
-    setReturns(rows);
+    setReturns(await fetchMyReturns({ phone }));
     setLoading(false);
   };
 
@@ -46,39 +46,24 @@ export default function RefundPanel() {
     setError('');
     setSuccess('');
     if (!form.order_number.trim()) {
-      setError('Indiquez le numéro de commande concerné.');
+      setError(t('refundPanel.orderNumberRequired'));
       return;
     }
     setSubmitting(true);
     try {
       const number = form.order_number.trim().toUpperCase();
-      const orderRows = await base44.entities.Order.filter({ order_number: number }).catch(() => []);
-      const order = orderRows[0];
-      await base44.entities.Return.create({
-        return_number: `RET-${uid('').slice(1, 7).toUpperCase()}`,
-        order_id: order?.id || '',
-        order_number: number,
-        customer_name: profile.name || 'Client',
-        customer_phone: form.phone || profile.phone || '',
-        product_title: form.product_title || order?.items?.[0]?.title || '',
+      await openReturn({
+        orderNumber: number,
+        phone: form.phone || profile.phone || '',
         reason: form.reason,
         description: form.description,
-        refund_amount_usd: order?.total_usd || 0,
-        status: 'requested',
+        items: [{ product_title: form.product_title }],
       });
-      await base44.entities.Notification.create({
-        title: 'Nouvelle demande de remboursement',
-        message: `${profile.name || 'Un client'} demande un remboursement sur ${number}.`,
-        type: 'order',
-        audience: 'admin',
-        order_number: number,
-        is_demo: true,
-      });
-      setSuccess('Votre demande de remboursement est transmise. Un agent vous répond sous 48 h.');
+      setSuccess(t('refundPanel.refundSent'));
       setForm({ ...form, order_number: '', product_title: '', description: '' });
       await load(form.phone || profile.phone);
     } catch {
-      setError("La demande n'a pas pu être envoyée. Réessayez.");
+      setError(t('refundPanel.submitFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -88,27 +73,27 @@ export default function RefundPanel() {
     <>
       <section className="space-y-3 rounded-2xl border border-border bg-card p-4">
         <h2 className="flex items-center gap-2 text-sm font-bold">
-          <RotateCcw className="h-4 w-4 text-primary" /> Demander un remboursement
+          <RotateCcw className="h-4 w-4 text-primary" /> {t('refundPanel.askRefund')}
         </h2>
         <form onSubmit={submit} className="space-y-3">
           <div className="grid gap-3 md:grid-cols-2">
             <input
               value={form.order_number}
               onChange={(e) => setForm({ ...form, order_number: e.target.value.toUpperCase() })}
-              placeholder="Numéro de commande (CC-…)"
+              placeholder={t('refundPanel.orderNumberPh')}
               className="h-11 rounded-lg border border-border bg-background px-3 text-sm"
             />
             <input
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              placeholder="Téléphone"
+              placeholder={t('refundPanel.phonePh')}
               className="h-11 rounded-lg border border-border bg-background px-3 text-sm"
             />
           </div>
           <input
             value={form.product_title}
             onChange={(e) => setForm({ ...form, product_title: e.target.value })}
-            placeholder="Article concerné (optionnel)"
+            placeholder={t('refundPanel.itemPh')}
             className="h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"
           />
           <select
@@ -124,7 +109,7 @@ export default function RefundPanel() {
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
             rows={3}
-            placeholder="Précisez le montant attendu et les pièces disponibles (photos, reçu mobile money…)"
+            placeholder={t('refundPanel.descPh')}
             className="w-full rounded-lg border border-border bg-background p-3 text-sm"
           />
           {error && (
@@ -138,13 +123,13 @@ export default function RefundPanel() {
             disabled={submitting}
             className="rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50"
           >
-            {submitting ? 'Envoi…' : 'Envoyer la demande'}
+            {submitting ? t('refundPanel.sending') : t('refundPanel.submit')}
           </button>
         </form>
       </section>
 
       <section className="rounded-2xl border border-border bg-card p-4">
-        <h2 className="mb-3 text-sm font-bold">Mes demandes de remboursement</h2>
+        <h2 className="mb-3 text-sm font-bold">{t('refundPanel.myRefunds')}</h2>
         {loading ? (
           <div className="h-16 animate-pulse rounded-lg bg-secondary" />
         ) : returns.length ? (
@@ -173,13 +158,13 @@ export default function RefundPanel() {
                       </span>
                     ))}
                   </div>
-                  {r.resolution_notes && <p className="mt-1.5 text-xs font-medium text-primary">Réponse : {r.resolution_notes}</p>}
+                  {r.resolution_notes && <p className="mt-1.5 text-xs font-medium text-primary">{t('refundPanel.responseIs', { notes: r.resolution_notes })}</p>}
                 </div>
               );
             })}
           </div>
         ) : (
-          <p className="text-xs text-muted-foreground">Aucune demande enregistrée sur ce numéro de téléphone.</p>
+          <p className="text-xs text-muted-foreground">{t('refundPanel.noRequests')}</p>
         )}
       </section>
     </>

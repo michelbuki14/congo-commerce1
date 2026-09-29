@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Gavel } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useActiveSeller } from '@/lib/seller';
@@ -6,15 +7,16 @@ import OpsHeader from '@/components/ops/OpsHeader';
 import StatCard from '@/components/ops/StatCard';
 import DisputeCaseCard from '@/components/disputes/DisputeCaseCard';
 import { OPEN_STATUSES, threadFor } from '@/lib/disputeResolution';
+import { fetchSellerDisputes, fetchSellerThreads } from '@/lib/customerAccount';
 import { formatUSD } from '@/lib/format';
 
-const TABS = [
-  { id: 'open', label: 'Ouverts' },
-  { id: 'resolved', label: 'Traités' },
-  { id: 'all', label: 'Tous' },
-];
-
 export default function DisputeResolution() {
+  const { t } = useTranslation();
+  const TABS = [
+    { id: 'open', label: t('disputeResolution.tabOpen') },
+    { id: 'resolved', label: t('disputeResolution.tabResolved') },
+    { id: 'all', label: t('disputeResolution.tabAll') },
+  ];
   const { seller, loading: loadingSeller } = useActiveSeller();
   const [actor, setActor] = useState(null);
   const [disputes, setDisputes] = useState([]);
@@ -33,11 +35,10 @@ export default function DisputeResolution() {
     const [cases, threads] = await Promise.all([
       isAdmin
         ? base44.entities.Dispute.list('-created_date', 100).catch(() => [])
-        : Promise.all([
-            base44.entities.Dispute.filter({ tenant_owner_email: actor.email }, '-created_date', 100).catch(() => []),
-            seller ? base44.entities.Dispute.filter({ seller_name: seller.name }, '-created_date', 100).catch(() => []) : [],
-          ]).then(([mine, byName]) => [...mine, ...byName].reduce((acc, d) => (acc.some((x) => x.id === d.id) ? acc : [...acc, d]), [])),
-      base44.entities.SupportTicket.list('-created_date', 100).catch(() => []),
+        : fetchSellerDisputes(),
+      isAdmin
+        ? base44.entities.SupportTicket.list('-created_date', 100).catch(() => [])
+        : fetchSellerThreads(),
     ]);
     setDisputes(cases);
     setTickets(threads);
@@ -49,7 +50,7 @@ export default function DisputeResolution() {
   }, [load]);
 
   const mergeTicket = (ticket) => {
-    setTickets((prev) => (prev.some((t) => t.id === ticket.id) ? prev.map((t) => (t.id === ticket.id ? ticket : t)) : [ticket, ...prev]));
+    setTickets((prev) => (prev.some((tx) => tx.id === ticket.id) ? prev.map((tx) => (tx.id === ticket.id ? ticket : tx)) : [ticket, ...prev]));
   };
 
   const open = disputes.filter((d) => OPEN_STATUSES.includes(String(d.status || '')));
@@ -67,38 +68,37 @@ export default function DisputeResolution() {
   return (
     <div className="space-y-5 pb-8">
       <OpsHeader
-        title="Résolution des litiges"
+        title={t('disputeResolution.title')}
         subtitle={isAdmin
-          ? 'Examinez les dossiers ouverts, échangez avec le client et le vendeur, puis exécutez le remboursement ou le remplacement.'
-          : 'Suivez les litiges sur vos commandes, transmettez vos pièces et proposez une résolution à la médiation.'}
+          ? t('disputeResolution.subtitleAdmin')
+          : t('disputeResolution.subtitleSeller')}
       />
 
       <div className="grid grid-cols-2 gap-2.5 md:grid-cols-4">
-        <StatCard label="Litiges ouverts" value={open.length} tone={open.length ? 'warn' : 'good'} />
-        <StatCard label="Montant en jeu" value={formatUSD(atStake)} hint="dossiers ouverts" />
-        <StatCard label="Sans réponse" value={awaiting} hint="aucun échange au dossier" tone={awaiting ? 'warn' : 'good'} />
-        <StatCard label="Dossiers traités" value={disputes.length - open.length} hint="historique complet" />
+        <StatCard label={t('disputeResolution.statOpen')} value={open.length} tone={open.length ? 'warn' : 'good'} />
+        <StatCard label={t('disputeResolution.statStake')} value={formatUSD(atStake)} hint={t('disputeResolution.hintOpenCases')} />
+        <StatCard label={t('disputeResolution.statAwaiting')} value={awaiting} hint={t('disputeResolution.hintNoThread')} tone={awaiting ? 'warn' : 'good'} />
+        <StatCard label={t('disputeResolution.statResolved')} value={disputes.length - open.length} hint={t('disputeResolution.hintHistory')} />
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {TABS.map((t) => (
+        {TABS.map((tx) => (
           <button
-            key={t.id}
+            key={tx.id}
             type="button"
-            onClick={() => setTab(t.id)}
+            onClick={() => setTab(tx.id)}
             className={`rounded-full px-3.5 py-1.5 text-xs font-semibold ${
-              tab === t.id ? 'bg-primary text-primary-foreground' : 'bg-secondary'
+              tab === tx.id ? 'bg-primary text-primary-foreground' : 'bg-secondary'
             }`}
           >
-            {t.label}
+            {tx.label}
           </button>
         ))}
       </div>
 
       {!isAdmin ? (
         <p className="rounded-xl border border-primary/30 bg-primary/5 p-3 text-xs">
-          Vous pouvez échanger avec la médiation et proposer une résolution. L'exécution du remboursement relève de
-          l'équipe Congo Commerce : votre proposition est jointe au dossier et arbitrée sous 48 h.
+          {t('disputeResolution.sellerNotice')}
         </p>
       ) : null}
 
@@ -118,7 +118,7 @@ export default function DisputeResolution() {
         </div>
       ) : (
         <p className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-card p-6 text-center text-xs text-muted-foreground">
-          <Gavel className="h-4 w-4" /> Aucun litige dans ce filtre.
+          <Gavel className="h-4 w-4" /> {t('disputeResolution.emptyFilter')}
         </p>
       )}
     </div>

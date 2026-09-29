@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
+import { requireAdmin } from '../../shared/security.ts';
 import {
   buildCsv,
   dedupeById,
@@ -26,23 +27,19 @@ export default async function (req) {
     const requestId = String(body.request_id || '').trim();
     if (!requestId) return Response.json({ error: 'request_id is required' }, { status: 400 });
 
+    // This report carries a person's whole purchase history, so an administrator
+    // must ask for it on every path. The platform's own lifecycle calls this
+    // function with the administrator session it runs under (as it does for the
+    // sibling steps of that same workflow), so an anonymous caller who merely
+    // knows a request id can no longer trigger the report once compliance has
+    // marked it ready.
+    const auth = await requireAdmin(base44);
+    if (!auth.ok) return auth.response;
+
     const service = base44.asServiceRole;
     const request = await service.entities.DataRequest.get(requestId).catch(() => null);
     if (!request) return Response.json({ error: 'DataRequest not found' }, { status: 404 });
     if (request.report_sent_at) return Response.json({ skipped: true, reason: 'report already sent' });
-
-    // This report carries a person's whole purchase history, so an
-    // administrator must ask for it. The platform's own lifecycle runs without
-    // a session: it may only proceed once compliance has verified the requester
-    // and marked the request ready to send — a state an outsider cannot reach,
-    // because DataRequest updates are administrator-only.
-    const caller = await base44.auth.me().catch(() => null);
-    if (caller && String(caller.role || '') !== 'admin') {
-      return Response.json({ error: 'Réservé aux administrateurs' }, { status: 403 });
-    }
-    if (!caller && !(String(request.status || '') === 'ready' && request.verified_at)) {
-      return Response.json({ error: 'Authentification requise' }, { status: 401 });
-    }
 
     const reference = request.request_number || requestId;
     const email = String(request.email || '').trim();

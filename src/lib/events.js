@@ -11,20 +11,20 @@ export const EVENT_CATEGORIES = {
 };
 
 export const EVENT_LABELS = {
-  order_placed: 'Commande enregistrée',
-  order_paid: 'Paiement confirmé',
-  payment_failed: 'Paiement échoué',
-  fulfillment_status_changed: 'Expédition mise à jour',
-  order_delivered: 'Commande livrée',
-  payout_released: 'Versement libéré',
-  product_published: 'Produit publié',
-  product_archived: 'Produit archivé',
-  product_low_stock: 'Stock faible',
-  seller_applied: 'Candidature vendeur',
-  account_created: 'Nouveau compte',
-  dispute_opened: 'Litige ouvert',
-  return_requested: 'Demande de retour',
-  risk_flagged: 'Risque détecté',
+  order_placed: 'eventLog.orderPlaced',
+  order_paid: 'eventLog.orderPaid',
+  payment_failed: 'eventLog.paymentFailed',
+  fulfillment_status_changed: 'eventLog.fulfillmentChanged',
+  order_delivered: 'eventLog.orderDelivered',
+  payout_released: 'eventLog.payoutReleased',
+  product_published: 'eventLog.productPublished',
+  product_archived: 'eventLog.productArchived',
+  product_low_stock: 'eventLog.productLowStock',
+  seller_applied: 'eventLog.sellerApplied',
+  account_created: 'eventLog.accountCreated',
+  dispute_opened: 'eventLog.disputeOpened',
+  return_requested: 'eventLog.returnRequested',
+  risk_flagged: 'eventLog.riskFlagged',
 };
 
 /** Emit a platform event. Accepts an optional Base44 client so server functions

@@ -6,8 +6,10 @@ import StatusBadge from '@/components/StatusBadge';
 import { Image } from '@/components/ui/image';
 import { ADMIN_LINKS } from '@/lib/navLinks';
 import { formatUSD } from '@/lib/format';
+import { useTranslation } from 'react-i18next';
 
 export default function AdminProducts() {
+  const { t } = useTranslation();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [term, setTerm] = useState('');
@@ -22,12 +24,12 @@ export default function AdminProducts() {
   }, []);
 
   const visible = useMemo(() => {
-    const t = term.trim().toLowerCase();
+    const q = term.trim().toLowerCase();
     return products.filter((p) => {
       if (status !== 'all' && p.status !== status) return false;
       if (source === 'local' && p.source_type === 'international_supplier') return false;
       if (source === 'international' && p.source_type !== 'international_supplier') return false;
-      if (t && !`${p.title} ${p.seller_name || ''} ${p.supplier_name || ''}`.toLowerCase().includes(t)) return false;
+      if (q && !`${p.title} ${p.seller_name || ''} ${p.supplier_name || ''}`.toLowerCase().includes(q)) return false;
       return true;
     });
   }, [products, term, status, source]);
@@ -49,7 +51,7 @@ export default function AdminProducts() {
 
   return (
     <div className="space-y-5 pb-8">
-      <DashboardNav title="Catalogue produits" links={ADMIN_LINKS} />
+      <DashboardNav title={t('adminProducts.title')} links={ADMIN_LINKS} />
 
       <div className="flex flex-wrap gap-2">
         <div className="relative min-w-[200px] flex-1">
@@ -57,20 +59,20 @@ export default function AdminProducts() {
           <input
             value={term}
             onChange={(e) => setTerm(e.target.value)}
-            placeholder="Rechercher un produit, vendeur, fournisseur…"
+            placeholder={t('adminProducts.search')}
             className="h-10 w-full rounded-full border border-border bg-card pl-9 pr-3 text-sm"
           />
         </div>
         <select value={status} onChange={(e) => setStatus(e.target.value)} className="h-10 rounded-lg border border-border bg-card px-3 text-xs">
-          <option value="all">Tous les statuts</option>
-          <option value="published">Publiés</option>
-          <option value="draft">Brouillons</option>
-          <option value="archived">Archivés</option>
+          <option value="all">{t('adminProducts.allStatuses')}</option>
+          <option value="published">{t('adminProducts.published')}</option>
+          <option value="draft">{t('adminProducts.drafts')}</option>
+          <option value="archived">{t('adminProducts.archived')}</option>
         </select>
         <select value={source} onChange={(e) => setSource(e.target.value)} className="h-10 rounded-lg border border-border bg-card px-3 text-xs">
-          <option value="all">Toutes provenances</option>
-          <option value="local">Local RDC</option>
-          <option value="international">International</option>
+          <option value="all">{t('adminProducts.allSources')}</option>
+          <option value="local">{t('adminProducts.local')}</option>
+          <option value="international">{t('adminProducts.intl')}</option>
         </select>
       </div>
 
@@ -90,7 +92,7 @@ export default function AdminProducts() {
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{p.title}</p>
                 <p className="text-[11px] text-muted-foreground">
-                  {p.seller_name || p.supplier_name} · réf. {p.external_product_id || 'local'} · stock {p.stock ?? 0}
+                  {t('adminProducts.meta', { seller: p.seller_name || p.supplier_name, ref: p.external_product_id || t('adminProducts.localRef'), stock: p.stock ?? 0 })}
                 </p>
                 <div className="mt-0.5 flex items-center gap-2">
                   <span className="text-xs font-bold">{formatUSD(p.price_usd)}</span>
@@ -99,18 +101,18 @@ export default function AdminProducts() {
                 </div>
               </div>
               <div className="flex shrink-0 items-center gap-1">
-                <button type="button" onClick={() => toggleFlash(p)} className="rounded-lg p-2 hover:bg-secondary" title="Vente flash">
+                <button type="button" onClick={() => toggleFlash(p)} className="rounded-lg p-2 hover:bg-secondary" title={t('adminProducts.flash')}>
                   <Zap className={`h-4 w-4 ${p.is_flash_sale ? 'text-amber-500' : ''}`} />
                 </button>
                 <button
                   type="button"
                   onClick={() => setStatusOf(p, p.status === 'published' ? 'archived' : 'published')}
                   className="rounded-lg p-2 hover:bg-secondary"
-                  title="Publier / archiver"
+                  title={t('adminProducts.publishArchive')}
                 >
                   {p.status === 'published' ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
-                <button type="button" onClick={() => remove(p)} className="rounded-lg p-2 text-destructive hover:bg-secondary" title="Supprimer">
+                <button type="button" onClick={() => remove(p)} className="rounded-lg p-2 text-destructive hover:bg-secondary" title={t('adminProducts.delete')}>
                   <Trash2 className="h-4 w-4" />
                 </button>
               </div>
@@ -118,7 +120,7 @@ export default function AdminProducts() {
           ))}
           {!visible.length && (
             <p className="rounded-xl border border-dashed border-border bg-card p-6 text-center text-xs text-muted-foreground">
-              Aucun produit ne correspond à ces critères.
+              {t('adminProducts.empty')}
             </p>
           )}
         </div>

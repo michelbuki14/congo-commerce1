@@ -104,7 +104,14 @@ export async function notifyOrderStatus(client, { order, fulfillment = null, sta
 export async function notifyFulfillmentStatus(client, fulfillment, status) {
   const db = client || base44;
   if (!fulfillment?.order_id) return null;
-  const order = await db.entities.Order.get(fulfillment.order_id).catch(() => null);
+  // Try direct read first; fall back to deliveryDesk if the caller lacks read access.
+  let order = await db.entities.Order.get(fulfillment.order_id).catch(() => null);
+  if (!order) {
+    const response = await base44.functions
+      .invoke('deliveryDesk', { action: 'order', fulfillment_id: fulfillment.id })
+      .catch(() => null);
+    order = response?.data?.order || null;
+  }
   if (!order) return null;
   return notifyOrderStatus(db, { order, fulfillment, status });
 }

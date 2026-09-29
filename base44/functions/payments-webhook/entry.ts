@@ -170,12 +170,38 @@ async function handleOrderApproved(db: any, eventData: any): Promise<Response> {
   const mkOrder = (await db.entities.Order.filter({ order_number: purchase.productId }))[0];
   if (!mkOrder) {
     console.error("payments-webhook: paid purchase has no matching Order", { productId: purchase.productId });
-  } else if (mkOrder.payment_status !== "PAID") {
+    return new Response("Order not found", { status: 500 });
+  }
+  const cents = (value: unknown) => Math.round(Number(value) * 100);
+  const charged = cents(order?.priceSummary?.total?.amount);
+  const expected = cents(purchase.amount);
+  if (order?.paymentStatus !== "PAID" || order?.status !== "APPROVED" || order?.currency !== "USD" ||
+      !Number.isFinite(charged) || charged < 50 || charged !== expected || expected !== cents(mkOrder.total_usd) ||
+      mkOrder.payment_provider !== "card") {
+    console.error("payments-webhook: payment does not match the stored order", { checkoutId, orderId });
+    return new Response("Payment mismatch", { status: 409 });
+  }
+  if (["CANCELLED", "REFUNDED"].includes(mkOrder.payment_status) || mkOrder.status === "CANCELLED") {
+    console.warn("payments-webhook: not restoring a closed order", { checkoutId, orderId });
+    return new Response("OK", { status: 200 });
+  }
+  if (mkOrder.payment_status !== "PAID" || !mkOrder.payment_verified) {
     await db.entities.Order.update(mkOrder.id, {
       payment_status: "PAID",
+      payment_verified: true,
       status: mkOrder.status === "PENDING" ? "CONFIRMED" : mkOrder.status,
       payment_reference: orderId ?? checkoutId,
     });
+    // Card orders are created as PENDING *before* the buyer pays on Wix. The
+    // fulfillments must follow the order into CONFIRMED, otherwise they strand
+    // in PENDING until someone advances them by hand. Only PENDING rows move,
+    // so retries and concurrent deliveries are no-ops.
+    const fulfillments = await db.entities.FulfillmentOrder.filter({ order_number: mkOrder.order_number });
+    for (const fo of fulfillments) {
+      if (fo.status === "PENDING") {
+        await db.entities.FulfillmentOrder.update(fo.id, { status: "CONFIRMED" });
+      }
+    }
     const logged = await db.entities.AuditLog.filter({ action: "payment.succeeded", entity_id: mkOrder.id });
     if (!logged.length) {
       await db.entities.AuditLog.create({

@@ -1,40 +1,36 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Wallet, Ticket, Gift, RotateCcw, Bell, Headphones, Heart, MapPin, Save, Store, ShieldCheck, Sparkles, Truck, Gavel,
 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
-import { getProfile, saveProfile, getOrderIds } from '@/lib/session';
+import { fetchMyOrders } from '@/lib/customerAccount';
+import { getProfile, saveProfile } from '@/lib/session';
 import { getCities } from '@/lib/config';
 import StatusBadge from '@/components/StatusBadge';
 import { formatUSD, formatDate } from '@/lib/format';
 
-const LINKS = [
-  { to: '/wallet', label: 'Mon portefeuille', icon: Wallet },
-  { to: '/coupons', label: 'Codes promo', icon: Ticket },
-  { to: '/referral', label: 'Parrainage & commissions', icon: Gift },
-  { to: '/returns', label: 'Retours & remboursements', icon: RotateCcw },
-  { to: '/disputes', label: 'Litiges & protection acheteur', icon: Gavel },
-  { to: '/notifications', label: 'Notifications', icon: Bell },
-  { to: '/wishlist', label: 'Mes favoris', icon: Heart },
-  { to: '/track', label: 'Suivre une commande', icon: MapPin },
-  { to: '/support', label: 'Aide & protection acheteur', icon: Headphones },
-];
-
 export default function Profile() {
+  const { t } = useTranslation();
+  const LINKS = [
+    { to: '/wallet', label: t('profile.linkWallet'), icon: Wallet },
+    { to: '/coupons', label: t('profile.linkCoupons'), icon: Ticket },
+    { to: '/referral', label: t('profile.linkReferral'), icon: Gift },
+    { to: '/returns', label: t('profile.linkReturns'), icon: RotateCcw },
+    { to: '/disputes', label: t('profile.linkDisputes'), icon: Gavel },
+    { to: '/notifications', label: t('profile.linkNotifications'), icon: Bell },
+    { to: '/wishlist', label: t('profile.linkWishlist'), icon: Heart },
+    { to: '/track', label: t('profile.linkTrack'), icon: MapPin },
+    { to: '/support', label: t('profile.linkSupport'), icon: Headphones },
+  ];
   const [profile, setProfile] = useState(getProfile());
   const [saved, setSaved] = useState(false);
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
 
   useEffect(() => {
-    const ids = getOrderIds();
-    if (!ids.length) {
-      setLoadingOrders(false);
-      return;
-    }
-    Promise.all(ids.slice(0, 10).map((o) => base44.entities.Order.get(o.id).catch(() => null)))
-      .then((rows) => setOrders(rows.filter(Boolean)))
+    fetchMyOrders({ limit: 10 })
+      .then((rows) => setOrders(rows))
       .finally(() => setLoadingOrders(false));
   }, []);
 
@@ -47,28 +43,28 @@ export default function Profile() {
 
   return (
     <div className="space-y-5 pb-6">
-      <h1 className="text-lg font-bold md:text-xl">Mon profil</h1>
+      <h1 className="text-lg font-bold md:text-xl">{t('profile.title')}</h1>
 
       <section className="rounded-2xl border border-border bg-card p-4">
-        <h2 className="mb-3 text-sm font-bold">Mes informations</h2>
+        <h2 className="mb-3 text-sm font-bold">{t('profile.myInfo')}</h2>
         <form onSubmit={submit} className="space-y-3">
           <div className="grid gap-3 md:grid-cols-2">
             <input
               value={profile.name}
               onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-              placeholder="Nom complet"
+              placeholder={t('profile.namePh')}
               className="h-11 rounded-lg border border-border bg-background px-3 text-sm"
             />
             <input
               value={profile.phone}
               onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-              placeholder="Téléphone"
+              placeholder={t('profile.phonePh')}
               className="h-11 rounded-lg border border-border bg-background px-3 text-sm"
             />
             <input
               value={profile.email || ''}
               onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-              placeholder="Email (optionnel)"
+              placeholder={t('profile.emailPh')}
               className="h-11 rounded-lg border border-border bg-background px-3 text-sm"
             />
             <select
@@ -85,20 +81,20 @@ export default function Profile() {
             value={profile.address}
             onChange={(e) => setProfile({ ...profile, address: e.target.value })}
             rows={2}
-            placeholder="Adresse de livraison par défaut"
+            placeholder={t('profile.addressPh')}
             className="w-full rounded-lg border border-border bg-background p-3 text-sm"
           />
           <button type="submit" className="flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground">
-            <Save className="h-4 w-4" /> {saved ? 'Enregistré' : 'Enregistrer'}
+            <Save className="h-4 w-4" /> {saved ? t('profile.saved') : t('profile.save')}
           </button>
           <p className="text-[11px] text-muted-foreground">
-            Vos informations restent sur cet appareil et sont réutilisées au paiement.
+            {t('profile.localNote')}
           </p>
         </form>
       </section>
 
       <section className="rounded-2xl border border-border bg-card p-4">
-        <h2 className="mb-3 text-sm font-bold">Mes commandes</h2>
+        <h2 className="mb-3 text-sm font-bold">{t('profile.myOrders')}</h2>
         {loadingOrders ? (
           <div className="h-20 animate-pulse rounded-lg bg-secondary" />
         ) : orders.length ? (
@@ -112,7 +108,7 @@ export default function Profile() {
                 <div>
                   <p className="text-sm font-semibold">{o.order_number}</p>
                   <p className="text-[11px] text-muted-foreground">
-                    {formatDate(o.created_date)} · {o.fulfillment_count || 1} expédition(s)
+                    {formatDate(o.created_date)} · {t('profile.shipmentsLine', { count: o.fulfillment_count || 1 })}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -123,7 +119,7 @@ export default function Profile() {
             ))}
           </div>
         ) : (
-          <p className="text-xs text-muted-foreground">Aucune commande sur cet appareil pour le moment.</p>
+          <p className="text-xs text-muted-foreground">{t('profile.noOrders')}</p>
         )}
       </section>
 
@@ -144,29 +140,29 @@ export default function Profile() {
         <Link to="/seller" className="flex items-center gap-3 rounded-xl border border-border bg-card p-3.5">
           <Store className="h-4 w-4 text-primary" />
           <div>
-            <p className="text-sm font-semibold">Espace vendeur</p>
-            <p className="text-[11px] text-muted-foreground">Gérez votre boutique</p>
+            <p className="text-sm font-semibold">{t('profile.sellerSpace')}</p>
+            <p className="text-[11px] text-muted-foreground">{t('profile.sellerSub')}</p>
           </div>
         </Link>
         <Link to="/creator" className="flex items-center gap-3 rounded-xl border border-border bg-card p-3.5">
           <Sparkles className="h-4 w-4 text-primary" />
           <div>
-            <p className="text-sm font-semibold">Espace créateur</p>
-            <p className="text-[11px] text-muted-foreground">Affiliation & contenus</p>
+            <p className="text-sm font-semibold">{t('profile.creatorSpace')}</p>
+            <p className="text-[11px] text-muted-foreground">{t('profile.creatorSub')}</p>
           </div>
         </Link>
         <Link to="/courier" className="flex items-center gap-3 rounded-xl border border-border bg-card p-3.5">
           <Truck className="h-4 w-4 text-primary" />
           <div>
-            <p className="text-sm font-semibold">Espace livreur</p>
-            <p className="text-[11px] text-muted-foreground">Courses & gains</p>
+            <p className="text-sm font-semibold">{t('profile.courierSpace')}</p>
+            <p className="text-[11px] text-muted-foreground">{t('profile.courierSub')}</p>
           </div>
         </Link>
         <Link to="/admin" className="flex items-center gap-3 rounded-xl border border-border bg-card p-3.5">
           <ShieldCheck className="h-4 w-4 text-primary" />
           <div>
-            <p className="text-sm font-semibold">Administration</p>
-            <p className="text-[11px] text-muted-foreground">Pilotage de la place de marché</p>
+            <p className="text-sm font-semibold">{t('profile.adminSpace')}</p>
+            <p className="text-[11px] text-muted-foreground">{t('profile.adminSub')}</p>
           </div>
         </Link>
       </section>

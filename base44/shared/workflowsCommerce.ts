@@ -20,12 +20,12 @@ const productPublication = {
   name: 'Publication de produit',
   description:
     'Contrôle puis publie un produit : validation, modération, mise en ligne, indexation et notification du vendeur.',
-  version: '1.0',
+  version: '1.1',
   category: 'commerce',
   trigger: 'manual',
   aggregateType: 'Product',
   tenant_scoped: true,
-  admin_only: false,
+  admin_only: true,
   idempotent: true,
   max_attempts: 2,
   steps: [
@@ -138,13 +138,13 @@ const returnRefund = {
   name: 'Retour & remboursement',
   description:
     'Traite un retour : décision, remboursement du client (portefeuille, une seule fois), reprise des gains vendeur, remise en stock et notification.',
-  version: '1.0',
+  version: '1.1',
   category: 'commerce',
   trigger: 'event',
   event_names: ['return_requested'],
   aggregateType: 'Return',
   tenant_scoped: true,
-  admin_only: false,
+  admin_only: true,
   idempotent: true,
   max_attempts: 2,
   steps: [
@@ -186,6 +186,7 @@ const returnRefund = {
         if (!decision) {
           return { waiting: true, reason: 'Décision d’un agent requise sur ce retour (approve / reject)' };
         }
+        if (!['approve', 'reject'].includes(decision)) throw new Error('Décision de retour invalide');
         const row = ctx.data.row;
         const status = decision === 'reject' ? 'rejected' : 'approved';
         const updated = await ctx.base44.asServiceRole.entities.Return.update(row.id, {
@@ -202,6 +203,9 @@ const returnRefund = {
       label: 'Rembourser le client',
       run: async (ctx) => {
         if (!ctx.data.row || ctx.data.rejected) return { skipped: true, reason: 'Retour non traité' };
+        if (ctx.input.decision !== 'approve' || ctx.data.row.status !== 'approved') {
+          throw new Error('Approbation explicite requise avant remboursement');
+        }
         const row = ctx.data.row;
         const order = ctx.data.order;
         const amount = ctx.data.refundAmount;
@@ -331,13 +335,13 @@ const creatorCommission = {
   name: 'Commission créateur',
   description:
     'Calcule et règle la commission d’un créateur : attribution, calcul, gel en cas de litige, crédit du portefeuille et notification.',
-  version: '1.0',
+  version: '1.1',
   category: 'commerce',
   trigger: 'event',
   event_names: ['payout_released'],
   aggregateType: 'Creator',
   tenant_scoped: true,
-  admin_only: false,
+  admin_only: true,
   idempotent: true,
   max_attempts: 2,
   steps: [
@@ -352,8 +356,19 @@ const creatorCommission = {
           (await ctx.base44.asServiceRole.entities.Order.filter({ order_number: orderNumber }).catch(() => []))[0] || null;
         if (!order) throw new Error(`Commande ${orderNumber} introuvable`);
 
-        const creatorId = String(ctx.input.creator_id || order.creator_id || '');
-        const code = String(ctx.input.affiliate_code || order.affiliate_code || '');
+        // A commission only ever rides on a payout that was really released for
+        // this order. The event alone never authorises the credit, whoever
+        // reported it and whatever it claims.
+        const released = await ctx.base44.asServiceRole.entities.FulfillmentOrder
+          .filter({ order_number: orderNumber, payout_released: true }, '-created_date', 1)
+          .catch(() => []);
+        if (!released.length) {
+          return { skipped: true, reason: 'Versement non libéré sur cette commande' };
+        }
+
+        // Attribution is owned by the order, never by a workflow caller.
+        const creatorId = String(order.creator_id || '');
+        const code = String(order.affiliate_code || '');
         let creator = creatorId ? await ctx.base44.asServiceRole.entities.Creator.get(creatorId).catch(() => null) : null;
         if (!creator && code) {
           creator = (await ctx.base44.asServiceRole.entities.Creator.filter({ referral_code: code }).catch(() => []))[0] || null;
@@ -514,18 +529,26 @@ const fraudReview = {
         const disputes = ctx.data.disputes || [];
         const events = ctx.data.fraudEvents || [];
         const disputeSeverity = disputes.some((d) => ['open', 'investigating', 'escalated'].includes(String(d.status)));
-        const eventScore = events.reduce((max, e) => Math.max(max, Number(e.score || 0)), 0);
+        // FraudEvent stores the score in `risk_score` (written by src/lib/fraud.js);
+        // `score`/`rule_code` are legacy fallbacks for rows written before the schema settled.
+        const eventScore = events.reduce((max, e) => Math.max(max, Number(e.risk_score ?? e.score ?? 0)), 0);
         const score = Math.min(100, (disputeSeverity ? 60 : 0) + eventScore);
         const level = score >= 70 ? 'critical' : score >= 30 ? 'suspicious' : 'normal';
         const action = level === 'critical' ? 'hold_payout' : level === 'suspicious' ? 'monitor' : 'allow';
         ctx.data.level = level;
         ctx.data.score = score;
         ctx.data.action = action;
+        const eventSignals = events.flatMap((e) => {
+          if (Array.isArray(e.signals) && e.signals.length) {
+            return e.signals.map((s) => `fraud:${s?.code || s?.signal || s}`);
+          }
+          return [`fraud:${e.rule_code || e.risk_score || e.score || 'unknown'}`];
+        });
         return {
           score,
           level,
           action,
-          signals: [...disputes.map((d) => `dispute:${d.type}`), ...events.map((e) => `fraud:${e.rule_code || e.score}`)],
+          signals: [...disputes.map((d) => `dispute:${d.type}`), ...eventSignals],
         };
       },
     },

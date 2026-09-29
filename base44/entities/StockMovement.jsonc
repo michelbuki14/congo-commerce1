@@ -2,6 +2,10 @@
   "name": "StockMovement",
   "type": "object",
   "properties": {
+    "description": {
+      "type": "string",
+      "maxLength": 1000
+    },
     "product_id": {
       "type": "string"
     },

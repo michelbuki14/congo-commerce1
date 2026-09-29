@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Trash2, ShoppingBag, Ticket, Truck } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { trackEvent } from '@/lib/tracking';
@@ -13,6 +14,7 @@ import SectionHeader from '@/components/SectionHeader';
 import { getProfile } from '@/lib/session';
 
 export default function Cart() {
+  const { t } = useTranslation();
   const { items, subtotal, updateQuantity, removeItem, count } = useCart();
   const { currency, format } = useCurrency();
   const navigate = useNavigate();
@@ -37,10 +39,10 @@ export default function Cart() {
       <div className="space-y-6 pb-6">
         <EmptyState
           icon={ShoppingBag}
-          title="Votre panier est vide"
-          description="Parcourez les catégories ou découvrez les vidéos des créateurs."
+          title={t('cart.emptyTitle')}
+          description={t('cart.emptyDesc')}
           actionTo="/"
-          actionLabel="Commencer mes achats"
+          actionLabel={t('cart.emptyAction')}
         />
       </div>
     );
@@ -51,11 +53,13 @@ export default function Cart() {
 
   return (
     <div className="space-y-5 pb-6">
-      <h1 className="text-lg font-bold md:text-xl">Mon panier ({count})</h1>
+      <h1 className="text-2xl font-bold tracking-tight md:text-3xl">{t('cart.title', { count })}</h1>
 
-      <div className="space-y-2.5">
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+      <div className="min-w-0 space-y-4">
+      <div className="space-y-3">
         {items.map((item) => (
-          <div key={`${item.product_id}-${item.variant || ''}`} className="flex gap-3 rounded-xl border border-border bg-card p-2.5">
+          <div key={`${item.product_id}-${item.variant || ''}`} className="flex gap-3 rounded-2xl border border-border bg-card p-3 sm:p-4">
             <Link to={`/product/${item.slug || item.product_id}`} className="h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-secondary">
               <Image src={item.image} alt={item.title} className="h-full w-full object-cover" />
             </Link>
@@ -65,9 +69,9 @@ export default function Cart() {
               </Link>
               {item.variant && <p className="text-[11px] text-muted-foreground">{item.variant}</p>}
               <p className="text-[11px] text-muted-foreground">
-                {item.source_type === 'international_supplier' ? 'Import international' : item.seller_name || 'Vendeur local'}
+                {item.source_type === 'international_supplier' ? t('cart.intlImport') : item.seller_name || t('cart.localSeller')}
               </p>
-              <div className="mt-1.5 flex items-center justify-between">
+              <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
                 <span className="text-sm font-bold text-primary">{format(item.price_usd)}</span>
                 <div className="flex items-center gap-2">
                   <QuantityStepper
@@ -79,7 +83,7 @@ export default function Cart() {
                     type="button"
                     onClick={() => removeItem(item.product_id, item.variant)}
                     className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary hover:text-destructive"
-                    aria-label="Retirer du panier"
+                    aria-label={t('cart.remove')}
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -91,26 +95,28 @@ export default function Cart() {
       </div>
 
       <Link to="/coupons" className="flex items-center gap-2 rounded-xl border border-dashed border-primary/40 bg-primary/5 p-3 text-sm font-semibold text-primary">
-        <Ticket className="h-4 w-4" /> Vous avez un code promo ? Appliquez-le au paiement
+        <Ticket className="h-4 w-4" /> {t('cart.couponHint')}
       </Link>
 
-      <div className="space-y-2 rounded-xl border border-border bg-card p-4">
+      </div>
+      <aside className="min-w-0 space-y-4 lg:sticky lg:top-40">
+      <div className="space-y-4 rounded-2xl border border-border bg-card p-5">
         <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Sous-total</span>
+          <span className="text-muted-foreground">{t('cart.subtotal')}</span>
           <span className="font-semibold">{format(subtotal)}</span>
         </div>
         <div className="flex justify-between text-sm">
           <span className="flex items-center gap-1 text-muted-foreground">
-            <Truck className="h-3.5 w-3.5" /> Livraison estimée {zone ? `(${zone.name})` : ''}
+            <Truck className="h-3.5 w-3.5" /> {t('cart.estimatedShipping', { zone: zone ? `(${zone.name})` : '' })}
           </span>
-          <span className="font-semibold">{zone ? format(shipping) : 'Au paiement'}</span>
+          <span className="font-semibold">{zone ? format(shipping) : t('cart.atCheckout')}</span>
         </div>
         <div className="flex justify-between border-t border-border pt-2 text-base font-bold">
-          <span>Total</span>
+          <span>{t('cart.total')}</span>
           <span className="text-primary">{zone ? format(total) : format(subtotal)}</span>
         </div>
         <p className="text-[11px] text-muted-foreground">
-          Montant en {currency} · taux appliqué au moment du paiement. Vérifiez votre ville dans votre profil pour un calcul exact.
+          {t('cart.totalNote', { currency })}
         </p>
       </div>
 
@@ -122,12 +128,14 @@ export default function Cart() {
         }}
         className="w-full rounded-full bg-primary py-3.5 text-sm font-bold text-primary-foreground"
       >
-        Passer au paiement
+        {t('cart.checkout')}
       </button>
+      </aside>
+      </div>
 
       {!!suggestions.length && (
         <section>
-          <SectionHeader title="Vous aimerez aussi" to="/search?sort=sold" />
+          <SectionHeader title={t('cart.suggestions')} to="/search?sort=sold" />
           <ProductRow products={suggestions} />
         </section>
       )}

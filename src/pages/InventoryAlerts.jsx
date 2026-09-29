@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AlertTriangle, Boxes, Download, PackageX, Save } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useActiveSeller } from '@/lib/seller';
@@ -8,23 +9,23 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { downloadCsv } from '@/lib/export';
 
-const SOURCE_LABELS = {
-  local_seller: 'Stock vendeur',
-  local_warehouse: 'Entrepôt local',
-  international_supplier: 'Fournisseur international',
+const SOURCE_KEYS = {
+  local_seller: 'sourceSeller',
+  local_warehouse: 'sourceWarehouse',
+  international_supplier: 'sourceIntl',
 };
 
-const COLUMNS = [
-  { key: 'title', label: 'Article' },
-  { key: 'warehouse', label: 'Stock' },
-  { key: 'stock', label: 'Quantité' },
-  { key: 'threshold', label: 'Seuil' },
-  { key: 'state', label: 'État' },
+const COLUMN_KEYS = [
+  { key: 'title', labelKey: 'colItem' },
+  { key: 'warehouse', labelKey: 'colStock' },
+  { key: 'stock', labelKey: 'colQty' },
+  { key: 'threshold', labelKey: 'colThreshold' },
+  { key: 'state', labelKey: 'colState' },
 ];
 
-const settingKey = (email) => `inventory_alerts:${String(email || '').toLowerCase()}`;
-
 export default function InventoryAlerts() {
+  const { t } = useTranslation();
+  const srcLabel = (k) => t(`inventoryAlerts.${SOURCE_KEYS[k] || 'sourceSeller'}`);
   const { seller, loading: loadingSeller } = useActiveSeller();
   const [user, setUser] = useState(null);
   const [products, setProducts] = useState([]);
@@ -44,13 +45,14 @@ export default function InventoryAlerts() {
     (async () => {
       const [rows, settings] = await Promise.all([
         base44.entities.Product.list('-sold_count', 300).catch(() => []),
-        base44.entities.PlatformSetting.filter({ key: settingKey(user.email) }).catch(() => []),
+        base44.entities.PartnerPreference.filter({ key: 'inventory_alerts' }).catch(() => []),
       ]);
       setProducts(rows);
-      if (settings[0]) {
-        setSettingId(settings[0].id);
-        setThreshold(Number(settings[0].value?.default_threshold) || 5);
-        setOverrides(settings[0].value?.overrides || {});
+      const saved = settings[0];
+      if (saved) {
+        if (settings[0]) setSettingId(saved.id);
+        setThreshold(Number(saved.value?.default_threshold) || 5);
+        setOverrides(saved.value?.overrides || {});
       }
     })().finally(() => setLoading(false));
   }, [user]);
@@ -88,19 +90,14 @@ export default function InventoryAlerts() {
     try {
       const value = { default_threshold: Number(threshold) || 0, overrides };
       if (settingId) {
-        await base44.entities.PlatformSetting.update(settingId, { value });
+        await base44.entities.PartnerPreference.update(settingId, { value });
       } else {
-        const created = await base44.entities.PlatformSetting.create({
-          key: settingKey(user.email),
-          label: 'Seuils de réapprovisionnement',
-          group: 'inventory',
-          value,
-        });
+        const created = await base44.entities.PartnerPreference.create({ key: 'inventory_alerts', value });
         setSettingId(created.id);
       }
-      setNotice('Seuils enregistrés.');
+      setNotice(t('inventoryAlerts.saved'));
     } catch (e) {
-      setNotice(e?.message || "L'enregistrement a échoué.");
+      setNotice(e?.message || t('inventoryAlerts.saveFailed'));
     } finally {
       setBusy('');
     }
@@ -127,36 +124,36 @@ export default function InventoryAlerts() {
   return (
     <div className="space-y-5 pb-8">
       <OpsHeader
-        title="Alertes de stock"
-        subtitle="Surveillance des quantités par entrepôt, avec alerte dès qu'un article passe sous son seuil de réapprovisionnement."
+        title={t('inventoryAlerts.title')}
+        subtitle={t('inventoryAlerts.subtitle')}
       >
         <button
           type="button"
-          onClick={() => downloadCsv(`alertes-stock-${Date.now()}.csv`, COLUMNS, alerts.map((a) => ({
+          onClick={() => downloadCsv(`alertes-stock-${Date.now()}.csv`, COLUMN_KEYS.map((c) => ({ key: c.key, label: t(`inventoryAlerts.${c.labelKey}`) })), alerts.map((a) => ({
             title: a.product.title,
-            warehouse: SOURCE_LABELS[a.product.source_type] || a.product.source_type || '—',
+            warehouse: SOURCE_KEYS[a.product.source_type] ? t(`inventoryAlerts.${SOURCE_KEYS[a.product.source_type]}`) : (a.product.source_type || '—'),
             stock: a.stock,
             threshold: a.limit,
-            state: a.stock === 0 ? 'Rupture' : 'Sous le seuil',
+            state: a.stock === 0 ? t('inventoryAlerts.stateOut') : t('inventoryAlerts.stateLow'),
           })))}
           className="flex items-center gap-1.5 rounded-full border border-border px-3.5 py-1.5 text-xs font-semibold"
         >
-          <Download className="h-3.5 w-3.5" /> Exporter les alertes
+          <Download className="h-3.5 w-3.5" /> {t('inventoryAlerts.export')}
         </button>
       </OpsHeader>
 
       <div className="grid grid-cols-2 gap-2.5 md:grid-cols-4">
-        <StatCard label="Articles suivis" value={mine.length} hint={`${Object.keys(byWarehouse).length} entrepôt(s)`} />
-        <StatCard label="Sous le seuil" value={alerts.length} tone={alerts.length ? 'warn' : 'good'} />
-        <StatCard label="En rupture" value={outOfStock.length} tone={outOfStock.length ? 'bad' : 'good'} />
-        <StatCard label="Unités en stock" value={mine.reduce((s, p) => s + (Number(p.stock) || 0), 0)} />
+        <StatCard label={t('inventoryAlerts.statTracked')} value={mine.length} hint={t('inventoryAlerts.statWarehouses', { count: Object.keys(byWarehouse).length })} />
+        <StatCard label={t('inventoryAlerts.statLow')} value={alerts.length} tone={alerts.length ? 'warn' : 'good'} />
+        <StatCard label={t('inventoryAlerts.statOut')} value={outOfStock.length} tone={outOfStock.length ? 'bad' : 'good'} />
+        <StatCard label={t('inventoryAlerts.statUnits')} value={mine.reduce((s, p) => s + (Number(p.stock) || 0), 0)} />
       </div>
 
       <section className="rounded-2xl border border-border bg-card p-4">
-        <h2 className="flex items-center gap-2 text-sm font-bold"><Boxes className="h-4 w-4" /> Seuil de réapprovisionnement</h2>
+        <h2 className="flex items-center gap-2 text-sm font-bold"><Boxes className="h-4 w-4" /> {t('inventoryAlerts.thresholdTitle')}</h2>
         <div className="mt-3 flex flex-wrap items-end gap-3">
           <div className="w-40">
-            <Label htmlFor="inv-threshold" className="text-[11px]">Seuil par défaut</Label>
+            <Label htmlFor="inv-threshold" className="text-[11px]">{t('inventoryAlerts.defaultThreshold')}</Label>
             <Input
               id="inv-threshold"
               type="number"
@@ -171,19 +168,19 @@ export default function InventoryAlerts() {
             onClick={saveSettings}
             className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-50"
           >
-            <Save className="h-3.5 w-3.5" /> Enregistrer les seuils
+            <Save className="h-3.5 w-3.5" /> {t('inventoryAlerts.saveThresholds')}
           </button>
           {notice ? <span className="text-[11px] text-muted-foreground">{notice}</span> : null}
         </div>
         <p className="mt-2 text-[11px] text-muted-foreground">
-          Un seuil par article peut être défini directement dans la liste des alertes ci-dessous.
+          {t('inventoryAlerts.thresholdHint')}
         </p>
       </section>
 
       {alerts.length ? (
         <section className="rounded-2xl border border-amber-300 bg-amber-50">
           <header className="flex items-center gap-2 border-b border-amber-200 px-4 py-3 text-sm font-bold text-amber-900">
-            <AlertTriangle className="h-4 w-4" /> {alerts.length} article(s) à réapprovisionner
+            <AlertTriangle className="h-4 w-4" /> {t('inventoryAlerts.restockCount', { count: alerts.length })}
           </header>
           <div className="divide-y divide-amber-200">
             {alerts.map(({ product, limit, stock }) => (
@@ -191,7 +188,7 @@ export default function InventoryAlerts() {
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-amber-950">{product.title}</p>
                   <p className="text-[11px] text-amber-900">
-                    {SOURCE_LABELS[product.source_type] || product.source_type || '—'} · seuil {limit} · {stock === 0 ? 'rupture de stock' : `${stock} restant(s)`}
+                    {(SOURCE_KEYS[product.source_type] ? t(`inventoryAlerts.${SOURCE_KEYS[product.source_type]}`) : (product.source_type || '—'))} · {t('inventoryAlerts.rowMeta', { limit, stock: stock === 0 ? t('inventoryAlerts.rowOut') : t('inventoryAlerts.rowLeft', { count: stock }) })}
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
@@ -202,7 +199,7 @@ export default function InventoryAlerts() {
                     placeholder={String(threshold)}
                     onChange={(e) => setProductThreshold(product, e.target.value)}
                     className="h-8 w-20 text-xs"
-                    aria-label={`Seuil pour ${product.title}`}
+                    aria-label={t('inventoryAlerts.thresholdAria', { title: product.title })}
                   />
                   {[10, 25].map((q) => (
                     <button
@@ -222,24 +219,24 @@ export default function InventoryAlerts() {
         </section>
       ) : (
         <p className="rounded-xl border border-dashed border-border bg-card p-6 text-center text-xs text-muted-foreground">
-          Tous vos articles sont au-dessus de leur seuil. Les alertes apparaissent ici automatiquement.
+          {t('inventoryAlerts.allOk')}
         </p>
       )}
 
       <section className="rounded-2xl border border-border bg-card">
         <header className="border-b border-border px-4 py-3">
-          <h2 className="flex items-center gap-2 text-sm font-bold"><PackageX className="h-4 w-4" /> Niveaux par entrepôt</h2>
+          <h2 className="flex items-center gap-2 text-sm font-bold"><PackageX className="h-4 w-4" /> {t('inventoryAlerts.byWarehouse')}</h2>
         </header>
         <div className="divide-y divide-border">
           {Object.entries(byWarehouse).length ? Object.entries(byWarehouse).map(([key, stats]) => (
             <div key={key} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 text-xs">
-              <span className="font-semibold">{SOURCE_LABELS[key] || key}</span>
+              <span className="font-semibold">{SOURCE_KEYS[key] ? t(`inventoryAlerts.${SOURCE_KEYS[key]}`) : key}</span>
               <span className="text-muted-foreground">
-                {stats.total} article(s) · {stats.units} unité(s) · {stats.low} sous le seuil
+                {t('inventoryAlerts.warehouseMeta', { total: stats.total, units: stats.units, low: stats.low })}
               </span>
             </div>
           )) : (
-            <p className="px-4 py-6 text-center text-xs text-muted-foreground">Aucun article dans votre catalogue.</p>
+            <p className="px-4 py-6 text-center text-xs text-muted-foreground">{t('inventoryAlerts.noCatalog')}</p>
           )}
         </div>
       </section>

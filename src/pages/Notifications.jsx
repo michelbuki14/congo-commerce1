@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Bell, BellRing, CheckCheck } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import EmptyState from '@/components/EmptyState';
@@ -13,6 +14,7 @@ const TYPE_STYLES = {
 };
 
 export default function Notifications() {
+  const { t } = useTranslation();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -40,10 +42,10 @@ export default function Notifications() {
   return (
     <div className="mx-auto max-w-2xl space-y-4 pb-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-bold md:text-xl">Notifications</h1>
+        <h1 className="text-lg font-bold md:text-xl">{t('notifications.title')}</h1>
         {unreadCount > 0 && (
           <button type="button" onClick={markAll} className="flex items-center gap-1 text-xs font-semibold text-primary">
-            <CheckCheck className="h-3.5 w-3.5" /> Tout marquer comme lu
+            <CheckCheck className="h-3.5 w-3.5" /> {t('notifications.markAllRead')}
           </button>
         )}
       </div>
@@ -83,7 +85,7 @@ export default function Notifications() {
           ))}
         </div>
       ) : (
-        <EmptyState icon={Bell} title="Aucune notification" description="Vos alertes de commande et promotions apparaîtront ici." />
+        <EmptyState icon={Bell} title={t('notifications.emptyTitle')} description={t('notifications.emptyText')} />
       )}
     </div>
   );

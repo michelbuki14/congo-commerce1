@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Mail, LifeBuoy, ShieldCheck } from 'lucide-react';
 import { getCompanyConfig, loadPlatformConfig } from '@/lib/config';
 
 export default function Contact() {
+  const { t } = useTranslation();
   const [company, setCompany] = useState(getCompanyConfig());
 
   useEffect(() => {
@@ -14,11 +16,10 @@ export default function Contact() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-5 pb-8">
-      <h1 className="font-heading text-2xl font-bold md:text-3xl">Contact</h1>
+      <h1 className="font-heading text-2xl font-bold md:text-3xl">{t('contact.title')}</h1>
 
       <p className="text-sm leading-relaxed text-muted-foreground">
-        Une question sur une commande, un produit, votre boutique ou votre partenariat ? Notre équipe vous répond
-        du lundi au samedi.
+        {t('contact.intro')}
       </p>
 
       <div className="space-y-2">
@@ -28,7 +29,7 @@ export default function Contact() {
         >
           <Mail className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
           <span>
-            <span className="block text-sm font-semibold">Écrire un e-mail</span>
+            <span className="block text-sm font-semibold">{t('contact.writeEmail')}</span>
             <span className="block text-xs text-muted-foreground">{email}</span>
           </span>
         </a>
@@ -39,9 +40,9 @@ export default function Contact() {
         >
           <LifeBuoy className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
           <span>
-            <span className="block text-sm font-semibold">Centre d'aide</span>
+            <span className="block text-sm font-semibold">{t('contact.helpCenter')}</span>
             <span className="block text-xs text-muted-foreground">
-              Suivi de commande, retours, litiges et questions fréquentes.
+              {t('contact.helpCenterText')}
             </span>
           </span>
         </Link>
@@ -52,9 +53,9 @@ export default function Contact() {
         >
           <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
           <span>
-            <span className="block text-sm font-semibold">Droits sur vos données</span>
+            <span className="block text-sm font-semibold">{t('contact.dataRights')}</span>
             <span className="block text-xs text-muted-foreground">
-              Demander l'accès, la rectification ou la suppression de vos données.
+              {t('contact.dataRightsText')}
             </span>
           </span>
         </Link>
