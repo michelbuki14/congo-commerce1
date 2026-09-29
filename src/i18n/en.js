@@ -288,7 +288,7 @@ export default {
     export: 'Export',
   },
   seller: {
-    title: 'Seller space',
+    title: 'Seller space', overview: 'Overview',
     noShop: 'No shop linked to your account',
     noShopDesc: 'Your seller space is not linked to any shop. The administration must attach a shop to the email address you sign in with.',
     createShop: 'Create a shop',

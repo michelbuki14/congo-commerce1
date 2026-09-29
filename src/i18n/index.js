@@ -1,10 +1,6 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import fr from './fr';
-import en from './en';
-import ln from './ln';
-import sw from './sw';
-import intlShipment from './intlShipment';
+import { translations } from './resources.js';
 
 export const LANGUAGES = [
   { id: 'fr', label: 'FR', name: 'Français' },
@@ -27,15 +23,12 @@ function initialLanguage() {
   return 'fr';
 }
 
-const mergeNamespaces = (base, extra) =>
-  Object.entries(extra).reduce((out, [ns, values]) => ({ ...out, [ns]: { ...(out[ns] || {}), ...values } }), { ...base });
-
 i18n.use(initReactI18next).init({
   resources: {
-    fr: { translation: mergeNamespaces(fr, intlShipment.fr) },
-    en: { translation: mergeNamespaces(en, intlShipment.en) },
-    ln: { translation: mergeNamespaces(ln, intlShipment.fr) },
-    sw: { translation: mergeNamespaces(sw, intlShipment.fr) },
+    fr: { translation: translations.fr },
+    en: { translation: translations.en },
+    ln: { translation: translations.ln },
+    sw: { translation: translations.sw },
   },
   lng: initialLanguage(),
   fallbackLng: 'fr',

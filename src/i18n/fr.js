@@ -291,7 +291,7 @@ export default {
     export: 'Export',
   },
   seller: {
-    title: 'Espace vendeur',
+    title: 'Espace vendeur', overview: 'Aperçu',
     noShop: 'Aucune boutique associée à votre compte',
     noShopDesc: "Votre espace vendeur n'est relié à aucune boutique. L'administration doit rattacher une boutique à l'adresse e-mail avec laquelle vous vous connectez.",
     createShop: 'Créer une boutique',
