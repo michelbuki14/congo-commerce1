@@ -29,6 +29,7 @@ export const ADMIN_LINKS = [
   { to: '/admin/workflows', label: 'Workflows' },
   { to: '/workflow-monitor', label: 'Supervision' },
   { to: '/admin/fraud', label: 'Fraude & risques' },
+  { to: '/admin/billing', label: 'Facturation' },
   { to: '/admin/promotions', label: 'Promotions' },
   { to: '/marketing-analytics', label: 'Marketing' },
   { to: '/platform-analytics', label: 'Analytique plateforme' },

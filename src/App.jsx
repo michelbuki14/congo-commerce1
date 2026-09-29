@@ -324,6 +324,7 @@ const AuthenticatedApp = () => {
             <Route path="/admin/events" element={<AdminEvents />} />
             <Route path="/admin/workflows" element={<AdminWorkflows />} />
             <Route path="/admin/fraud" element={<AdminFraud />} />
+            <Route path="/admin/billing" element={<AdminBilling />} />
             <Route path="/admin/disputes" element={<AdminDisputes />} />
             <Route path="/logistics-hub" element={<LogisticsHub />} />
             <Route path="/workflow-monitor" element={<WorkflowMonitor />} />
