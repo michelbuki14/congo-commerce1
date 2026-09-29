@@ -82,6 +82,14 @@ export default async function (req: Request) {
     if (req.method !== "POST") return err("Method not allowed", 405);
     const base44 = createClientFromRequest(req);
     const db = base44.asServiceRole;
+
+    // ---- 0a. Trust boundary: only a signed-in account may place an order ----
+    // This handler writes with the service role and moves stock, coupons and
+    // invoice counters, so an anonymous caller could drain inventory, burn
+    // coupon codes and inflate the invoice sequence.
+    const user = await base44.auth.me().catch(() => null);
+    if (!user) return err("Connectez-vous pour passer commande.", 401);
+
     const body = await req.json().catch(() => ({}));
 
     // ---- 0. Validate shape (fail fast, before any write) -------------------
@@ -322,7 +330,9 @@ export default async function (req: Request) {
       customer_name: name,
       customer_phone: phone,
       payment_phone: method.kind === "mobile_money" ? chargePhone : "",
-      customer_email: String(profile.email || ""),
+      // The account's own email is the ownership anchor the order is later read
+      // back by (get-order, customerAccount), so it never comes from the client.
+      customer_email: String(user.email || profile.email || ""),
       city: String(profile.city || ""),
       address: String(delivery.address || profile.address || ""),
       delivery_method: delivery.method,

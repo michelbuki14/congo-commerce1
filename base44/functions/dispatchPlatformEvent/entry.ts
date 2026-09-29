@@ -35,6 +35,38 @@ const GUEST_EVENTS = {
 
 const GUEST_DESCRIPTION_MAX = 300;
 
+/**
+ * Events that assert something happened to one specific order. A signed-in
+ * non-admin caller may only report these for an order that is actually theirs —
+ * otherwise the event, its notification, its audit entry and the support ticket
+ * it opens would be written against a stranger's order from caller-supplied
+ * text (a spam / phishing vector).
+ */
+const ORDER_EVENTS = new Set([
+  'order_placed',
+  'order_paid',
+  'payment_failed',
+  'order_delivered',
+  'fulfillment_status_changed',
+  'dispute_opened',
+  'return_requested',
+  'risk_flagged',
+]);
+
+/** True when the caller is the buyer, the selling partner or the tenant of this order. */
+async function callerOwnsOrder(base44, order, user) {
+  const email = String(user?.email || '').trim().toLowerCase();
+  if (!email) return false;
+  if (String(order.created_by_id || '') === String(user.id || '')) return true;
+  if (String(order.customer_email || '').trim().toLowerCase() === email) return true;
+  if (String(order.tenant_owner_email || '').trim().toLowerCase() === email) return true;
+  const sellers = await base44.asServiceRole.entities.Seller
+    .filter({ email: user.email }, 'name', 5)
+    .catch(() => []);
+  const names = (sellers || []).map((s) => s.name).filter(Boolean);
+  return names.length > 0 && (order.items || []).some((i) => names.includes(i.seller_name));
+}
+
 /** Plain text only — a notification never carries markup or control characters. */
 function plainText(value, max) {
   return String(value ?? '')
@@ -133,6 +165,18 @@ export default async function (req) {
     // A released payout is a privileged financial assertion, not a client event.
     if (name === 'payout_released' && !isAdmin) {
       return Response.json({ error: 'Versement réservé aux administrateurs' }, { status: user ? 403 : 401 });
+    }
+
+    // A signed-in, non-admin caller may only report an order event on an order
+    // that is really theirs.
+    if (user && !isAdmin && ORDER_EVENTS.has(name)) {
+      const rows = await base44.asServiceRole.entities.Order
+        .filter({ order_number: reference }, '-created_date', 1)
+        .catch(() => []);
+      const order = rows?.[0];
+      if (!order || !(await callerOwnsOrder(base44, order, user))) {
+        return Response.json({ error: 'Événement non autorisé' }, { status: 403 });
+      }
     }
 
     // ---- 0. Trust boundary --------------------------------------------------
