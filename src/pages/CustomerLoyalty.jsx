@@ -28,7 +28,7 @@ export default function CustomerLoyalty() {
       setRedemptions(data.redemptions);
       setLoading(false);
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   const summary = loyaltySummary({ orders, redemptions });

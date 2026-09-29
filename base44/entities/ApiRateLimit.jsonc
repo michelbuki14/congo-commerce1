@@ -1,0 +1,17 @@
+{
+  "name": "ApiRateLimit",
+  "type": "object",
+  "properties": {
+    "key_prefix": { "type": "string" },
+    "window_start": { "type": "string" },
+    "request_count": { "type": "number", "default": 0 },
+    "last_reset_at": { "type": "string" }
+  },
+  "required": ["key_prefix", "window_start"],
+  "rls": {
+    "read": { "user_condition": { "role": "admin" } },
+    "create": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}

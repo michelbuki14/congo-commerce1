@@ -2,9 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { LifeBuoy, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
 import TicketThread from '@/components/support/TicketThread';
-import { getProfile, getSessionId, uid } from '@/lib/session';
+import { getProfile, getSessionId } from '@/lib/session';
 import { fetchMyTickets, openTicket } from '@/lib/customerAccount';
 import { formatDateTime } from '@/lib/format';
 
@@ -52,7 +51,7 @@ export default function SupportTickets() {
 
   useEffect(() => {
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   const submit = async (e) => {

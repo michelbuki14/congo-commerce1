@@ -38,7 +38,7 @@ export default function DisputePanel() {
 
   useEffect(() => {
     load(profile.phone);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   const submit = async (e) => {

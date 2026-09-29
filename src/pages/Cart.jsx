@@ -31,7 +31,7 @@ export default function Cart() {
       setZone(zones[0] || null);
       setSuggestions(popular.filter((p) => !items.some((i) => i.product_id === p.id)));
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   if (!count) {
