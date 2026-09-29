@@ -16,6 +16,13 @@ const intlShipment = {
       helper:
         'Votre commande contient des articles importés ({{weight}} kg). Notre propre équipe de livraison les achemine jusqu’à votre ville — tarif international, distinct de la livraison locale.',
       eta: 'Délai estimé : {{eta}}',
+      breakdownTitle: 'Détail du tarif international',
+      breakdownWeight: 'Poids facturé : {{weight}} kg',
+      breakdownFormula: 'Forfait {{base}} + {{perKg}} × {{weight}} kg',
+      breakdownSelected: 'Sélectionné',
+      breakdownCheapest: 'Le plus économique',
+      breakdownExtra: '{{amount}} de plus que le tarif le plus bas',
+      breakdownNote: 'Tarif international distinct, jamais offert par le seuil de livraison locale.',
     },
     intlPacking: {
       tab: 'Emballage & remise',
@@ -77,6 +84,13 @@ const intlShipment = {
       helper:
         'Your order contains imported items ({{weight}} kg). Our own delivery team carries them to your city — an international tariff, separate from local delivery.',
       eta: 'Estimated: {{eta}}',
+      breakdownTitle: 'International tariff breakdown',
+      breakdownWeight: 'Billed weight: {{weight}} kg',
+      breakdownFormula: 'Base {{base}} + {{perKg}} × {{weight}} kg',
+      breakdownSelected: 'Selected',
+      breakdownCheapest: 'Lowest cost',
+      breakdownExtra: '{{amount}} more than the lowest tariff',
+      breakdownNote: 'A separate international tariff — never waived by the local free-delivery threshold.',
     },
     intlPacking: {
       tab: 'Packing & hand-over',

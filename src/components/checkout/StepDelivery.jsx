@@ -4,6 +4,7 @@ import { MapPin, Store, Truck, Split, Plane } from 'lucide-react';
 import { getCities } from '@/lib/config';
 import { formatUSD } from '@/lib/format';
 import { intlFee } from '@/lib/intlDelivery';
+import IntlShippingBreakdown from '@/components/checkout/IntlShippingBreakdown';
 
 const FIELD = 'h-11 w-full rounded-lg border border-border bg-background px-3 text-sm';
 
@@ -162,6 +163,11 @@ export default function StepDelivery({
               <span className="shrink-0 text-xs font-semibold">{formatUSD(intlFee(o, intlWeight))}</span>
             </button>
           ))}
+          <IntlShippingBreakdown
+            options={intlOptions}
+            weightKg={intlWeight}
+            selectedId={selectedIntlOption?.id}
+          />
         </div>
       )}
 
