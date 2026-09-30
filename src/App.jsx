@@ -133,6 +133,7 @@ import AdminEvents from '@/pages/admin/AdminEvents';
 import AdminWorkflows from '@/pages/admin/AdminWorkflows';
 import AdminFraud from '@/pages/admin/AdminFraud';
 import AdminDisputes from '@/pages/admin/AdminDisputes';
+import AdminBilling from '@/pages/admin/AdminBilling';
 import ReturnsPortal from '@/pages/ReturnsPortal';
 import PayoutHistory from '@/pages/PayoutHistory';
 import PayoutSettings from '@/pages/PayoutSettings';

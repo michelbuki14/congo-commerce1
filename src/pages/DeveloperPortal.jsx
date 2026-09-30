@@ -27,7 +27,7 @@ export default function DeveloperPortal() {
   const section = DEV_SECTIONS.find((s) => s.id === tab);
 
   if (tab === 'api-keys') {
-    return <ApiKeysTab />;
+    return <ApiKeysTab tab={tab} setTab={setTab} />;
   }
 
   return (
@@ -57,7 +57,7 @@ export default function DeveloperPortal() {
   );
 }
 
-function ApiKeysTab() {
+function ApiKeysTab({ tab, setTab }) {
   const { t } = useTranslation();
   const [apiKeys, setApiKeys] = useState([]);
   const [loading, setLoading] = useState(true);
