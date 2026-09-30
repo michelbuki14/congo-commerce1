@@ -23,14 +23,11 @@
       "maxLength": 1000
     }
   },
-  "created_by_id": {
-      "type": "string"
-    },
-    "required": [
+  "required": [
     "name"
   ],
   "rls": {
-    "create": { "user_condition": { "role": "admin" } },
+    "create": null,
     "read": {
       "user_condition": {
         "role": "admin"

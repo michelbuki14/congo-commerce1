@@ -45,10 +45,7 @@
       "maxLength": 1000
     }
   },
-  "created_by_id": {
-      "type": "string"
-    },
-    "required": [
+  "required": [
     "event_type"
   ],
   "rls": {

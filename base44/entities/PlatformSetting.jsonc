@@ -19,10 +19,7 @@
       "type": "object"
     }
   },
-  "created_by_id": {
-      "type": "string"
-    },
-    "required": [
+  "required": [
     "key"
   ],
   "rls": {

@@ -40,10 +40,7 @@
       "default": true
     }
   },
-  "created_by_id": {
-      "type": "string"
-    },
-    "required": [
+  "required": [
     "name",
     "city"
   ],
@@ -53,7 +50,7 @@
         "role": "admin"
       }
     },
-    "read": { "user_condition": { "role": { "$in": ["admin", "user"] } } },
+    "read": null,
     "update": {
       "user_condition": {
         "role": "admin"

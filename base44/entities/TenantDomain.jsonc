@@ -55,15 +55,12 @@
       "maxLength": 1000
     }
   },
-  "created_by_id": {
-      "type": "string"
-    },
-    "required": [
+  "required": [
     "tenant_id",
     "hostname"
   ],
   "rls": {
-    "read": { "user_condition": { "role": "admin" } },
+    "read": null,
     "create": {
       "$or": [
         {

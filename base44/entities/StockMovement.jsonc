@@ -37,10 +37,7 @@
       "type": "string"
     }
   },
-  "created_by_id": {
-      "type": "string"
-    },
-    "required": [
+  "required": [
     "product_id",
     "quantity"
   ],

@@ -21,10 +21,7 @@
     "expires_at": { "type": "string" },
     "description": { "type": "string", "maxLength": 1000 }
   },
-  "created_by_id": {
-      "type": "string"
-    },
-    "required": ["tenant_id", "name", "key_prefix", "key_hash"],
+  "required": ["tenant_id", "name", "key_prefix", "key_hash"],
   "rls": {
     "read": {
       "user_condition": { "role": "admin" }

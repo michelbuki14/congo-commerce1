@@ -24,10 +24,7 @@
       "type": "string"
     }
   },
-  "created_by_id": {
-      "type": "string"
-    },
-    "required": [
+  "required": [
     "session_id",
     "target_id"
   ],
@@ -37,7 +34,7 @@
         "role": "admin"
       }
     },
-    "read": { "user_condition": { "role": { "$in": ["admin", "user"] } } },
+    "read": null,
     "update": {
       "user_condition": {
         "role": "admin"

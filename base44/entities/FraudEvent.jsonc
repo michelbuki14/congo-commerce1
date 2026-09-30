@@ -84,14 +84,11 @@
       "default": false
     }
   },
-  "created_by_id": {
-      "type": "string"
-    },
-    "required": [
+  "required": [
     "risk_score"
   ],
   "rls": {
-    "create": { "user_condition": { "role": "admin" } },
+    "create": null,
     "read": {
       "user_condition": {
         "role": "admin"

@@ -22,10 +22,7 @@
     "last_receipt_at": { "type": "string" },
     "active": { "type": "boolean", "default": true }
   },
-  "created_by_id": {
-      "type": "string"
-    },
-    "required": ["warehouse_id", "product_id", "sku"],
+  "required": ["warehouse_id", "product_id", "sku"],
   "rls": {
     "read": {
       "$or": [

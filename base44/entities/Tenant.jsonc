@@ -79,15 +79,12 @@
       "type": "string"
     }
   },
-  "created_by_id": {
-      "type": "string"
-    },
-    "required": [
+  "required": [
     "name",
     "slug"
   ],
   "rls": {
-    "read": { "user_condition": { "role": "admin" } },
+    "read": null,
     "create": {
       "$or": [
         {
