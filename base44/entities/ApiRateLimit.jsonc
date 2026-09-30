@@ -7,10 +7,7 @@
     "request_count": { "type": "number", "default": 0 },
     "last_reset_at": { "type": "string" }
   },
-  "created_by_id": {
-      "type": "string"
-    },
-    "required": ["key_prefix", "window_start"],
+  "required": ["key_prefix", "window_start"],
   "rls": {
     "read": { "user_condition": { "role": "admin" } },
     "create": { "user_condition": { "role": "admin" } },

@@ -17,10 +17,7 @@
     "created_by": { "type": "string" },
     "created_date": { "type": "string" }
   },
-  "created_by_id": {
-      "type": "string"
-    },
-    "required": ["po_number", "supplier_id"],
+  "required": ["po_number", "supplier_id"],
   "rls": {
     "read": {
       "$or": [

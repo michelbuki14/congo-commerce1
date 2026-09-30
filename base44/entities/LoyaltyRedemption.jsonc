@@ -42,16 +42,13 @@
       "maxLength": 1000
     }
   },
-  "created_by_id": {
-      "type": "string"
-    },
-    "required": [
+  "required": [
     "reward_label",
     "points_spent"
   ],
   "rls": {
-    "create": { "user_condition": { "role": "admin" } },
-    "read": { "user_condition": { "role": { "$in": ["admin", "user"] } } },
+    "create": null,
+    "read": null,
     "update": {
       "user_condition": {
         "role": "admin"

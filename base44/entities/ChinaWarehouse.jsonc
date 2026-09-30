@@ -15,10 +15,7 @@
     "active": { "type": "boolean", "default": true },
     "operating_hours": { "type": "string" }
   },
-  "created_by_id": {
-      "type": "string"
-    },
-    "required": ["name", "city"],
+  "required": ["name", "city"],
   "rls": {
     "read": {
       "$or": [

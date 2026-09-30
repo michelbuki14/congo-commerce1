@@ -40,16 +40,13 @@
       "default": 0
     }
   },
-  "created_by_id": {
-      "type": "string"
-    },
-    "required": [
+  "required": [
     "code",
     "label",
     "signal"
   ],
   "rls": {
-    "read": { "user_condition": { "role": "admin" } },
+    "read": null,
     "create": {
       "user_condition": {
         "role": "admin"

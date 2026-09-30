@@ -27,10 +27,7 @@
       "maxLength": 2000
     }
   },
-  "created_by_id": {
-      "type": "string"
-    },
-    "required": [
+  "required": [
     "thread_id",
     "sender_role",
     "body"

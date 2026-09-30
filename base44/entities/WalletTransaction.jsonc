@@ -81,10 +81,7 @@
       "default": "posted"
     }
   },
-  "created_by_id": {
-      "type": "string"
-    },
-    "required": [
+  "required": [
     "wallet_id",
     "type",
     "amount_usd"

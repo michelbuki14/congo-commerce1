@@ -14,10 +14,7 @@
     "created_by": { "type": "string" },
     "created_date": { "type": "string" }
   },
-  "created_by_id": {
-      "type": "string"
-    },
-    "required": ["consolidation_id", "warehouse_id"],
+  "required": ["consolidation_id", "warehouse_id"],
   "rls": {
     "read": {
       "$or": [
