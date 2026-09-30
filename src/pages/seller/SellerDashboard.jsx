@@ -206,10 +206,10 @@ export default function SellerDashboard() {
               <span>{t(tile.key)}</span>
             </Link>
           ))}
-          <Link to="/admin" className="paper-tile">
-            <BarChart3 className="paper-tile-icon" />
-            <span>{t('seller.adminView')}</span>
-          </Link>
+          {isAdmin && <Link to="/admin" className="paper-tile">
+                      <BarChart3 className="paper-tile-icon" />
+                      <span>{t('seller.adminView')}</span>
+                    </Link>}
         </section>
       </main>
     </div>
