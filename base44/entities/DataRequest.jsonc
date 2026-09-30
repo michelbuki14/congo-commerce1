@@ -70,17 +70,16 @@
       "type": "string"
     }
   },
-  "required": [
+  "created_by_id": {
+      "type": "string"
+    },
+    "required": [
     "type",
     "name"
   ],
   "rls": {
-    "create": null,
-    "read": {
-      "user_condition": {
-        "role": "admin"
-      }
-    },
+    "create": { "$or": [{ "data.email": "{{user.email}}" }, { "user_condition": { "role": "admin" } }] },
+    "read": { "$or": [{ "data.email": "{{user.email}}" }, { "user_condition": { "role": "admin" } }] },
     "update": {
       "user_condition": {
         "role": "admin"

@@ -50,12 +50,15 @@
       "default": false
     }
   },
-  "required": [
+  "created_by_id": {
+      "type": "string"
+    },
+    "required": [
     "title"
   ],
   "rls": {
-    "create": null,
-    "read": null,
+    "create": { "user_condition": { "role": "admin" } },
+    "read": { "user_condition": { "role": { "$in": ["admin", "user"] } } },
     "update": null,
     "delete": {
       "user_condition": {

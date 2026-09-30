@@ -48,7 +48,10 @@
       "default": 0
     }
   },
-  "required": [
+  "created_by_id": {
+      "type": "string"
+    },
+    "required": [
     "source_name",
     "status"
   ],

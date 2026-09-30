@@ -82,7 +82,10 @@
       "default": 0
     }
   },
-  "required": [
+  "created_by_id": {
+      "type": "string"
+    },
+    "required": [
     "code",
     "name"
   ],

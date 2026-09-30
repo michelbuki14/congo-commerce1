@@ -73,7 +73,10 @@
       "type": "string"
     }
   },
-  "required": [
+  "created_by_id": {
+      "type": "string"
+    },
+    "required": [
     "execution_id",
     "name"
   ],

@@ -41,7 +41,10 @@
       "maxLength": 1000
     }
   },
-  "required": [
+  "created_by_id": {
+      "type": "string"
+    },
+    "required": [
     "key",
     "scope"
   ],

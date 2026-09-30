@@ -62,7 +62,10 @@
       "default": "published"
     }
   },
-  "required": [
+  "created_by_id": {
+      "type": "string"
+    },
+    "required": [
     "product_id",
     "rating"
   ],
@@ -72,7 +75,7 @@
         "role": "admin"
       }
     },
-    "read": null,
+    "read": { "user_condition": { "role": { "$in": ["admin", "user"] } } },
     "update": {
       "user_condition": {
         "role": "admin"

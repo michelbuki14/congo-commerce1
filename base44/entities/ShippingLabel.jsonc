@@ -19,7 +19,10 @@
     "generated_at": { "type": "string" },
     "printed_at": { "type": "string" }
   },
-  "required": ["order_number", "label_id"],
+  "created_by_id": {
+      "type": "string"
+    },
+    "required": ["order_number", "label_id"],
   "rls": {
     "read": {
       "$or": [

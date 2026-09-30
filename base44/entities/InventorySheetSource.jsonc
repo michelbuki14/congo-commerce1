@@ -56,7 +56,10 @@
       }
     }
   },
-  "required": [
+  "created_by_id": {
+      "type": "string"
+    },
+    "required": [
     "name",
     "spreadsheet_id"
   ],
