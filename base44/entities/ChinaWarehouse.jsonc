@@ -1,0 +1,30 @@
+{
+  "name": "ChinaWarehouse",
+  "type": "object",
+  "properties": {
+    "tenant_id": { "type": "string" },
+    "tenant_owner_email": { "type": "string" },
+    "name": { "type": "string", "description": "Warehouse name/location in China" },
+    "city": { "type": "string" },
+    "province": { "type": "string" },
+    "address": { "type": "string" },
+    "contact_name": { "type": "string" },
+    "contact_phone": { "type": "string" },
+    "manager_email": { "type": "string" },
+    "capacity_sqm": { "type": "number", "default": 0 },
+    "active": { "type": "boolean", "default": true },
+    "operating_hours": { "type": "string" }
+  },
+  "required": ["name", "city"],
+  "rls": {
+    "read": {
+      "$or": [
+        { "user_condition": { "role": "admin" } },
+        { "data.tenant_owner_email": "{{user.email}}" }
+      ]
+    },
+    "create": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}

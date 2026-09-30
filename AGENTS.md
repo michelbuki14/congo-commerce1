@@ -1,5 +1,22 @@
 # AGENTS.md
 
+## 💥 CRITICAL: Local Development Requires Base44 CLI
+
+**DO NOT run `npm run dev` directly for Base44 apps.** This will result in "backend is not responding" errors because the Base44 backend (Deno runtime) is not started.
+
+**CORRECT WORKFLOW:**
+```bash
+# One-time setup (per machine)
+base44 login
+base44 link
+
+# Start development (includes BOTH frontend AND backend)
+base44 dev
+
+# For remote (production) backend:
+base44 dev --remote
+```
+
 ## Project Context
 
 This is a Base44 app repository. Treat it as user-owned application code, keep changes focused on the user's request, and preserve existing project conventions.

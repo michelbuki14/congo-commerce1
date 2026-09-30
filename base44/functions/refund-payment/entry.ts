@@ -73,12 +73,14 @@ export default async function (req: Request) {
     }
     if (!wallet) {
       wallet = await db.entities.Wallet.create({
-        tenant_id: order.tenant_id || "",
-        tenant_owner_email: order.tenant_owner_email || "",
-        owner_type: "customer",
-        owner_name: order.customer_name || "Client",
-        owner_email: order.customer_email || "",
-        owner_id: sessionId,
+              tenant_id: order.tenant_id || "",
+              tenant_owner_email: order.tenant_owner_email || "",
+              owner_type: "customer",
+              owner_name: order.customer_name || "Client",
+              owner_email: order.customer_email || "",
+              owner_id: order.created_by_id || "",
+              created_by_id: order.created_by_id || "",
+              session_id: sessionId,
         balance_usd: 0,
       });
     }

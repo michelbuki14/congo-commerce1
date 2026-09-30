@@ -8,6 +8,10 @@
     "tenant_owner_email": {
       "type": "string"
     },
+    "created_by_id": {
+      "type": "string",
+      "description": "User who created the dispute"
+    },
     "order_number": {
       "type": "string"
     },
@@ -15,6 +19,9 @@
       "type": "string"
     },
     "customer_phone": {
+      "type": "string"
+    },
+    "customer_email": {
       "type": "string"
     },
     "seller_name": {

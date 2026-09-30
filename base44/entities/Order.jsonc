@@ -26,6 +26,10 @@
     "customer_email": {
       "type": "string"
     },
+    "created_by_id": {
+      "type": "string",
+      "description": "User who placed the order"
+    },
     "city": {
       "type": "string"
     },

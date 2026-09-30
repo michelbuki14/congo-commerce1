@@ -24,7 +24,7 @@ async function creditCourier(db, fulfillment, order, courier) {
   const key = `courier:${fulfillment.fulfillment_number}`;
   if ((await db.entities.WalletTransaction.filter({ idempotency_key: key })).length) return;
   let wallet = (await db.entities.Wallet.filter({ owner_type: 'courier', owner_name: fulfillment.courier_name }))[0];
-  if (!wallet) wallet = await db.entities.Wallet.create({ owner_type: 'courier', owner_id: courier.id, owner_name: courier.name, owner_email: courier.email || '', balance_usd: 0 });
+  if (!wallet) wallet = await db.entities.Wallet.create({ owner_type: 'courier', owner_id: courier.id, owner_name: courier.name, owner_email: courier.email || '', created_by_id: courier.id || '', balance_usd: 0 });
   await postWalletEntry(db, wallet, {
     type: 'PAYOUT',
     direction: 'credit',

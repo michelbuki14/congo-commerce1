@@ -32,6 +32,10 @@
     "owner_email": {
       "type": "string"
     },
+    "created_by_id": {
+      "type": "string",
+      "description": "User who owns this wallet"
+    },
     "balance_usd": {
       "type": "number",
       "default": 0
@@ -89,9 +93,17 @@
       ]
     },
     "create": {
-      "user_condition": {
-        "role": "admin"
-      }
+      "$or": [
+        {
+          "data.owner_type": "seller",
+          "data.owner_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     },
     "update": {
       "user_condition": {

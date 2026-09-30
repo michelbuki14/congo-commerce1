@@ -33,12 +33,13 @@ async function rewardSeller(base44, review, tenant) {
     .filter({ owner_type: 'seller', owner_name: ownerName })
     .catch(() => []);
   const wallet = wallets[0] || await base44.asServiceRole.entities.Wallet.create({
-    ...tenant,
-    owner_type: 'seller',
-    owner_id: review.seller_id || '',
-    owner_name: ownerName,
-    owner_email: seller?.email || '',
-    balance_usd: 0,
+      ...tenant,
+      owner_type: 'seller',
+      owner_id: review.seller_id || '',
+      owner_name: ownerName,
+      owner_email: seller?.email || '',
+      created_by_id: review.seller_id || '',
+      balance_usd: 0,
     pending_usd: 0,
     lifetime_credit_usd: 0,
     lifetime_debit_usd: 0,

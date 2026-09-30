@@ -104,6 +104,10 @@ import SellerMessages from '@/pages/seller/SellerMessages';
 import SupportInbox from '@/pages/admin/SupportInbox';
 import DeveloperPortal from '@/pages/DeveloperPortal';
 import Warehouse from '@/pages/admin/Warehouse';
+import ChinaWarehouse from '@/pages/admin/ChinaWarehouse';
+import ShippingLabels from '@/pages/admin/ShippingLabels';
+import AdvancedAnalytics from '@/pages/admin/AdvancedAnalytics';
+import TicketAutomation from '@/pages/admin/TicketAutomation';
 
 // Seller
 import SellerDashboard from '@/pages/seller/SellerDashboard';
@@ -306,6 +310,10 @@ const AuthenticatedApp = () => {
             <Route path="/finance" element={<FinancePortal />} />
             <Route path="/pickup-manager" element={<PickupManager />} />
             <Route path="/warehouse" element={<Warehouse />} />
+            <Route path="/china-warehouse" element={<ChinaWarehouse />} />
+            <Route path="/shipping-labels" element={<ShippingLabels />} />
+            <Route path="/analytics" element={<AdvancedAnalytics />} />
+            <Route path="/ticket-automation" element={<TicketAutomation />} />
             <Route path="/support-inbox" element={<SupportInbox />} />
             <Route path="/shipping-config" element={<ShippingConfig />} />
             <Route path="/admin" element={<AdminDashboard />} />
