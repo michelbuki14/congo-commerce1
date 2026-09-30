@@ -110,7 +110,7 @@
         }
       ]
     },
-    "read": null,
+    "read": { "user_condition": { "role": "admin" } },
     "update": null,
     "delete": {
       "user_condition": {

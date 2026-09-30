@@ -47,8 +47,8 @@
     "points_spent"
   ],
   "rls": {
-    "create": null,
-    "read": null,
+    "create": { "user_condition": { "role": "admin" } },
+    "read": { "user_condition": { "role": "admin" } },
     "update": {
       "user_condition": {
         "role": "admin"

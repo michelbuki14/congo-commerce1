@@ -84,7 +84,7 @@
     "slug"
   ],
   "rls": {
-    "read": null,
+    "read": { "user_condition": { "role": "admin" } },
     "create": {
       "$or": [
         {
