@@ -95,6 +95,9 @@
     "title"
   ],
   "rls": {
+    "created_by_id": {
+      "type": "string"
+    },
     "create": {
       "$or": [
         {

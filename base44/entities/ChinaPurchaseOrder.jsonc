@@ -1,0 +1,32 @@
+{
+  "name": "ChinaPurchaseOrder",
+  "type": "object",
+  "properties": {
+    "tenant_id": { "type": "string" },
+    "tenant_owner_email": { "type": "string" },
+    "po_number": { "type": "string" },
+    "supplier_id": { "type": "string" },
+    "supplier_name": { "type": "string" },
+    "warehouse_id": { "type": "string" },
+    "warehouse_name": { "type": "string" },
+    "items": { "type": "array", "items": { "type": "object" } },
+    "total_cost_usd": { "type": "number", "default": 0 },
+    "status": { "type": "string", "enum": ["created", "approved", "shipped", "received", "inspected", "rejected", "completed", "cancelled"], "default": "created" },
+    "expected_date": { "type": "string" },
+    "notes": { "type": "string" },
+    "created_by": { "type": "string" },
+    "created_date": { "type": "string" }
+  },
+  "required": ["po_number", "supplier_id"],
+  "rls": {
+    "read": {
+      "$or": [
+        { "user_condition": { "role": "admin" } },
+        { "data.tenant_owner_email": "{{user.email}}" }
+      ]
+    },
+    "create": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}

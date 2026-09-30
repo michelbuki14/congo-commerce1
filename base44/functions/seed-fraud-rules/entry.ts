@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { requireAdmin } from '../../shared/security.ts';
-import { RULES_SEED } from '../../src/lib/fraud-rules.json';
+import { RULES_SEED } from '../../../src/lib/fraud-rules.json';
 
 /**
  * SEED FRAUD RULES — base44/functions/seed-fraud-rules/entry.ts

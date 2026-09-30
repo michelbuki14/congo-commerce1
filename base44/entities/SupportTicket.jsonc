@@ -8,6 +8,10 @@
     "tenant_owner_email": {
       "type": "string"
     },
+    "created_by_id": {
+      "type": "string",
+      "description": "User who created the ticket"
+    },
     "ticket_number": {
       "type": "string"
     },
@@ -101,9 +105,16 @@
       ]
     },
     "create": {
-      "user_condition": {
-        "role": "admin"
-      }
+      "$or": [
+        {
+          "data.customer_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     },
     "update": {
       "user_condition": {

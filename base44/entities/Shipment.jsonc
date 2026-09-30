@@ -81,6 +81,9 @@
         }
       ]
     },
+    "created_by_id": {
+      "type": "string"
+    },
     "create": {
       "user_condition": {
         "role": "admin"

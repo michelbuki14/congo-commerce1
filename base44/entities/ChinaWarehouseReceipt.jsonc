@@ -1,0 +1,35 @@
+{
+  "name": "ChinaWarehouseReceipt",
+  "type": "object",
+  "properties": {
+    "tenant_id": { "type": "string" },
+    "tenant_owner_email": { "type": "string" },
+    "receipt_id": { "type": "string" },
+    "warehouse_id": { "type": "string" },
+    "warehouse_name": { "type": "string" },
+    "supplier_id": { "type": "string" },
+    "supplier_name": { "type": "string" },
+    "purchase_order": { "type": "string" },
+    "status": { "type": "string", "enum": ["received", "inspecting", "approved", "rejected", "partial"], "default": "received" },
+    "items": { "type": "array", "items": { "type": "object" } },
+    "total_cost_usd": { "type": "number", "default": 0 },
+    "received_by": { "type": "string" },
+    "received_at": { "type": "string" },
+    "inspected_by": { "type": "string" },
+    "inspected_at": { "type": "string" },
+    "inspection_notes": { "type": "string" },
+    "photo_urls": { "type": "array", "items": { "type": "string" } }
+  },
+  "required": ["receipt_id", "warehouse_id"],
+  "rls": {
+    "read": {
+      "$or": [
+        { "user_condition": { "role": "admin" } },
+        { "data.tenant_owner_email": "{{user.email}}" }
+      ]
+    },
+    "create": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}

@@ -222,6 +222,7 @@ async function getOrCreateWallet(
     owner_name,
     owner_email: owner_email ?? "",
     owner_id: owner_id ?? "",
+    created_by_id: user.id ?? "",
     balance_cents: 0,
     pending_cents: 0,
     balance_cdf: 0,
@@ -720,6 +721,9 @@ export async function placeOrder(db, params) {
       marketing: !!consent?.marketing,
     },
     source: "web",
+    customer_email: userEmail ?? "",
+    created_by_id: user.id ?? "",
+    tenant_owner_email: email ?? "",
     metadata: {
       buyer_name: profile?.name ?? "",
       buyer_phone: userPhone,
@@ -775,6 +779,7 @@ export async function placeOrder(db, params) {
         platform_cents: l.platform_cents,
         seller_cents: l.seller_cents,
       })),
+      created_by_id: user?.id ?? "",
     };\n    const fo = await db.entities.FulfillmentOrder.create(foPayload);\n    if (fo) fulfillmentOrders.push(fo);\n    const pickupCode = generatePickupCode();
     const trackingNumber = generateTrackingNumber(foNumber);
     const shipmentPayload = {
@@ -789,6 +794,7 @@ export async function placeOrder(db, params) {
       address_text: (delivery?.address ?? "").toString(),
       estimated_delivery_days: 3,
       weight_kg: totalWeight,
+      created_by_id: user?.id ?? "",
     };
     const shipment = await db.entities.Shipment.create(shipmentPayload);
     if (shipment) shipments.push(shipment);

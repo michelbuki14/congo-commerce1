@@ -236,6 +236,7 @@ export default async function (req: Request) {
         tenant_owner_email: order.tenant_owner_email || "",
         order_number: orderNumber,
         customer_name: order.customer_name || "Client",
+        customer_email: order.customer_email || "",
         customer_phone: phone || order.customer_phone || "",
         seller_name: order.items?.[0]?.seller_name || "",
         type: String(body.type || "not_received"),
@@ -243,6 +244,7 @@ export default async function (req: Request) {
         amount_usd: Number(order.total_usd) || 0,
         status: "open",
         priority: "normal",
+        created_by_id: user.id || "",
       });
       await db.entities.Notification.create({
         tenant_id: order.tenant_id || "",
@@ -280,7 +282,9 @@ export default async function (req: Request) {
           order_id: order.id,
           order_number: orderNumber,
           customer_name: order.customer_name || "Client",
+          customer_email: order.customer_email || "",
           customer_phone: phone || order.customer_phone || "",
+          created_by_id: user.id || "",
           product_id: item.product_id || "",
           product_title: item.product_title || "",
           reason: String(item.reason || body.reason || "not_received"),
@@ -317,6 +321,8 @@ export default async function (req: Request) {
         // The account's own email is the ownership anchor the ticket is read
         // back by, so it never comes from the client.
         customer_email: String(user.email || "").trim(),
+        created_by_id: user.id || "",
+        tenant_owner_email: email || "",
         customer_phone: phone,
         order_number: String(body.order_number || "").trim().toUpperCase(),
         session_id: sessionId,
@@ -423,6 +429,9 @@ export default async function (req: Request) {
         priority: "high",
         order_number: orderNumber,
         customer_name: dispute.customer_name || "",
+        customer_email: dispute.tenant_owner_email || "",
+        created_by_id: dispute.created_by_id || "",
+        tenant_owner_email: dispute.tenant_owner_email || "",
         customer_phone: dispute.customer_phone || "",
         assigned_to: isAdmin ? "mediation" : "vendeur",
         messages: [entry],

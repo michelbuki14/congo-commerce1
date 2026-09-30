@@ -153,6 +153,9 @@
   ],
   "rls": {
     "read": null,
+    "created_by_id": {
+      "type": "string"
+    },
     "create": {
       "$or": [
         {
