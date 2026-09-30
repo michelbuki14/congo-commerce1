@@ -1,0 +1,35 @@
+{
+  "name": "SourcingResult",
+  "type": "object",
+  "properties": {
+    "tenant_id": { "type": "string" },
+    "tenant_owner_email": { "type": "string" },
+    "requisition_id": { "type": "string" },
+    "result_id": { "type": "string" },
+    "supplier_id": { "type": "string" },
+    "supplier_name": { "type": "string" },
+    "product_id": { "type": "string" },
+    "product_title": { "type": "string" },
+    "sku_id": { "type": "string" },
+    "sku_attributes": { "type": "array", "items": { "type": "object" } },
+    "price_usd": { "type": "number" },
+    "min_order_qty": { "type": "number" },
+    "delivery_days": { "type": "number" },
+    "supports_dropship": { "type": "boolean", "default": true },
+    "supports_consolidation": { "type": "boolean", "default": false },
+    "quality_score": { "type": "number" },
+    "response_status": { "type": "string", "enum": ["pending", "quoted", "rejected"], "default": "pending" },
+    "selected_for_replacement": { "type": "boolean", "default": false },
+    "selected_at": { "type": "string" },
+    "selected_by": { "type": "string" },
+    "operation_record_id": { "type": "string" },
+    "created_date": { "type": "string" }
+  },
+  "required": ["requisition_id", "supplier_id", "product_id", "sku_id"],
+  "rls": {
+    "read": { "user_condition": { "role": "admin" } },
+    "create": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}

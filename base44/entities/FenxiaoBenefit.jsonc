@@ -1,0 +1,26 @@
+{
+  "name": "FenxiaoBenefit",
+  "type": "object",
+  "properties": {
+    "tenant_id": { "type": "string" },
+    "tenant_owner_email": { "type": "string" },
+    "user_id": { "type": "string" },
+    "user_logon_id": { "type": "string" },
+    "is_ka_user": { "type": "boolean", "default": false },
+    "credit_benefit_status": { "type": "string", "enum": ["not_applied", "pending", "approved", "rejected"], "default": "not_applied" },
+    "credit_open_status": { "type": "string", "enum": ["not_opened", "opening", "opened", "failed"], "default": "not_opened" },
+    "benefit_type": { "type": "string", "enum": ["basic", "distribution"], "default": "basic" },
+    "applied_at": { "type": "string" },
+    "approved_at": { "type": "string" },
+    "opened_at": { "type": "string" },
+    "created_by": { "type": "string" },
+    "created_date": { "type": "string" }
+  },
+  "required": ["user_id", "user_logon_id"],
+  "rls": {
+    "read": { "user_condition": { "role": "admin" } },
+    "create": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}

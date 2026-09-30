@@ -1,0 +1,26 @@
+{
+  "name": "FenxiaoWarehouseOrder",
+  "type": "object",
+  "properties": {
+    "tenant_id": { "type": "string" },
+    "tenant_owner_email": { "type": "string" },
+    "order_id": { "type": "string" },
+    "warehouse_id": { "type": "string" },
+    "original_order_id": { "type": "string" },
+    "downstream_order_no": { "type": "string" },
+    "items": { "type": "array", "items": { "type": "object" } },
+    "status": { "type": "string", "enum": ["created", "processing", "shipped", "completed", "cancelled"], "default": "created" },
+    "logistic_company_id": { "type": "string" },
+    "logistic_company_name": { "type": "string" },
+    "tracking_number": { "type": "string" },
+    "created_by": { "type": "string" },
+    "created_date": { "type": "string" }
+  },
+  "required": ["order_id", "warehouse_id", "created_by"],
+  "rls": {
+    "read": { "user_condition": { "role": "admin" } },
+    "create": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}
