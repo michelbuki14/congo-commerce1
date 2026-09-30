@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Warehouse, Plus, Trash2, RefreshCw, Search, Package, MapPin, Phone, Mail } from 'lucide-react';
+import { Warehouse, Plus, RefreshCw, Package, MapPin, Phone } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { DashboardNav } from '@/components/DashboardNav';
 import { ADMIN_LINKS } from '@/lib/navLinks';
@@ -14,7 +14,6 @@ export default function ChinaWarehousePage() {
   const [inventory, setInventory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: '', city: '', province: '', address: '', contact_name: '', contact_phone: '', manager_email: '', capacity_sqm: '' });
   const [selectedWh, setSelectedWh] = useState(null);
@@ -57,19 +56,6 @@ export default function ChinaWarehousePage() {
   const viewInventory = async (wh) => {
     setSelectedWh(wh);
     const res = await base44.functions.invoke('chinaWarehouse', { action: 'inventory', warehouse_id: wh.id });
-    setInventory(res?.inventory || []);
-  };
-
-  const addStock = async (product_id, product_title, sku, quantity, cost_usd, location) => {
-    if (!selectedWh) return;
-    await base44.functions.invoke('chinaWarehouse', {
-      action: 'add-stock',
-      warehouse_id: selectedWh.id,
-      warehouse_name: selectedWh.name,
-      product_id, product_title, sku,
-      quantity, cost_usd: Number(cost_usd) || 0, location,
-    });
-    const res = await base44.functions.invoke('chinaWarehouse', { action: 'inventory', warehouse_id: selectedWh.id });
     setInventory(res?.inventory || []);
   };
 
@@ -173,6 +159,7 @@ export default function ChinaWarehousePage() {
 }
 
 function StockAdder({ warehouseId, warehouseName, onAdded }) {
+  const { t } = useTranslation();
   const [form, setForm] = useState({ product_id: '', product_title: '', sku: '', quantity: 1, cost_usd: 0, location: '' });
   const [products, setProducts] = useState([]);
   const [saving, setSaving] = useState(false);

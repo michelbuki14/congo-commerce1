@@ -2,7 +2,7 @@ import React from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
-export default function DashboardNav({ title, links, variant }) {
+export function DashboardNav({ title, links, variant }) {
   const { t } = useTranslation();
   const { pathname } = useLocation();
   const navigate = useNavigate();
@@ -37,3 +37,5 @@ export default function DashboardNav({ title, links, variant }) {
     </div>
   );
 }
+
+export default DashboardNav;

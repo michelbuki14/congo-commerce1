@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
+import { requireAdmin } from '../../shared/security.ts';
 
 const fail = (error, status = 400) => Response.json({ error }, { status });
 
@@ -6,8 +7,11 @@ export default async function(req: Request): Promise<Response> {
   try {
     if (req.method !== 'POST') return fail('Méthode non autorisée', 405);
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me().catch(() => null);
-    if (!user?.email) return fail('Authentification requise', 401);
+    // Sourcing runs as the service role and mutates purchase orders, receipts
+    // and consolidations, so it is reserved to administrators.
+    const gate = await requireAdmin(base44);
+    if (!gate.ok) return gate.response;
+    const user = gate.user;
     const db = base44.asServiceRole;
     const body = await req.json().catch(() => ({}));
     const action = String(body.action || '');
