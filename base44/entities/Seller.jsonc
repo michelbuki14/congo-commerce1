@@ -76,7 +76,10 @@
       "default": "active"
     }
   },
-  "required": [
+  "created_by_id": {
+      "type": "string"
+    },
+    "required": [
     "name",
     "slug"
   ],

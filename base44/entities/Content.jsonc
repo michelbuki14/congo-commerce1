@@ -110,7 +110,7 @@
         }
       ]
     },
-    "read": null,
+    "read": { "user_condition": { "role": { "$in": ["admin", "user"] } } },
     "update": null,
     "delete": {
       "user_condition": {

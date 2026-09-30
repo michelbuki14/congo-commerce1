@@ -20,7 +20,10 @@
     "inspection_notes": { "type": "string" },
     "photo_urls": { "type": "array", "items": { "type": "string" } }
   },
-  "required": ["receipt_id", "warehouse_id"],
+  "created_by_id": {
+      "type": "string"
+    },
+    "required": ["receipt_id", "warehouse_id"],
   "rls": {
     "read": {
       "$or": [

@@ -75,7 +75,10 @@
       "type": "string"
     }
   },
-  "required": [
+  "created_by_id": {
+      "type": "string"
+    },
+    "required": [
     "tenant_id",
     "plan_code"
   ],

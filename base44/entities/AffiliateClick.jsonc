@@ -36,12 +36,15 @@
       "default": 0
     }
   },
-  "required": [
+  "created_by_id": {
+      "type": "string"
+    },
+    "required": [
     "referral_code"
   ],
   "rls": {
     "create": { "user_condition": { "role": "admin" } },
-    "read": null,
+    "read": { "user_condition": { "role": { "$in": ["admin", "user"] } } },
     "update": { "user_condition": { "role": "admin" } },
     "delete": { "user_condition": { "role": "admin" } }
   }

@@ -56,7 +56,10 @@
       "default": "open"
     }
   },
-  "required": [
+  "created_by_id": {
+      "type": "string"
+    },
+    "required": [
     "type",
     "customer_session"
   ],
