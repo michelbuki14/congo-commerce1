@@ -739,7 +739,7 @@ export default {
   emptyTitle: "Aucune commande sur cet appareil",
   emptyText: "Vos commandes apparaissent ici après un achat, ou rattachez-en une avec son numéro ci-dessus.",
   emptyCta: "Voir mes commandes",
-},
+,\n    "noItemsSelected": "Aucun article sélectionné"},
   disputes: {
   title: "Litiges & protection acheteur",
   buyerProtection: "Si un article n'arrive pas, arrive abîmé ou ne correspond pas à la description, ouvrez un litige. Notre équipe arbitre le dossier entre vous et le vendeur, et un remboursement peut être crédité sur votre portefeuille.",

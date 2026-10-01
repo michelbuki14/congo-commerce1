@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Ticket, Zap, Clock, AlertTriangle, CheckCircle, ChevronRight } from 'lucide-react';
+import { Ticket, Zap, Clock, AlertTriangle, CheckCircle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import DashboardNav from '@/components/DashboardNav';
 import { ADMIN_LINKS } from '@/lib/navLinks';

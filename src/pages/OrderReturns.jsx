@@ -197,23 +197,27 @@ export default function OrderReturns() {
           placeholder={t('orderReturns.descPh')}
           className="w-full rounded-lg border border-border bg-background p-3 text-sm"
         />
-        {pickedCount ? (
-          <div className="rounded-xl bg-secondary/60 p-3 text-xs">
-            <p className="font-semibold">{t('orderReturns.pickedSummary', { count: pickedCount, total: formatUSD(pickedTotal) })}</p>
-            <ul className="mt-1 space-y-0.5 text-muted-foreground">
-              {Object.entries(selection).map(([key, value]) => {
-                const [orderId, index] = key.split('::');
-                const order = orders.find((o) => o.id === orderId);
-                const item = order?.items?.[Number(index)];
-                return (
-                  <li key={key}>
-                    {order?.order_number} — {item?.title} : {t(RETURN_REASON_LABELS[value.reason] || 'returnReason.unknown')}
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        ) : null}
+        <div className="rounded-xl bg-secondary/60 p-3 text-xs">
+          {pickedCount > 0 ? (
+            <>
+              <p className="font-semibold">{t('orderReturns.pickedSummary', { count: pickedCount, total: formatUSD(pickedTotal) })}</p>
+              <ul className="mt-1 space-y-0.5 text-muted-foreground">
+                {Object.entries(selection).map(([key, value]) => {
+                  const [orderId, index] = key.split('::');
+                  const order = orders.find((o) => o.id === orderId);
+                  const item = order?.items?.[Number(index)];
+                  return (
+                    <li key={key}>
+                      {order?.order_number} — {item?.title} : {t(RETURN_REASON_LABELS[value.reason] || 'returnReason.unknown')}
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
+          ) : (
+            <p className="font-semibold text-muted-foreground">{t('orderReturns.noItemsSelected')}</p>
+          )}
+        </div>
         {error ? (
           <p className="flex items-center gap-1.5 text-xs text-destructive">
             <AlertCircle className="h-3.5 w-3.5" /> {error}

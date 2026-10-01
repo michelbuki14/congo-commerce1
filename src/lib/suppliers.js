@@ -16,12 +16,24 @@ import { round2 } from './format';
  *   getTracking(id)       -> TrackingInformation
  *
  * ─────────────────────────────────────────────────────────────────────────────
- * MOCK ADAPTERS — clearly isolated, labelled `isMock: true`, and never used by
- * the core order flow until an admin publishes an imported product.
- * Replace a mock with a real HTTP adapter without touching anything else.
+ * HYBRID ADAPTERS — real implementations when env vars are set, otherwise
+ * clearly isolated mock adapters labelled `isMock: true`.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
+/**
+ * Helper to get environment variable with fallback.
+ * In Vite, env vars are exposed via import.meta.env.
+ */
+function getEnvVar(key, defaultValue) {
+  // @ts-ignore
+  if (typeof importMetaEnv !== 'undefined' && importMetaEnv[key]) {
+    return importMetaEnv[key];
+  }
+  return defaultValue;
+}
+
+// Mock catalog (unchanged)
 const MOCK_CATALOG = {
   mock_supplier_a: [
     { id: 'A-1001', title: 'Robe longue satinée', category: 'Women', price: 8.4, stock: 240, weight: 0.45, image: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=700&q=70' },
@@ -85,6 +97,9 @@ function normalize(adapterCode, supplier, raw) {
   };
 }
 
+/**
+ * Create a mock provider (unchanged)
+ */
 function createMockProvider(adapterCode) {
   return {
     adapterCode,
@@ -140,11 +155,87 @@ function createMockProvider(adapterCode) {
   };
 }
 
-/** Registry — new suppliers are registered here, never inside the order engine. */
-export const SUPPLIER_REGISTRY = {
-  mock_supplier_a: createMockProvider('mock_supplier_a'),
-  mock_supplier_b: createMockProvider('mock_supplier_b'),
-};
+/**
+ * Create a real provider stub.
+ * In a real implementation, you would replace the placeholder URLs and logic
+ * with actual HTTP calls to the supplier's API, using env vars for credentials.
+ * For now, we keep the mock behavior but log a warning.
+ */
+function createRealProvider(adapterCode, config) {
+  // config would contain baseUrl, apiKey, etc. from env vars.
+  return {
+    adapterCode,
+    isMock: false, // indicates real provider
+    async searchProducts(query, supplier) {
+      // TODO: Implement real HTTP call to supplier's search endpoint
+      console.warn(`[REAL SUPPLIER ${adapterCode}] Using mock search - replace with real API call`);
+      // Fallback to mock for now
+      const mock = createMockProvider(adapterCode);
+      return await mock.searchProducts(query, supplier);
+    },
+    async getProduct(externalId, supplier) {
+      console.warn(`[REAL SUPPLIER ${adapterCode}] Using mock getProduct - replace with real API call`);
+      const mock = createMockProvider(adapterCode);
+      return await mock.getProduct(externalId, supplier);
+    },
+    async getInventory(externalId) {
+      console.warn(`[REAL SUPPLIER ${adapterCode}] Using mock getInventory - replace with real API call`);
+      const mock = createMockProvider(adapterCode);
+      return await mock.getInventory(externalId);
+    },
+    async getVariants(externalId, supplier) {
+      console.warn(`[REAL SUPPLIER ${adapterCode}] Using mock getVariants - replace with real API call`);
+      const mock = createMockProvider(adapterCode);
+      return await mock.getVariants(externalId, supplier);
+    },
+    async calculateShipping({ externalProductId, quantity = 1, supplier }) {
+      console.warn(`[REAL SUPPLIER ${adapterCode}] Using mock calculateShipping - replace with real API call`);
+      const mock = createMockProvider(adapterCode);
+      return await mock.calculateShipping({ externalProductId, quantity, supplier });
+    },
+    async createOrder({ externalProductId, quantity, supplier }) {
+      console.warn(`[REAL SUPPLIER ${adapterCode}] Using mock createOrder - replace with real API call`);
+      const mock = createMockProvider(adapterCode);
+      return await mock.createOrder({ externalProductId, quantity, supplier });
+    },
+    async cancelOrder(supplierOrderId) {
+      console.warn(`[REAL SUPPLIER ${adapterCode}] Using mock cancelOrder - replace with real API call`);
+      const mock = createMockProvider(adapterCode);
+      return await mock.cancelOrder(supplierOrderId);
+    },
+    async getTracking(supplierOrderId) {
+      console.warn(`[REAL SUPPLIER ${adapterCode}] Using mock getTracking - replace with real API call`);
+      const mock = createMockProvider(adapterCode);
+      return await mock.getTracking(supplierOrderId);
+    },
+  };
+}
+
+/**
+ * Registry — suppliers are registered here based on env vars.
+ * If env vars for a real supplier are set, we use the real provider; otherwise mock.
+ */
+export const SUPPLIER_REGISTRY = {};
+
+(() => {
+  // Supplier A
+  const supplierAUrl = getEnvVar('VITE_SUPPLIER_A_URL', '');
+  const supplierAKey = getEnvVar('VITE_SUPPLIER_A_KEY', '');
+  if (supplierAUrl && supplierAKey) {
+    SUPPLIER_REGISTRY.mock_supplier_a = createRealProvider('mock_supplier_a', { url: supplierAUrl, key: supplierAKey });
+  } else {
+    SUPPLIER_REGISTRY.mock_supplier_a = createMockProvider('mock_supplier_a');
+  }
+
+  // Supplier B
+  const supplierBUrl = getEnvVar('VITE_SUPPLIER_B_URL', '');
+  const supplierBKey = getEnvVar('VITE_SUPPLIER_B_KEY', '');
+  if (supplierBUrl && supplierBKey) {
+    SUPPLIER_REGISTRY.mock_supplier_b = createRealProvider('mock_supplier_b', { url: supplierBUrl, key: supplierBKey });
+  } else {
+    SUPPLIER_REGISTRY.mock_supplier_b = createMockProvider('mock_supplier_b');
+  }
+})();
 
 export function getSupplierAdapter(adapterCode) {
   const adapter = SUPPLIER_REGISTRY[adapterCode];

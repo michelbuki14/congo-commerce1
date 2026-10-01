@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Printer, Download, Trash2, RefreshCw, Search, Package, Truck, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Printer, Download, RefreshCw, Search } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { DashboardNav } from '@/components/DashboardNav';
 import { ADMIN_LINKS } from '@/lib/navLinks';

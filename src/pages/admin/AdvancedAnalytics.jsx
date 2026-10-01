@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { TrendingUp, ShoppingCart, DollarSign, Users, Package, Activity } from 'lucide-react';
+import { ShoppingCart, DollarSign, Users, Package } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import DashboardNav from '@/components/DashboardNav';
 import { ADMIN_LINKS } from '@/lib/navLinks';

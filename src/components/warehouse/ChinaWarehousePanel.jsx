@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { base44 } from '@/api/base44Client';
-import { Package, Truck, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
+import { Package } from 'lucide-react';
 
 const STATUS_COLORS = {
   received: 'bg-blue-100 text-blue-800',
