@@ -1199,6 +1199,11 @@ export default {
   rightsText: "You can request access, correction, deletion, or restriction of your personal data at any time from the Privacy & data page.",
   exerciseRights: "Exercise my rights",
 },
+  accountTitle: "Delete account",
+  accountText: "This action permanently deletes your account, order history, and personal data. This cannot be undone.",
+  deleteConfirm: "Are you sure you want to delete your account? This action is irreversible.",
+  deleteSuccess: "Your account has been successfully deleted.",
+  deleteAccount: "Delete account",
   notificationSettings: {
   title: "Notification preferences",
   subtitle: "Choose how to be notified. Every change is saved immediately.",

@@ -1202,6 +1202,11 @@ export default {
   rightsText: "Vous pouvez demander l’accès, la rectification, la suppression ou la limitation du traitement de vos données personnelles à tout moment depuis la page Confidentialité & données.",
   exerciseRights: "Exercer mes droits",
 },
+  accountTitle: "Supprimer le compte",
+  accountText: "Cette action supprime définitivement votre compte, votre historique de commandes et vos données personnelles. Cette action est irréversible.",
+  deleteConfirm: "Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible.",
+  deleteSuccess: "Votre compte a été supprimé avec succès.",
+  deleteAccount: "Supprimer le compte",
   notificationSettings: {
   title: "Préférences de notification",
   subtitle: "Choisissez comment être prévenu. Chaque changement est enregistré immédiatement.",

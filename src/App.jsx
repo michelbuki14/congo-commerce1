@@ -18,6 +18,7 @@ import { CurrencyProvider } from '@/lib/currency';
 import AppLayout from '@/components/layout/AppLayout';
 import Backoffice from '@/pages/Backoffice';
 import SalesIntelligence from '@/pages/admin/SalesIntelligence';
+import { motion } from 'framer-motion';
 
 // Customer
 import Home from '@/pages/Home';
@@ -161,6 +162,31 @@ import CreatorDashboard from '@/pages/CreatorDashboard';
 
 // Courier
 import CourierConsole from '@/pages/courier/CourierConsole';
+// Page transition variants
+const pageVariants = {
+  initial: {
+    opacity: 0,
+    x: 20,
+  },
+  animate: {
+    opacity: 1,
+    x: 0,
+    transition: {
+      type: 'spring',
+      stiffness: 300,
+      damping: 20,
+    },
+  },
+  exit: {
+    opacity: 0,
+    x: -20,
+    transition: {
+      type: 'spring',
+      stiffness: 300,
+      damping: 20,
+    },
+  },
+}
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -187,7 +213,7 @@ const AuthenticatedApp = () => {
 
   // Render the main app
   return (
-    <Routes>
+    <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit">
       <Route element={<AppLayout />}>
         <Route path="/" element={<Home />} />
         <Route path="/discover" element={<Discover />} />
@@ -350,7 +376,7 @@ const AuthenticatedApp = () => {
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/oauth/consent" element={<OAuthConsent />} />
+      <Route path="/oauth/consent" element={<OAuthCons</motion.div>/>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );

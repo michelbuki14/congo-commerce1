@@ -619,3 +619,16 @@
     margin: 0;
   }
 }
+/* Mobile optimizations */
+html, body {
+  overscroll-behavior: none;
+  height: 100%;
+}
+
+/* Prevent text selection on interactive elements */
+button, a, [role="button"], .nav-link {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}

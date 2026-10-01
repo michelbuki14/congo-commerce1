@@ -1,11 +1,56 @@
+import { motion, AnimatePresence } from 'framer-motion';
 import React, { useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import TopBar from './TopBar';
 import BottomNav from './BottomNav';
 import LegalFooter from '@/components/legal/LegalFooter';
-import { applyTenantBranding, clearTenantBranding, resolveTenantByHost } from '@/lib/tenancy';
+import { applyTenantBranding, clearTenantBranding, resolveTenantByHost } from '@/lib/tenancy'
 
-export default function AppLayout() {
+// Page transition variants
+const pageVariants = {
+  initial: {
+    opacity: 0,
+    x: 20,
+  },
+  animate: {
+    opacity: 1,
+    x: 0,
+    transition: {
+      type: 'spring',
+      stiffness: 300,
+      damping: 20,
+    },
+  },
+  exit: {
+    opacity: 0,
+    x: -20,
+    transition: {
+      type: 'spring',
+      stiffness: 300,
+      damping: 20,
+    },
+  },
+};
+
+
+
+// Page transition variants
+    transition: {
+      type: 'spring',
+      stiffness: 300,
+      damping: 20,
+    },
+  },
+  exit: {
+    opacity: 0,
+    x: -20,
+    transition: {
+      type: 'spring',
+      stiffness: 300,
+      damping: 20,
+    },
+  },
+};export default function AppLayout() {
   // White label: a visitor arriving on a tenant's verified domain sees that
   // tenant's colours. Everything else keeps the platform theme.
   useEffect(() => {
