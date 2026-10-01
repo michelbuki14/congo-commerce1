@@ -25,12 +25,7 @@ ProviderContainer _container([CartPersistence? persistence]) {
   );
 }
 
-/// Forces the cart provider to exist, then lets its constructor-time restore
-/// complete.
-///
-/// Two things matter here. Riverpod builds a provider on FIRST READ, so simply
-/// waiting is not enough -- nothing has been constructed yet. And CartNotifier
-/// restores asynchronously, so the read must happen before the wait, not after.
+/// Ensures the CartNotifier exists then waits for its async restore.
 Future<void> _settle(ProviderContainer container) async {
   container.read(cartProvider);
   await Future<void>.delayed(const Duration(milliseconds: 20));

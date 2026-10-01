@@ -36,7 +36,6 @@ dependencies:
   flutter_secure_storage: ^10.0.0
 
   
-  # Serialization
   # UI & Theming
   cupertino_icons: ^1.0.8
   google_fonts: ^6.2.0
