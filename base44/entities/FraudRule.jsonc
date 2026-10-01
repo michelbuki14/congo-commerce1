@@ -52,19 +52,12 @@
     "signal"
   ],
   "rls": {
-    "read": {
-      "$or": [
-        {
-          "data.tenant_id": "{{user.tenant_id}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
-    },
     "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
       "user_condition": {
         "role": "admin"
       }

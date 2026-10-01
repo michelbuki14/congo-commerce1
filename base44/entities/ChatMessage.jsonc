@@ -39,10 +39,14 @@
     "body"
   ],
   "rls": {
-    "read": {
+    "create": {
       "$or": [
         {
-          "data.tenant_id": "{{user.tenant_id}}"
+          "data.participants": {
+            "$in": [
+              "{{user.email}}"
+            ]
+          }
         },
         {
           "user_condition": {
@@ -51,7 +55,7 @@
         }
       ]
     },
-    "create": {
+    "read": {
       "$or": [
         {
           "data.participants": {
