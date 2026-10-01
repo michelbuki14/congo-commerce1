@@ -94,7 +94,7 @@ export default function PrivacySettings() {
             if (window.confirm(t('privacySettings.deleteConfirm'))) {
               // TODO: Implement actual account deletion API call
               alert(t('privacySettings.deleteSuccess'));
-              window.location.href = '/;
+              window.location.href = '/';
             }
           }
           }

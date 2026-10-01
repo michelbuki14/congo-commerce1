@@ -35,24 +35,18 @@ export default function Profile() {
   }, []);
 
   const submit = (e) => {
-  const handleDeleteAccount = () => {
-    if (window.confirm(t('profile.deleteConfirm'))) {
-      // TODO: Call backend cleanup function
-      alert(t('profile.deleteSuccess'));
-      window.location.href = '/;
-    }
+    e.preventDefault();
+    saveProfile(profile);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
   };
+
   const handleDeleteAccount = () => {
     if (window.confirm(t('profile.deleteConfirm'))) {
       // TODO: Call backend cleanup function
       alert(t('profile.deleteSuccess'));
       window.location.href = '/';
     }
-  };
-    e.preventDefault();
-    saveProfile(profile);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
   };
 
   return (
