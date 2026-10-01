@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Congo Commerce brand: near-black green (see BRAND.md) -->
+    <color name="cc_brand_background">#07110D</color>
+</resources>

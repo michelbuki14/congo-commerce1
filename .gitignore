@@ -42,12 +42,21 @@ base44/.app.jsonc
 # Local Deno check artifact (no deno.json in this repo)
 deno.lock
 
-# Capacitor native build outputs (platform sources ARE committed)
-android/app/build/
-android/app/release/
-ios/App/build/
+# ── Flutter ────────────────────────────────────────────────────────────────
+# Build outputs and tool caches. Platform sources under android/, ios/,
+# and windows/ ARE committed; everything below is regenerated.
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+build/
 *.apk
 *.aab
 *.ipa
 *.keystore
 *.jks
+android/local.properties
+ios/Flutter/ephemeral/
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+*.iml
+congo_commerce_flutter.iml

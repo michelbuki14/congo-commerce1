@@ -15,20 +15,11 @@
     "preview": "vite preview",
     "test": "node --test --import ./test/setup.mjs test/*.test.js",
     "test:e2e": "npx playwright test",
-    "seed-fraud": "node scripts/seed-fraud-rules.js",
-    "mobile:assets": "node scripts/generate-mobile-assets.mjs && npx @capacitor/assets generate --iconBackgroundColor '#07110D' --splashBackgroundColor '#07110D'",
-    "mobile:sync": "base44 build && npx cap sync",
-    "mobile:open:android": "npx cap open android",
-    "mobile:open:ios": "npx cap open ios"
+    "seed-fraud": "node scripts/seed-fraud-rules.js"
   },
   "dependencies": {
     "@base44/sdk": "^0.8.52",
     "@base44/vite-plugin": "^1.0.44",
-    "@capacitor/android": "^8.5.2",
-    "@capacitor/assets": "^3.0.5",
-    "@capacitor/cli": "^8.5.2",
-    "@capacitor/core": "^8.5.2",
-    "@capacitor/ios": "^8.5.2",
     "@hello-pangea/dnd": "^17.0.0",
     "@hookform/resolvers": "^4.1.2",
     "@radix-ui/react-accordion": "^1.2.3",

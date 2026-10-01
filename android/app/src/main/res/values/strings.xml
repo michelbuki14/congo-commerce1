@@ -1,7 +1,4 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_name">Congo Commerce</string>
-    <string name="title_activity_main">Congo Commerce</string>
-    <string name="package_name">com.congocommerce.app</string>
-    <string name="custom_url_scheme">com.congocommerce.app</string>
 </resources>

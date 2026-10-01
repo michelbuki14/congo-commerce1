@@ -1,0 +1,77 @@
+name: congo_commerce_flutter
+description: "Congo Commerce - The DRC Marketplace for Local & Global Trade"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # State Management
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
+  
+  # Navigation
+  go_router: ^14.8.1
+  
+  # Networking
+  dio: ^5.7.0
+  http: ^1.2.0
+  web_socket_channel: ^3.0.0
+  
+  # Storage
+  shared_preferences: ^2.3.2
+  path_provider: ^2.1.0
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  
+  # Serialization
+  # UI & Theming
+  cupertino_icons: ^1.0.8
+  google_fonts: ^6.2.0
+  flutter_svg: ^2.0.10+1
+  flutter_animate: ^4.5.0
+  cached_network_image: ^3.4.1
+  photo_view: ^0.15.0
+  flutter_slidable: ^3.1.2
+  
+  # Utils
+  uuid: ^4.5.0
+  intl: ^0.20.3
+  collection: ^1.18.0
+  crypto: ^3.0.0
+  mime: ^2.0.0
+  
+  # File & Media
+  file_picker: ^8.1.0
+  image: ^4.2.0
+  image_picker: ^1.1.2
+  
+  # Desktop Features (Windows)
+  window_manager: ^0.4.3
+  tray_manager: ^0.2.4
+  hotkey_manager: ^0.2.0
+  protocol_handler: ^0.2.0
+  url_launcher: ^6.3.0
+  
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  
+  flutter_lints: ^5.0.0
+  freezed: ^2.5.8
+  riverpod_generator: ^2.6.4
+  custom_lint: ^0.7.3
+  riverpod_lint: ^2.6.4
+
+flutter:
+  uses-material-design: true
+  
+  # Fonts are loaded at runtime by google_fonts (Poppins / Inter), so no
+  # bundled .ttf assets are declared here.
+  assets:
+    - assets/images/
+    - assets/icons/
