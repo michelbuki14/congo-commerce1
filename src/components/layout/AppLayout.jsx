@@ -2,7 +2,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import React, { useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import TopBar from './TopBar';
-import BottomNav from './BottomNav';
 import LegalFooter from '@/components/legal/LegalFooter';
 import { applyTenantBranding, clearTenantBranding, resolveTenantByHost } from '@/lib/tenancy';
 
@@ -47,7 +46,7 @@ export default function AppLayout() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-8">
+    <div className="min-h-screen bg-background pb-8 md:pb-8">
       <TopBar />
       <main className="mx-auto w-full min-w-0 max-w-6xl px-3 py-5 md:px-6 md:py-7">
         <AnimatePresence>
@@ -57,7 +56,6 @@ export default function AppLayout() {
         </AnimatePresence>
         <LegalFooter />
       </main>
-      <BottomNav />
     </div>
   );
 }

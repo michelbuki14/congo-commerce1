@@ -82,46 +82,46 @@ export default function TopBar() {
         </form>
 
         <div className="flex items-center gap-2">
-          <CurrencyToggle className="hidden sm:inline-flex" />
-          <LanguageToggle className="hidden h-11 sm:block" />
-          <ThemeToggle className="hidden sm:inline-flex" />
+                  <CurrencyToggle className="hidden md:inline-flex" />
+                  <LanguageToggle className="hidden h-11 md:block" />
+                  <ThemeToggle className="hidden md:inline-flex" />
 
-          {/* User actions - desktop */}
-          <div className="flex items-center gap-1">
-            <Link
-              to="/wishlist"
-              aria-label={t('nav.wishlist')}
-              className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <Heart className="h-5 w-5" aria-hidden="true" />
-            </Link>
-            <Link
-              to="/messages"
-              aria-label={t('nav.messages')}
-              className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-secondary sm:flex focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <MessageCircle className="h-5 w-5" aria-hidden="true" />
-            </Link>
-            <Link
-              to="/notifications"
-              aria-label={t('nav.notifications')}
-              className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-secondary sm:flex focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <Bell className="h-5 w-5" aria-hidden="true" />
-            </Link>
+                  {/* User actions - desktop only */}
+                  <div className="hidden md:flex items-center gap-1">
+                    <Link
+                      to="/wishlist"
+                      aria-label={t('nav.wishlist')}
+                      className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <Heart className="h-5 w-5" aria-hidden="true" />
+                    </Link>
+                    <Link
+                      to="/messages"
+                      aria-label={t('nav.messages')}
+                      className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <MessageCircle className="h-5 w-5" aria-hidden="true" />
+                    </Link>
+                    <Link
+                      to="/notifications"
+                      aria-label={t('nav.notifications')}
+                      className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <Bell className="h-5 w-5" aria-hidden="true" />
+                    </Link>
 
-            {/* User menu dropdown */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setUserMenuOpen(!userMenuOpen)}
-                className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                aria-expanded={userMenuOpen}
-                aria-haspopup="true"
-                aria-label={user ? t('nav.profile') : t('nav.login')}
-              >
-                <User className="h-5 w-5" aria-hidden="true" />
-              </button>
+                    {/* User menu dropdown */}
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setUserMenuOpen(!userMenuOpen)}
+                        className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        aria-expanded={userMenuOpen}
+                        aria-haspopup="true"
+                        aria-label={user ? t('nav.profile') : t('nav.login')}
+                      >
+                        <User className="h-5 w-5" aria-hidden="true" />
+                      </button>
 
               {userMenuOpen && (
                 <>
