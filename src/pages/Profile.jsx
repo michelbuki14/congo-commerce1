@@ -39,6 +39,13 @@ export default function Profile() {
     if (window.confirm(t('profile.deleteConfirm'))) {
       // TODO: Call backend cleanup function
       alert(t('profile.deleteSuccess'));
+      window.location.href = '/;
+    }
+  };
+  const handleDeleteAccount = () => {
+    if (window.confirm(t('profile.deleteConfirm'))) {
+      // TODO: Call backend cleanup function
+      alert(t('profile.deleteSuccess'));
       window.location.href = '/';
     }
   };
@@ -166,6 +173,13 @@ export default function Profile() {
           </div>
         </Link>
         <Link to="/admin" className="flex items-center gap-3 rounded-xl border border-border bg-card p-3.5">
+        <Link to="#" className="flex items-center gap-3 rounded-xl border border-border bg-card p-3.5 text-red-500" onClick={handleDeleteAccount}>
+          <RotateCcw className="h-4 w-4 text-red-500" />
+          <div>
+            <p className="text-sm font-semibold text-red-500">{t('profile.deleteAccount')}</p>
+            <p className="text-[11px] text-muted-foreground">{t('profile.deleteAccountSub')}</p>
+          </div>
+        </Link>
         <Link to="#" className="flex items-center gap-3 rounded-xl border border-border bg-card p-3.5 text-red-500" onClick={handleDeleteAccount}>
           <RotateCcw className="h-4 w-4 text-red-500" />
           <div>

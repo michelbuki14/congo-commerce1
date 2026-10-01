@@ -1161,6 +1161,9 @@ export default {
   deleteAccount: "Delete Account",
   deleteConfirm: "Are you sure you want to delete your account? This action is irreversible.",
   deleteSuccess: "Your account has been successfully deleted.",
+  deleteAccount: "Delete Account",
+  deleteConfirm: "Are you sure you want to delete your account? This action is irreversible.",
+  deleteSuccess: "Your account has been successfully deleted.",
 },
   userProfile: {
   hello: "Hello{{commaName}}",
