@@ -153,6 +153,9 @@
   ],
   "rls": {
     "read": null,
+    "created_by_id": {
+      "type": "string"
+    },
     "create": {
       "$or": [
         {
@@ -165,7 +168,21 @@
         }
       ]
     },
-    "update": null,
+    "update": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "data.tenant_owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
     "delete": {
       "$or": [
         {

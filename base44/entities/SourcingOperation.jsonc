@@ -1,0 +1,27 @@
+{
+  "name": "SourcingOperation",
+  "type": "object",
+  "properties": {
+    "tenant_id": { "type": "string" },
+    "tenant_owner_email": { "type": "string" },
+    "operation_id": { "type": "string" },
+    "requisition_id": { "type": "string" },
+    "result_id": { "type": "string" },
+    "operation_type": { "type": "string", "enum": ["replace_supplier", "list_product", "create_po"], "default": "replace_supplier" },
+    "target_product_id": { "type": "string" },
+    "target_sku_id": { "type": "string" },
+    "new_supplier_id": { "type": "string" },
+    "new_sku_id": { "type": "string" },
+    "operation_status": { "type": "string", "enum": ["pending", "success", "failed"], "default": "pending" },
+    "error_message": { "type": "string" },
+    "performed_by": { "type": "string" },
+    "performed_at": { "type": "string" }
+  },
+  "required": ["requisition_id", "result_id", "operation_type", "performed_by"],
+  "rls": {
+    "read": { "user_condition": { "role": "admin" } },
+    "create": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}

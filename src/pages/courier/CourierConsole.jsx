@@ -49,7 +49,10 @@ export default function CourierConsole() {
       const [shipGroups, foGroups, allOrders, walletGroups] = await Promise.all([
         Promise.all(names.map((n) => base44.entities.Shipment.filter({ courier_name: n }, '-created_date', 100).catch(() => []))),
         Promise.all(names.map((n) => base44.entities.FulfillmentOrder.filter({ courier_name: n }, '-created_date', 100).catch(() => []))),
-        base44.entities.Order.list('-created_date', 100).catch(() => []),
+        base44.functions
+          .invoke('deliveryDesk', { action: 'orders', courier_names: names })
+          .then((r) => r?.data?.orders || [])
+          .catch(() => []),
         Promise.all(names.map((n) => base44.entities.Wallet.filter({ owner_type: 'courier', owner_name: n }).catch(() => []))),
       ]);
 
@@ -154,7 +157,7 @@ export default function CourierConsole() {
 
   return (
     <div className="space-y-5 pb-8">
-      <h1 className="flex items-center gap-2 text-lg font-bold md:text-xl">
+      <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight md:text-3xl">
         <Truck className="h-5 w-5 text-primary" /> {t('courierConsole.title')}
       </h1>
 

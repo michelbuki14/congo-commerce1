@@ -8,7 +8,7 @@ import { TENANT_PERMISSIONS, TENANT_ROLES, permissionLabel, permissionsForRole }
 import { formatDate } from '@/lib/format';
 import { useTranslation } from 'react-i18next';
 
-export default function TenantTeamPanel({ tenant, members, onChange }) {
+export default function TenantTeamPanel({ tenant, members, onChange, permissions = [], owner = false }) {
   const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
@@ -16,48 +16,41 @@ export default function TenantTeamPanel({ tenant, members, onChange }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
+  const allowedRoles = TENANT_ROLES.filter(r => owner || (r.id !== 'TENANT_ADMIN' && permissionsForRole(r.id).every(p => permissions.includes(p))));
   const invite = async () => {
     if (!email) return;
     setBusy(true);
     setError('');
     try {
-      await base44.entities.TenantMember.create({
-        tenant_id: tenant.id,
-        tenant_name: tenant.name,
-        owner_email: tenant.owner_email || '',
-        email: String(email).trim().toLowerCase(),
-        full_name: name,
-        role,
-        permissions: permissionsForRole(role),
-        status: 'invited',
-        invited_by: tenant.owner_email || '',
-      });
+      await base44.functions.invoke('manageTenantTeam', { action: 'invite', tenantId: tenant.id, email, name, role });
       setEmail('');
       setName('');
-      onChange();
+      await onChange();
     } catch (e) {
-      setError(e?.message || t('tenantTeamPanel.inviteFailed'));
+      setError(e?.response?.data?.error || e?.message || t('tenantTeamPanel.inviteFailed'));
     } finally {
       setBusy(false);
     }
   };
 
-  const changeRole = async (member, nextRole) => {
-    await base44.entities.TenantMember.update(member.id, { role: nextRole, permissions: permissionsForRole(nextRole) });
-    onChange();
+  const manage = async (action, member, values = {}) => {
+    setBusy(true);
+    setError('');
+    try {
+      await base44.functions.invoke('manageTenantTeam', { action, tenantId: tenant.id, memberId: member.id, ...values });
+      await onChange();
+    } catch (e) {
+      setError(e?.response?.data?.error || e?.message || 'Action refusée');
+    } finally {
+      setBusy(false);
+    }
   };
-
-  const togglePermission = async (member, key) => {
+  const changeRole = (member, nextRole) => manage('role', member, { role: nextRole });
+  const togglePermission = (member, key) => {
     const current = member.permissions || [];
-    const next = current.includes(key) ? current.filter((k) => k !== key) : [...current, key];
-    await base44.entities.TenantMember.update(member.id, { permissions: next });
-    onChange();
+    manage('permissions', member, { permissions: current.includes(key) ? current.filter(k => k !== key) : [...current, key] });
   };
-
-  const remove = async (member) => {
-    await base44.entities.TenantMember.delete(member.id);
-    onChange();
-  };
+  const remove = (member) => manage('remove', member);
 
   return (
     <Card>
@@ -71,9 +64,9 @@ export default function TenantTeamPanel({ tenant, members, onChange }) {
           <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="membre@exemple.cd" />
           <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('tenantTeamPanel.namePlaceholder')} />
           <select value={role} onChange={(e) => setRole(e.target.value)} className="h-10 rounded-md border border-input bg-background px-3 text-sm">
-            {TENANT_ROLES.map((r) => <option key={r.id} value={r.id}>{r.label}</option>)}
+            {allowedRoles.map((r) => <option key={r.id} value={r.id}>{r.label}</option>)}
           </select>
-          <Button onClick={invite} disabled={busy || !email}>
+          <Button onClick={invite} disabled={busy || !email || !allowedRoles.some(r => r.id === role)}>
             <UserPlus className="mr-1.5 h-4 w-4" /> {t('tenantTeamPanel.invite')}
           </Button>
         </div>
@@ -94,11 +87,12 @@ export default function TenantTeamPanel({ tenant, members, onChange }) {
                   <select
                     value={m.role}
                     onChange={(e) => changeRole(m, e.target.value)}
+                    disabled={busy || m.email === tenant.owner_email || (!owner && m.role === 'TENANT_ADMIN')}
                     className="h-9 rounded-md border border-input bg-background px-2 text-sm"
                   >
-                    {TENANT_ROLES.map((r) => <option key={r.id} value={r.id}>{r.label}</option>)}
+                    {allowedRoles.map((r) => <option key={r.id} value={r.id}>{r.label}</option>)}
                   </select>
-                  <Button variant="ghost" size="sm" onClick={() => remove(m)}>
+                  <Button variant="ghost" size="sm" disabled={busy || m.email === tenant.owner_email || (!owner && m.role === 'TENANT_ADMIN')} aria-label={`Retirer ${m.email}`} onClick={() => remove(m)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
@@ -111,6 +105,7 @@ export default function TenantTeamPanel({ tenant, members, onChange }) {
                       key={p.key}
                       type="button"
                       onClick={() => togglePermission(m, p.key)}
+                      disabled={busy || m.email === tenant.owner_email || (!owner && (!permissions.includes(p.key) || m.role === 'TENANT_ADMIN'))}
                       className={`rounded-full border px-2 py-0.5 text-[11px] ${on ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-muted-foreground'}`}
                     >
                       {permissionLabel(p.key)}

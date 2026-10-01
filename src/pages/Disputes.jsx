@@ -5,11 +5,15 @@ import { Gavel, ShieldCheck, AlertCircle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import StatusBadge from '@/components/StatusBadge';
 import { getProfile } from '@/lib/session';
+import { fetchMyDisputes, openDispute } from '@/lib/customerAccount';
 import { formatUSD, formatDate } from '@/lib/format';
 import { emitEvent } from '@/lib/events';
+import { lookupOrder } from '@/lib/orderLookup';
+import { RETURN_COPY } from '@/lib/returnCopy';
 
 export default function Disputes() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const copy = RETURN_COPY[i18n.language === 'en' ? 'en' : 'fr'];
   const TYPES = [
     { id: 'not_received', label: t('disputes.typeNotReceived') },
     { id: 'wrong_product', label: t('disputes.typeWrongProduct') },
@@ -21,25 +25,29 @@ export default function Disputes() {
   const profile = getProfile();
   const [disputes, setDisputes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [form, setForm] = useState({
-    order_number: '',
-    type: 'not_received',
-    description: '',
-    phone: profile.phone || '',
+  const [form, setForm] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    const reason = params.get('reason');
+    return {
+      order_number: params.get('order') || '',
+      type: ['not_received', 'wrong_product', 'damaged', 'not_as_described', 'missing_item'].includes(reason) ? reason : 'not_received',
+      description: '',
+      phone: params.get('phone') || profile.phone || '',
+    };
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
   const load = async (phone) => {
-    const rows = await base44.entities.Dispute.filter({ customer_phone: phone || '—' }, '-created_date', 30).catch(() => []);
+    const rows = await fetchMyDisputes({ phone: phone || '' });
     setDisputes(rows);
     setLoading(false);
   };
 
   useEffect(() => {
     load(profile.phone);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   const submit = async (e) => {
@@ -50,31 +58,21 @@ export default function Disputes() {
       setError(t('disputes.orderNumberRequired'));
       return;
     }
+    if (!form.phone.trim()) {
+      setError(copy.phoneRequired);
+      return;
+    }
     setSubmitting(true);
     try {
       const number = form.order_number.trim().toUpperCase();
-      const orderRows = await base44.entities.Order.filter({ order_number: number }).catch(() => []);
-      const order = orderRows[0];
-      await base44.entities.Dispute.create({
-        order_number: number,
-        customer_name: profile.name || 'Client',
-        customer_phone: form.phone || profile.phone || '',
-        seller_name: order?.items?.[0]?.seller_name || '',
+      const { order } = await lookupOrder(number, form.phone);
+      await openDispute({
+        orderNumber: number,
+        phone: form.phone || profile.phone || '',
         type: form.type,
         description: form.description,
-        amount_usd: order?.total_usd || 0,
-        status: 'open',
-        priority: 'normal',
       });
-      await base44.entities.Notification.create({
-        title: 'Nouveau litige ouvert',
-        message: `${profile.name || 'Un client'} ouvre un litige sur ${number}.`,
-        type: 'order',
-        audience: 'admin',
-        order_number: number,
-        is_demo: true,
-      });
-      emitEvent('dispute_opened', {
+      emitEvent(base44, 'dispute_opened', {
         category: 'risk',
         source: 'Dispute',
         reference: number,
@@ -88,8 +86,8 @@ export default function Disputes() {
       setSuccess(t('disputes.disputeOpened'));
       setForm({ ...form, order_number: '', description: '' });
       await load(form.phone || profile.phone);
-    } catch {
-      setError(t('disputes.openFailed'));
+    } catch (err) {
+      setError(err.message || t('disputes.openFailed'));
     } finally {
       setSubmitting(false);
     }

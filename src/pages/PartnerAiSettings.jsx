@@ -13,8 +13,6 @@ const PROVIDERS = [
   { id: 'custom', label: 'Passerelle interne', model: '' },
 ];
 
-const settingKey = (email) => `partner_ai:${String(email || '').toLowerCase()}`;
-
 const DEFAULT = {
   provider: 'openai',
   model: 'gpt-5-mini',
@@ -43,13 +41,14 @@ export default function PartnerAiSettings() {
     if (!user) return;
     (async () => {
       const [settings, owned] = await Promise.all([
-        base44.entities.PlatformSetting.filter({ key: settingKey(user.email) }).catch(() => []),
+        base44.entities.PartnerPreference.filter({ key: 'partner_ai' }).catch(() => []),
         base44.entities.Tenant.filter({ owner_email: user.email }).catch(() => []),
       ]);
       setTenants(owned);
-      if (settings[0]) {
-        setSettingId(settings[0].id);
-        setForm({ ...DEFAULT, ...(settings[0].value || {}) });
+      const saved = settings[0];
+      if (saved) {
+        if (settings[0]) setSettingId(saved.id);
+        setForm({ ...DEFAULT, ...(saved.value || {}) });
       }
     })().finally(() => setLoading(false));
   }, [user]);
@@ -74,14 +73,9 @@ export default function PartnerAiSettings() {
         updated_by: user.email,
       };
       if (settingId) {
-        await base44.entities.PlatformSetting.update(settingId, { value });
+        await base44.entities.PartnerPreference.update(settingId, { value });
       } else {
-        const created = await base44.entities.PlatformSetting.create({
-          key: settingKey(user.email),
-          label: 'Connexion assistant IA',
-          group: 'integrations',
-          value,
-        });
+        const created = await base44.entities.PartnerPreference.create({ key: 'partner_ai', value });
         setSettingId(created.id);
       }
       setForm(value);

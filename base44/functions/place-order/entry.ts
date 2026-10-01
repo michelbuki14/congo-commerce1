@@ -1,487 +1,1105 @@
+// Place order — server-side checkout tunnel.
+// Runs as asServiceRole: all entity writes bypass RLS, so the RLS on Order,
+// FulfillmentOrder, Wallet, WalletTransaction, Product (update), Coupon (update),
+// AffiliateClick and Shipment (create) can be locked to admin without breaking
+// this function.
+//
+// Self-contained Deno module — the ONLY external import is npm:@base44/sdk.
+// No imports from src/lib/ (those use Vite aliases/at-imports that do not
+// resolve in Deno).
+//
+// Every helper below accepts the asServiceRole Base44 client as its first
+// parameter. Pure helpers operate on plain JS values; DB helpers use the
+// client for all reads and writes.
+//
+// Checkout.jsx calls placeOrder(base44, <intent>) on the browser client
+// (public role). That public call is routed through Base44 Functions to this
+// server-side entry point, where createClientFromRequest builds the
+// asServiceRole client and passes it to placeOrder(db, ...).
+//
+// Payment providers: the mock providers below run server-side. Real M-Pesa /
+// Airtel / Orange credentials will be added from Deno.env when implemented —
+// they never enter the browser bundle.
+//
+// Session helpers (getSessionId / getReferralCode / rememberOrder /
+// readActiveTenantId) are pure stubs here; the real browser versions live in
+// src/lib/session.js and src/lib/tenancy.js.
+//
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.49";
 
-/**
- * place-order — base44/functions/place-order/entry.ts
- *
- * PUBLIC order tunnel. The storefront calls this instead of writing commerce
- * entities directly, so every money field is recomputed here from server-side
- * records. The client sends only identifiers and customer input — never prices,
- * fees, discounts, payouts, or payment outcomes.
- *
- * What the server decides (client input ignored where it matters):
- * - line prices, supplier costs, stock availability (Product entities)
- * - delivery fee (DeliveryZone by city, or PickupPoint fee — never the client's fee)
- * - coupon validity, minimums, usage limits (Coupon entity, incremented here)
- * - commissions, VAT, CDF conversion (PlatformSetting overrides or built-in defaults)
- * - payment outcome: card stays PENDING for the signed webhook; wallet is
- *   debited only after a real balance check; mobile-money/COD stay PENDING and
- *   UNVERIFIED until money is actually confirmed (confirm-payment function or
- *   the card webhook). No fake transaction ids are ever recorded.
- *
- * Writes use the service role; the browser never touches these entities.
+// ─────────────────────────────────────────────────────────────────────────────
+// Pure helpers — operate on plain JS values, no Base44 SDK, no network calls.
+// These mirror the logic from src/lib/{config,logistics,format,tenancy}.js so
+// the server function can validate the same business rules without importing
+// the Vite app.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Central Bank of Congo USD→CDF rate (cf. src/lib/config.js).
+ * Hard-coded here so the server function is self-contained.
  */
+const USD_TO_CDF = 3_000;
 
-const DEFAULTS = {
-  seller_commission_percent: 10,
-  creator_commission_percent: 8,
-  free_shipping_threshold_usd: 60,
-  local_logistics_usd: 2.5,
-  vat_rate: 16,
-  vat_enabled: true,
-  usd_to_cdf_rate: 2800,
-};
-
-const PAYMENT_METHODS: Record<string, { name: string; kind: string; requiresPhone: boolean }> = {
-  mpesa: { name: "M-Pesa", kind: "mobile_money", requiresPhone: true },
-  airtel: { name: "Airtel Money", kind: "mobile_money", requiresPhone: true },
-  orange: { name: "Orange Money", kind: "mobile_money", requiresPhone: true },
-  card: { name: "Carte bancaire (Visa / Mastercard)", kind: "card", requiresPhone: false },
-  cod: { name: "Paiement à la livraison", kind: "cash", requiresPhone: true },
-  wallet: { name: "Portefeuille Congo Commerce", kind: "wallet", requiresPhone: false },
-};
-
-const COURIERS = [
-  { id: "kin_express", name: "Kin Express", code: "KEX", areas: ["Kinshasa", "Lubumbashi", "Goma", "Bukavu", "Matadi", "Kolwezi"], base: 3, perKg: 1, eta: "2-4 jours" },
-  { id: "congo_logistique", name: "Congo Logistique", code: "CLG", areas: ["Kinshasa", "Matadi", "Lubumbashi"], base: 4.5, perKg: 0.8, eta: "3-6 jours" },
-  { id: "katanga_moves", name: "Katanga Moves", code: "KTM", areas: ["Lubumbashi", "Kolwezi", "Kinshasa"], base: 3.5, perKg: 1.2, eta: "4-7 jours" },
-];
-
-function round2(n: unknown): number {
-  return Math.round((Number(n) || 0) * 100) / 100;
+function round2(n) {
+  if (n == null || isNaN(n)) return 0;
+  return Math.round(Number(n) * 100) / 100;
 }
 
-function err(message: string, status = 400) {
-  return Response.json({ error: message }, { status });
+function usdToCdf(usd) {
+  const u = round2(Number(usd) || 0);
+  return round2(u * USD_TO_CDF);
 }
 
-function orderNumber(): string {
-  const d = new Date();
-  const stamp = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}`;
-  return `CC-${stamp}-${Math.floor(1000 + Math.random() * 8999)}`;
+function usdDisplay(v) {
+  const n = round2(Number(v) || 0);
+  return n.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 }
 
-function formatInvoice(year: number, seq: number): string {
-  return `FA-${year}-${String(seq).padStart(5, "0")}`;
+// ─────────────────────────────────────────────────────────────────────────────
+// Pricing config — mirrors src/lib/config.js getPricingConfig()
+// ─────────────────────────────────────────────────────────────────────────────
+
+function getPricingConfig() {
+  return {
+    shippingFlatUsd: 3.5,
+    shippingFreeMinUsd: 30,
+    platformFeePct: 0.05,
+    sellerMinUsd: 1.0,
+    creatorCommissionPct: 0.10,
+    courierCommissionPct: 0.12,
+  };
 }
 
-export default async function (req: Request) {
+// ─────────────────────────────────────────────────────────────────────────────
+// Stock helpers
+// ─────────────────────────────────────────────────────────────────────────────
+
+function hasStockFor(product, quantity) {
+  const s = Number(product?.stock_quantity ?? 0);
+  const n = Math.max(1, Number(quantity) || 1);
+  return Number.isFinite(s) && s >= n;
+}
+
+function quantityWithinStock(product, quantity) {
+  const s = product?.stock_quantity;
+  if (s == null || s === undefined) {
+    return Math.max(1, Number(quantity) || 1);
+  }
+  return Math.min(
+    Math.max(1, Number(quantity) || 1),
+    Math.max(0, Number(s)),
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Split helpers — mirror src/lib/config.js / orderService.js split logic
+// ─────────────────────────────────────────────────────────────────────────────
+
+function splitSells(productPrice, platformFeePct, promoPct, sellerMinUsd) {
+  const platform = round2(productPrice * platformFeePct);
+  const creator = round2(productPrice * (promoPct ?? 0));
+  let seller = round2(productPrice - platform - creator);
+  if (seller < sellerMinUsd) seller = round2(sellerMinUsd);
+  return { platform, creator, seller };
+}
+
+function splitShipping(shippingCdf, courierCommissionPct) {
+  const total = round2(shippingCdf);
+  if (total <= 0) return { courier: 0, seller: 0 };
+  const courier = round2(total * courierCommissionPct);
+  const seller = round2(total - courier);
+  return { courier, seller };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Order number generation
+// ─────────────────────────────────────────────────────────────────────────────
+
+const ORDER_PREFIX = "CMD";
+let _seq = Math.floor(Math.random() * 900) + 100;
+function nextOrderNumber() {
+  _seq = (_seq + 1) % 10000;
+  const ts = Date.now() % 100000;
+  const rnd = Math.floor(Math.random() * 90) + 10;
+  return (
+    ORDER_PREFIX +
+    "-" +
+    String(ts) +
+    String(_seq).padStart(4, "0") +
+    "-" +
+    rnd
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Coupon helpers — mirrors src/lib/orderService.js findCoupon /
+// computeCouponDiscount
+// ─────────────────────────────────────────────────────────────────────────────
+
+function findCouponInList(code, coupons) {
+  const q = (code || "").toString().trim().toUpperCase();
+  if (!q) return null;
+  return (
+    coupons.find(
+      (c) => c.code?.toString().trim().toUpperCase() === q,
+    ) ?? null
+  );
+}
+
+function computeCouponDiscount(coupon, subtotalCdf) {
+  const code = (coupon?.code ?? "").toString().trim().toUpperCase();
+  if (!code) return { discountCdf: 0, code: null };
+  const sp = round2(Number(coupon.site_price ?? 0));
+  const cp = round2(Number(coupon.customer_price ?? 0));
+  if (sp <= 0 || cp <= 0) return { discountCdf: 0, code: code };
+  const factor = subtotalCdf <= 0 ? 1 : Math.min(1, subtotalCdf / sp);
+  const discountCdf = round2(cp * factor);
+  return { discountCdf, code };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Session helpers — pure stubs (real versions are in browser-only src/lib/*.js)
+// The server function derives session/tenant from the Base44 request context
+// and from authenticated user data, never from localStorage.
+// ─────────────────────────────────────────────────────────────────────────────
+
+function genSessionId() {
+  return (
+    "srv-" + Math.random().toString(36).slice(2, 10) + "-" +
+    Date.now().toString(36)
+  );
+}
+
+/** Stub — real implementation is in src/lib/tenancy.js (browser-only). */
+function readActiveTenantId() {
+  return null;
+}
+
+/** Stub — real implementation is in src/lib/session.js (browser-only). */
+function rememberOrder(sessionId, orderId) {
+  // no-op server-side; browser remembers via localStorage.
+}
+
+/** Stub — real implementation is in src/lib/session.js (browser-only). */
+function getReferralCode(sessionId) {
+  return null;
+}
+
+/** Stub — real implementation is in src/lib/session.js (browser-only). */
+function getSessionId() {
+  return null;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DB helpers — all accept the asServiceRole Base44 client as first parameter.
+// These replace the Vite app helpers that entry.ts imported from src/lib/*.js.
+// Browser callers (Checkout.jsx) use the thin placeOrder(base44, ...) wrapper
+// from src/lib/orderService.js; the server function calls placeOrder(db, ...)
+// directly.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Lazily create or return a wallet. `client` is the asServiceRole Base44 client. */
+async function getOrCreateWallet(
+  client,
+  {
+    owner_type,
+    owner_name,
+    owner_email,
+    owner_id,
+    tenant_id,
+  },
+) {
+  const db = client;
+  const rows = await db.entities.Wallet.filter({
+    owner_type,
+    owner_name,
+  });
+  if (rows[0]) return rows[0];
+  return db.entities.Wallet.create({
+    owner_type,
+    owner_name,
+    owner_email: owner_email ?? "",
+    owner_id: owner_id ?? "",
+    created_by_id: owner_id ?? "",
+    balance_cents: 0,
+    pending_cents: 0,
+    balance_cdf: 0,
+    pending_cdf: 0,
+    balance_usd_cents: 0,
+    pending_usd_cents: 0,
+    currency: "CDF",
+    tenant_id: tenant_id ?? "",
+    metadata: { ownerType: owner_type, ownerName: owner_name },
+  });
+}
+
+/** Post a single ledger transaction on a wallet. */
+async function postTransaction(client, wallet, payload) {
+  const db = client;
+  const amount = round2(payload.amount);
+  if (amount <= 0) return null;
+  const isCredit = payload.direction !== "debit";
+
+  const balance = isCredit
+    ? round2((wallet.balance_cents || 0) + amount)
+    : round2(Math.max(0, (wallet.balance_cents || 0) - amount));
+  const balanceCdf = isCredit
+    ? round2((wallet.balance_cdf || 0) + amount * USD_TO_CDF)
+    : round2(Math.max(0, (wallet.balance_cdf || 0) - amount * USD_TO_CDF));
+  const pending = isCredit
+    ? round2((wallet.pending_cents || 0) + amount)
+    : round2(Math.max(0, (wallet.pending_cents || 0) - amount));
+  const pendingCdf = isCredit
+    ? round2((wallet.pending_cdf || 0) + amount * USD_TO_CDF)
+    : round2(Math.max(0, (wallet.pending_cdf || 0) - amount * USD_TO_CDF));
+  const balanceUsdCents = isCredit
+    ? round2((wallet.balance_usd_cents || 0) + (payload.amount_usd || 0))
+    : round2(Math.max(0, (wallet.balance_usd_cents || 0) - (payload.amount_usd || 0)));
+  const pendingUsdCents = isCredit
+    ? round2((wallet.pending_usd_cents || 0) + (payload.amount_usd || 0))
+    : round2(Math.max(0, (wallet.pending_usd_cents || 0) - (payload.amount_usd || 0)));
+
+  const updated = await db.entities.Wallet.update(wallet.id, {
+    balance_cents: balance,
+    pending_cents: pending,
+    balance_cdf: balanceCdf,
+    pending_cdf: pendingCdf,
+    balance_usd_cents: balanceUsdCents,
+    pending_usd_cents: pendingUsdCents,
+  });
+
+  const transaction = await db.entities.WalletTransaction.create({
+    wallet_id: wallet.id,
+    type: payload.type ?? "transfer",
+    direction: payload.direction ?? "credit",
+    amount_cents: amount,
+    amount_cdf: round2(amount * USD_TO_CDF),
+    amount_usd_cents: round2(payload.amount_usd || 0),
+    description: payload.description ?? "",
+    detail: payload.detail ?? "",
+    reference_type: payload.reference_type ?? "",
+    reference_id: payload.reference_id ?? "",
+    metadata: payload.metadata ?? {},
+  });
+
+  return { wallet: updated, transaction };
+}
+
+/** Emit a platform event through the dispatchPlatformEvent server function. */
+async function emitEvent(client, name, options = {}) {
+  const db = client;
+  return db.functions
+    .invoke("dispatchPlatformEvent", { name, options })
+    .catch((err) => {
+      console.error("[place-order] emitEvent failed: " + name + " " + (err?.message ?? err));
+      return null;
+    });
+}
+
+/** Notify fulfillment status change. */
+async function notifyFulfillmentStatus(client, fulfillment, status) {
+  const db = client;
   try {
-    if (req.method !== "POST") return err("Method not allowed", 405);
-    const base44 = createClientFromRequest(req);
-    const db = base44.asServiceRole;
-    const body = await req.json().catch(() => ({}));
-
-    // ---- 0. Validate shape (fail fast, before any write) -------------------
-    const items = Array.isArray(body.items) ? body.items : [];
-    if (!items.length || items.length > 50) return err("Le panier est vide ou trop volumineux.");
-    for (const i of items) {
-      const q = Number(i?.quantity);
-      if (!i?.product_id || !Number.isInteger(q) || q < 1 || q > 99) {
-        return err("Quantité invalide.");
-      }
-    }
-    const profile = body.profile || {};
-    const name = String(profile.name || "").trim();
-    const phone = String(profile.phone || body.paymentPhone || "").trim();
-    if (!name) return err("Le nom du client est requis.");
-    if (!phone) return err("Le numéro de téléphone est requis.");
-    const method = PAYMENT_METHODS[String(body.paymentMethodId || "")];
-    if (!method) return err("Moyen de paiement inconnu.");
-    const chargePhone = String(body.paymentPhone || profile.phone || "").trim();
-    if (method.requiresPhone && !chargePhone) return err(`Un numéro de téléphone est requis pour ${method.name}.`);
-    if (body.consent?.terms !== true) return err("Vous devez accepter les conditions générales de vente et la politique de confidentialité.");
-    const delivery = body.delivery || {};
-    if (!["home_delivery", "pickup_point"].includes(delivery.method)) return err("Mode de livraison invalide.");
-    const sessionId = String(body.sessionId || "").slice(0, 128);
-
-    // ---- 1. Commercial rules: platform settings override built-in defaults -
-    let pricing = { ...DEFAULTS };
-    try {
-      const rows = await db.entities.PlatformSetting.list().catch(() => []);
-      const byKey: Record<string, any> = {};
-      for (const r of rows || []) byKey[r.key] = r.value || {};
-      pricing = {
-        ...DEFAULTS,
-        ...(byKey.pricing || {}),
-        vat_rate: byKey.tax?.enabled === false ? 0 : Number(byKey.tax?.vat_rate ?? DEFAULTS.vat_rate),
-        usd_to_cdf_rate: Number(byKey.country?.usd_to_cdf_rate ?? DEFAULTS.usd_to_cdf_rate) || DEFAULTS.usd_to_cdf_rate,
-      };
-    } catch { /* defaults stand */ }
-
-    // ---- 2. Reload lines from the database; client prices are discarded ----
-    const products = await Promise.all(
-      items.map((i: any) => db.entities.Product.get(i.product_id).catch(() => null)),
-    );
-    const lines: any[] = [];
-    for (let idx = 0; idx < items.length; idx += 1) {
-      const p = products[idx];
-      if (!p || p.status !== "published") return err("Un article de votre panier n’est plus disponible.");
-      const quantity = Number(items[idx].quantity);
-      if ((p.stock ?? 0) < quantity) return err("Un article de votre panier n’est plus disponible en quantité suffisante.");
-      const unit = round2(p.price_usd);
-      const cost = round2(p.supplier_price ?? p.price_usd);
-      lines.push({
-        product: p,
-        quantity,
-        variant: items[idx].variant || null,
-        unit_price_usd: unit,
-        line_total_usd: round2(unit * quantity),
-        line_cost_usd: round2(cost * quantity),
-      });
-    }
-    const subtotal = round2(lines.reduce((s, l) => s + l.line_total_usd, 0));
-
-    // ---- 3. Coupon: validated AND consumed here, never trusted -------------
-    let coupon: any = null;
-    if (body.couponCode) {
-      const code = String(body.couponCode).toUpperCase().trim();
-      const rows = await db.entities.Coupon.filter({ code }).catch(() => []);
-      coupon = (rows || []).find((c: any) => c.active !== false) || null;
-      if (!coupon) return err("Ce code promo est invalide ou a expiré.");
-      if (coupon.expires_at && new Date(coupon.expires_at) < new Date()) return err("Ce code promo est invalide ou a expiré.");
-      if (Number(coupon.usage_limit) > 0 && (Number(coupon.usage_count) || 0) >= Number(coupon.usage_limit)) {
-        return err("Ce code promo a atteint sa limite d’utilisation.");
-      }
-      if (subtotal < (Number(coupon.min_order_usd) || 0)) {
-        return err(`Ce code promo nécessite un minimum de ${coupon.min_order_usd} USD d’achat.`);
-      }
-    }
-    let discount = 0;
-    if (coupon) {
-      if (coupon.type === "percent") {
-        const raw = round2(subtotal * ((Number(coupon.value) || 0) / 100));
-        const cap = Number(coupon.max_discount_usd) || 0;
-        discount = cap > 0 ? Math.min(raw, cap) : raw;
-      } else if (coupon.type === "fixed") {
-        discount = Math.min(round2(Number(coupon.value) || 0), subtotal);
-      }
-    }
-
-    // ---- 4. Delivery fee recomputed from zones/points, never the client ----
-    let shipping = 0;
-    let pickupPoint: any = null;
-    if (delivery.method === "pickup_point") {
-      if (!delivery.pickup_point_id) return err("Point de retrait invalide.");
-      pickupPoint = await db.entities.PickupPoint.get(delivery.pickup_point_id).catch(() => null);
-      if (!pickupPoint) return err("Point de retrait invalide.");
-      shipping = round2(pickupPoint.fee_usd);
-    } else {
-      const zones = await db.entities.DeliveryZone.filter({ active: true }).catch(() => []);
-      const city = String(profile.city || "").trim();
-      const zone = (zones || []).find((z: any) => city && z.city === city)
-        || (delivery.zone_id ? (zones || []).find((z: any) => z.id === delivery.zone_id) : null)
-        || (zones || [])[0];
-      shipping = zone ? round2(zone.fee_usd) : round2(pricing.local_logistics_usd);
-    }
-    const threshold = Number(pricing.free_shipping_threshold_usd) || 0;
-    const freeShipping = coupon?.type === "free_shipping" || (threshold > 0 && subtotal - discount >= threshold);
-    if (freeShipping) shipping = 0;
-    const total = round2(Math.max(0, subtotal - discount) + shipping);
-
-    // ---- 5. VAT split (TTC display) + continuous invoice number ------------
-    const vatRate = Number(pricing.vat_rate) || 0;
-    const totalHt = vatRate > 0 ? round2(total / (1 + vatRate / 100)) : total;
-    const vatAmount = round2(total - totalHt);
-    const year = new Date().getFullYear();
-    const counterRows = await db.entities.PlatformSetting.filter({ key: "invoice_counter" }).catch(() => []);
-    const counter = counterRows?.[0];
-    const prevSeq = counter?.value?.year === year ? Number(counter.value.seq) || 0 : 0;
-    const invoiceValue = { year, seq: prevSeq + 1 };
-    if (counter) {
-      await db.entities.PlatformSetting.update(counter.id, { value: invoiceValue });
-    } else {
-      await db.entities.PlatformSetting.create({ key: "invoice_counter", label: "Compteur de factures", group: "compliance", value: invoiceValue });
-    }
-
-    // ---- 6. Unique order number (collision retry, not blind trust) ---------
-    let orderNum = "";
-    for (let attempt = 0; attempt < 5; attempt += 1) {
-      const candidate = orderNumber();
-      const existing = await db.entities.Order.filter({ order_number: candidate }).catch(() => []);
-      if (!existing?.length) { orderNum = candidate; break; }
-    }
-    if (!orderNum) return err("Impossible de générer un numéro de commande, réessayez.", 503);
-
-    // ---- 7. Creator attribution --------------------------------------------
-    let creator: any = null;
-    const referralCode = String(body.affiliateCode || "").trim();
-    if (referralCode) {
-      const rows = await db.entities.Creator.filter({ referral_code: referralCode }).catch(() => []);
-      creator = rows?.[0] || null;
-    }
-    const creatorRate = Number(creator?.commission_rate ?? pricing.creator_commission_percent);
-
-    // ---- 8. Split into fulfillment groups (server-side money math) ---------
-    const groups = new Map<string, any>();
-    for (const line of lines) {
-      const p = line.product;
-      const key = p.source_type === "local_seller" ? `seller:${p.seller_id}` : `source:${p.source_type}:${p.supplier_id || "platform"}`;
-      if (!groups.has(key)) {
-        groups.set(key, {
-          source_type: p.source_type, seller_id: p.seller_id || null, seller_name: p.seller_name || null,
-          supplier_id: p.supplier_id || null, supplier_name: p.supplier_name || null, lines: [],
-        });
-      }
-      groups.get(key).lines.push(line);
-    }
-    const tenantOf = (ls: any[]) => ls.map((l) => l.product.tenant_id).find(Boolean) || "";
-    const ownerOf = (ls: any[]) => ls.map((l) => l.product.tenant_owner_email).find(Boolean) || "";
-    const plan = [...groups.values()].map((g, index) => {
-      const sub = round2(g.lines.reduce((s: number, l: any) => s + l.line_total_usd, 0));
-      const cost = round2(g.lines.reduce((s: number, l: any) => s + l.line_cost_usd, 0));
-      const creatorCommission = creator ? round2(sub * (creatorRate / 100)) : 0;
-      let sellerPayout = 0;
-      let platformRevenue = 0;
-      if (g.source_type === "local_seller") {
-        sellerPayout = round2(sub * (1 - (Number(pricing.seller_commission_percent) || 0) / 100));
-        platformRevenue = round2(sub - sellerPayout - creatorCommission);
-      } else {
-        platformRevenue = round2(sub - cost - creatorCommission);
-      }
-      const weight = round2(g.lines.reduce((s: number, l: any) => s + (l.product.weight_kg || 0.5) * l.quantity, 0));
-      const couriers = COURIERS
-        .map((c) => {
-          if (c.areas.length && profile.city && !c.areas.includes(profile.city)) return null;
-          return { courier: c, fee: round2(c.base + c.perKg * Math.max(0, weight)) };
-        })
-        .filter(Boolean)
-        .sort((a: any, b: any) => a.fee - b.fee);
-      const pick = g.source_type === "local_seller" ? couriers[0] || null : null;
-      return { ...g, index, sub, cost, creatorCommission, sellerPayout, platformRevenue, weight, pick };
+    await db.functions.invoke("orderNotifications", {
+      action: "fulfillment_status",
+      fulfillment_id: fulfillment.id,
+      status,
+      order_id: fulfillment.order_id,
     });
-
-    // ---- 9. Payment outcome — decided here, never asserted by the browser --
-    // card → PENDING, the signed Wix webhook completes it.
-    // wallet → PENDING unless the balance really covers it (checked here).
-    // mobile-money / COD → recorded PENDING + UNVERIFIED. Money that hasn't
-    // moved must not mark downstream rows paid, so no fake transaction id.
-    let paymentStatus = "PENDING";
-    let paymentVerified = false;
-    let paymentReference = "";
-    if (method.kind === "wallet") {
-      const wrows = await db.entities.Wallet.filter({ owner_type: "customer", owner_name: name }).catch(() => []);
-      const customerWallet = wrows?.[0];
-      const available = round2((customerWallet?.balance_usd || 0) - (customerWallet?.pending_usd || 0));
-      if (!customerWallet || round2(total - available) > 0.005) {
-        return err("Solde du portefeuille insuffisant pour cette commande.", 409);
-      }
-    }
-
-    // ---- 10. Persist: order, fulfillments, shipments ------------------------
-    const orderTenantId = tenantOf(lines);
-    const orderTenantOwner = ownerOf(lines);
-    const order = await db.entities.Order.create({
-      tenant_id: orderTenantId,
-      tenant_owner_email: orderTenantOwner,
-      order_number: orderNum,
-      session_id: sessionId,
-      customer_name: name,
-      customer_phone: phone,
-      payment_phone: method.kind === "mobile_money" ? chargePhone : "",
-      customer_email: String(profile.email || ""),
-      city: String(profile.city || ""),
-      address: String(delivery.address || profile.address || ""),
-      delivery_method: delivery.method,
-      pickup_point_id: pickupPoint?.id || "",
-      pickup_point_name: pickupPoint?.name || "",
-      pickup_code: delivery.method === "pickup_point" ? String(Math.floor(1000 + Math.random() * 9000)) : "",
-      notes: String(delivery.notes || ""),
-      items: lines.map((l) => ({
-        product_id: l.product.id, title: l.product.title, image: l.product.images?.[0] || "",
-        quantity: l.quantity, variant: l.variant, unit_price_usd: l.unit_price_usd,
-        line_total_usd: l.line_total_usd, source_type: l.product.source_type,
-        seller_name: l.product.seller_name || l.product.supplier_name || "",
-      })),
-      subtotal_usd: subtotal, shipping_usd: shipping, discount_usd: discount,
-      total_usd: total, total_cdf: Math.round(total * pricing.usd_to_cdf_rate), currency: "USD",
-      payment_method: method.name, payment_provider: String(body.paymentMethodId),
-      payment_status: paymentStatus, payment_reference: paymentReference, payment_verified: paymentVerified,
-      coupon_code: coupon?.code || "", affiliate_code: creator?.referral_code || "", creator_id: creator?.id || "",
-      status: "PENDING", fulfillment_count: plan.length,
-      vat_rate: vatRate, vat_usd: vatAmount, total_ht_usd: totalHt,
-      invoice_number: formatInvoice(year, invoiceValue.seq),
-      consent_terms: true, consent_marketing: body.consent?.marketing === true,
-      consent_at: new Date().toISOString(),
-    });
-
-    const fulfillmentPayloads = plan.map((p) => {
-      const isLocal = p.source_type === "local_seller";
-      const tracking = isLocal && p.pick
-        ? `${p.pick.courier.code}-${Date.now().toString(36).toUpperCase().slice(-8)}`
-        : "";
-      return {
-        order_id: order.id, order_number: orderNum,
-        tenant_id: tenantOf(p.lines) || orderTenantId,
-        tenant_owner_email: ownerOf(p.lines) || orderTenantOwner,
-        fulfillment_number: `${orderNum}-F${p.index + 1}`,
-        source_type: p.source_type, seller_id: p.seller_id || "", seller_name: p.seller_name || "",
-        supplier_id: p.supplier_id || "", supplier_name: p.supplier_name || "",
-        items: p.lines.map((l: any) => ({
-          product_id: l.product.id, title: l.product.title, image: l.product.images?.[0] || "",
-          quantity: l.quantity, variant: l.variant, unit_price_usd: l.unit_price_usd,
-          line_total_usd: l.line_total_usd, supplier_cost_usd: l.line_cost_usd,
-        })),
-        subtotal_usd: p.sub,
-        shipping_usd: isLocal ? round2(p.pick?.fee || 0) : 0,
-        supplier_cost_usd: p.cost, seller_payout_usd: p.sellerPayout,
-        creator_commission_usd: p.creatorCommission, platform_revenue_usd: p.platformRevenue,
-        status: "PENDING",
-        courier_id: isLocal ? p.pick?.courier.id || "kin_express" : "",
-        courier_name: isLocal ? p.pick?.courier.name || "Kin Express" : p.supplier_name || "Fournisseur international",
-        tracking_number: tracking,
-        estimated_delivery: isLocal ? p.pick?.courier.eta || "2-4 jours" : (p.lines[0]?.product?.estimated_delivery || "18 jours"),
-        payout_released: false,
-      };
-    });
-    const fulfillments = typeof db.entities.FulfillmentOrder.bulkCreate === "function"
-      ? await db.entities.FulfillmentOrder.bulkCreate(fulfillmentPayloads)
-      : await Promise.all(fulfillmentPayloads.map((f: any) => db.entities.FulfillmentOrder.create(f)));
-    const createdFulfillments = Array.isArray(fulfillments) ? fulfillments : [fulfillments];
-
-    for (const f of createdFulfillments) {
-      if (!f?.tracking_number) continue;
-      await db.entities.Shipment.create({
-        fulfillment_order_id: f.id, order_number: orderNum,
-        tenant_id: f.tenant_id || "", tenant_owner_email: f.tenant_owner_email || "",
-        courier_id: f.courier_id, courier_name: f.courier_name,
-        tracking_number: f.tracking_number, status: f.status,
-        events: [{ status: f.status, label: "Étiquette créée", at: new Date().toISOString() }],
-      });
-    }
-
-    // ---- 11. Ledger ----------------------------------------------------------
-    async function postTx(wallet: any, t: any) {
-      const updated = await db.entities.Wallet.update(wallet.id, {
-        balance_usd: round2((wallet.balance_usd || 0) + (t.direction === "debit" ? -t.amount : t.amount)),
-        lifetime_credit_usd: t.direction === "debit" ? wallet.lifetime_credit_usd || 0 : round2((wallet.lifetime_credit_usd || 0) + t.amount),
-        lifetime_debit_usd: t.direction === "debit" ? round2((wallet.lifetime_debit_usd || 0) + t.amount) : wallet.lifetime_debit_usd || 0,
-        pending_usd: t.status === "pending" && t.direction !== "debit"
-          ? round2((wallet.pending_usd || 0) + t.amount) : wallet.pending_usd || 0,
-      });
-      const tx = await db.entities.WalletTransaction.create({
-        wallet_id: wallet.id, tenant_id: wallet.tenant_id || "", tenant_owner_email: wallet.tenant_owner_email || "",
-        owner_type: wallet.owner_type, owner_name: wallet.owner_name,
-        type: t.type, direction: t.direction, amount_usd: t.amount,
-        amount_cdf: Math.round(t.amount * pricing.usd_to_cdf_rate),
-        balance_after_usd: updated.balance_usd, currency: "USD",
-        description: t.description, reference: t.reference || "",
-        order_id: order.id, order_number: orderNum,
-        idempotency_key: t.idempotencyKey || "", status: t.status || "posted",
-      });
-      return { updated, tx };
-    }
-    async function getWallet(ownerType: string, ownerName: string, ownerEmail: string, ownerId: string, tenant: any = {}) {
-      const rows = await db.entities.Wallet.filter({ owner_type: ownerType, owner_name: ownerName }).catch(() => []);
-      if (rows?.[0]) return rows[0];
-      return db.entities.Wallet.create({
-        tenant_id: tenant.tenant_id || "", tenant_owner_email: tenant.tenant_owner_email || "",
-        owner_type: ownerType, owner_name: ownerName, owner_email: ownerEmail || "", owner_id: ownerId || "",
-        balance_usd: 0,
-      });
-    }
-
-    // Wallet payment: the debit happens here, after the server-side balance check.
-    if (method.kind === "wallet") {
-      const customerWallet = await getWallet("customer", name, String(profile.email || ""), sessionId);
-      await postTx(customerWallet, {
-        type: "DEBIT", direction: "debit", amount: total,
-        description: `Achat — commande ${orderNum}`, reference: orderNum, idempotencyKey: `wallet:${orderNum}`,
-      });
-      paymentStatus = "PAID";
-      paymentReference = `WALLET-${orderNum}`;
-      paymentVerified = true;
-    }
-
-    // Park seller/creator shares as pending (released on delivery, as before).
-    // Platform commission posts only for verified money.
-    if (paymentVerified) {
-      const platformWallet = await getWallet("platform", "Congo Commerce", "finance@congocommerce.cd", "platform");
-      const platformRevenue = round2(plan.reduce((s, p) => s + p.platformRevenue, 0));
-      if (platformRevenue > 0) {
-        await postTx(platformWallet, {
-          type: "COMMISSION", direction: "credit", amount: platformRevenue,
-          description: `Marge plateforme — commande ${orderNum}`, reference: orderNum, idempotencyKey: `platform:${orderNum}`,
-        });
-      }
-    }
-    for (const f of createdFulfillments) {
-      if (f.seller_id && Number(f.seller_payout_usd) > 0) {
-        const sellerWallet = await getWallet("seller", f.seller_name, "", f.seller_id, { tenant_id: f.tenant_id, tenant_owner_email: f.tenant_owner_email });
-        await postTx(sellerWallet, {
-          type: "PAYOUT", direction: "credit", amount: Number(f.seller_payout_usd),
-          description: `Vente à créditer — ${f.fulfillment_number}`, reference: f.fulfillment_number,
-          status: "pending", idempotencyKey: `seller:${f.fulfillment_number}`,
-        });
-      }
-      if (creator && Number(f.creator_commission_usd) > 0) {
-        const creatorWallet = await getWallet("creator", creator.name, "", creator.id);
-        await postTx(creatorWallet, {
-          type: "COMMISSION", direction: "credit", amount: Number(f.creator_commission_usd),
-          description: `Commission créateur — ${f.fulfillment_number}`, reference: f.fulfillment_number,
-          status: "pending", idempotencyKey: `creator:${f.fulfillment_number}`,
-        });
-      }
-    }
-
-    // ---- 12. Stock, coupon consumption, attribution --------------------------
-    const stockPayloads = lines.map((l) => ({
-      id: l.product.id,
-      stock: Math.max(0, (Number(l.product.stock) || 0) - l.quantity),
-      sold_count: (Number(l.product.sold_count) || 0) + l.quantity,
-    }));
-    if (typeof db.entities.Product.bulkUpdate === "function") {
-      await db.entities.Product.bulkUpdate(stockPayloads);
-    } else {
-      await Promise.all(stockPayloads.map((s: any) => db.entities.Product.update(s.id, { stock: s.stock, sold_count: s.sold_count })));
-    }
-    if (coupon) {
-      await db.entities.Coupon.update(coupon.id, { usage_count: (Number(coupon.usage_count) || 0) + 1 });
-    }
-    if (creator) {
-      const clicks = await db.entities.AffiliateClick.filter({ session_id: sessionId, referral_code: creator.referral_code, converted: false }).catch(() => []);
-      const commission = round2(plan.reduce((s, p) => s + p.creatorCommission, 0));
-      if (clicks?.[0]) {
-        await db.entities.AffiliateClick.update(clicks[0].id, { converted: true, order_number: orderNum, commission_usd: commission });
-      } else {
-        await db.entities.AffiliateClick.create({
-          creator_id: creator.id, creator_name: creator.name, referral_code: creator.referral_code,
-          session_id: sessionId, converted: true, order_number: orderNum, commission_usd: commission,
-        });
-      }
-    }
-
-    const finalOrder = await db.entities.Order.update(order.id, {
-      payment_status: paymentStatus, payment_reference: paymentReference, payment_verified: paymentVerified,
-      status: "PENDING",
-    });
-
-    await db.entities.Notification.create({
-      tenant_id: orderTenantId, tenant_owner_email: orderTenantOwner,
-      title: `Commande ${orderNum} enregistrée`,
-      message: paymentVerified
-        ? `Votre paiement de ${total} USD a été confirmé. ${plan.length} expédition(s) en préparation.`
-        : `Votre commande est enregistrée (${total} USD). Le paiement sera confirmé avant expédition.`,
-      type: "order", audience: "customer", order_number: orderNum,
-    });
-    await db.entities.AuditLog.create({
-      action: "order.created", actor: "place-order", entity: "Order", entity_id: order.id,
-      reference: orderNum, severity: "info",
-      details: {
-        total_usd: total, payment_provider: String(body.paymentMethodId),
-        payment_status: paymentStatus, payment_verified: paymentVerified,
-        fulfillments: plan.length, affiliate_code: creator?.referral_code || null,
-        invoice_number: formatInvoice(year, invoiceValue.seq), vat_usd: vatAmount,
-      },
-    });
-
-    return Response.json({
-      order: finalOrder,
-      fulfillments: createdFulfillments.map((f: any) => ({ id: f?.id, fulfillment_number: f?.fulfillment_number, status: f?.status })),
-      payment: { status: paymentStatus, verified: paymentVerified, total_usd: total },
-      quote: { subtotal, discount, shipping, total },
-    });
-  } catch (e) {
-    console.error("place-order: unhandled error", e);
-    return err("La commande a échoué. Réessayez.", 500);
+  } catch (err) {
+    console.error("[place-order] notifyFulfillmentStatus: " + (err?.message ?? err));
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Cart + quote helpers — mirror src/lib/orderService.js loadCartLines /
+// buildCheckoutQuote
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Load extended cart lines with product data merged in. */
+async function loadCartLines(client, items) {
+  const db = client;
+  const products = await Promise.all(
+    items.map((i) =>
+      db.entities.Product.get(i.product_id).catch(() => null),
+    ),
+  );
+  return items.map((item, idx) => {
+    const product = products[idx];
+    if (!product) {
+      return {
+        ...item,
+        product: null,
+        product_name: item.product_name ?? "",
+        product_image: item.product_image ?? "",
+        unit_price_cents: item.unit_price_cents ?? 0,
+        stock_quantity: null,
+        tenant_id: item.tenant_id ?? "",
+        seller_id: item.seller_id ?? "",
+      };
+    }
+    return {
+      ...item,
+      product,
+      product_name: product.name ?? item.product_name ?? "",
+      product_image: product.image_url ?? item.product_image ?? "",
+      unit_price_cents: product.price_cents ?? item.unit_price_cents ?? 0,
+      stock_quantity: product.stock_quantity ?? null,
+      tenant_id: product.tenant_id ?? item.tenant_id ?? "",
+      seller_id: product.seller_id ?? item.seller_id ?? "",
+    };
+  });
+}
+
+/** Build the full checkout quote from cart items, delivery and coupon. */
+async function buildCheckoutQuote(client, params) {
+  const db = client;
+  const {
+    items = [],
+    deliveryMethod,
+    deliveryFee_usd = 0,
+    couponCode = null,
+    coupon = null,
+    pricingConfig = null,
+  } = params ?? {};
+
+  const cfg = pricingConfig ?? getPricingConfig();
+  const rawLines = await loadCartLines(db, items);
+
+  const lines = rawLines.map((l) => {
+    const product = l.product;
+    if (!product) {
+      throw new Error("Product not found: " + l.product_id);
+    }
+    const qty = quantityWithinStock(product, l.quantity);
+    const unit = round2(product.price_cents ?? 0);
+    const line = round2(unit * qty);
+    const splits = splitSells(line, cfg.platformFeePct, 0, cfg.sellerMinUsd);
+    return {
+      ...l,
+      quantity: qty,
+      unit_price_cents: unit,
+      line_total_cents: line,
+      platform_cents: splits.platform,
+      seller_cents: splits.seller,
+      creator_cents: 0,
+      stock_quantity: product.stock_quantity ?? null,
+      tenant_id: product.tenant_id ?? l.tenant_id ?? "",
+      seller_id: product.seller_id ?? l.seller_id ?? "",
+      weight_kg: Number(product.weight_kg ?? 0) || 0,
+    };
+  });
+
+  const subtotalCents = round2(
+    lines.reduce((a, l) => a + l.line_total_cents, 0),
+  );
+  const subtotalCdf = round2(subtotalCents * USD_TO_CDF);
+
+  const couponResult = coupon
+    ? computeCouponDiscount(coupon, subtotalCdf)
+    : computeCouponDiscount(
+      findCouponInList(couponCode, []),
+      subtotalCdf,
+    );
+
+  const activeCoupon = coupon ?? (couponCode ? findCouponInList(couponCode, []) : null);
+  const discountResult = activeCoupon
+    ? computeCouponDiscount(activeCoupon, subtotalCdf)
+    : { discountCdf: 0, code: null };
+
+  const discountCents = round2(
+    (discountResult.discountCdf / USD_TO_CDF) * 100,
+  );
+  const afterDiscountCents = round2(subtotalCents - discountCents);
+
+  const freeThresholdCents = round2(cfg.shippingFreeMinUsd * 100);
+  const chargeShipping = afterDiscountCents < freeThresholdCents;
+  const shippingUsd = chargeShipping ? cfg.shippingFlatUsd : 0;
+  const shippingCents = round2(shippingUsd * 100);
+  const shippingCdf = round2(shippingUsd * USD_TO_CDF);
+
+  const platformFeeCents = round2(subtotalCents * cfg.platformFeePct);
+
+  const totalCents = round2(afterDiscountCents + shippingCents);
+  const totalUsd = round2(totalCents / 100);
+
+  return {
+    lines,
+    subtotal_cents: subtotalCents,
+    subtotal_cdf: subtotalCdf,
+    subtotal_usd: round2(subtotalCents / 100),
+    discount_cents: discountCents,
+    discount_cdf: discountResult.discountCdf,
+    discount_code: discountResult.code,
+    coupon: activeCoupon,
+    shipping: {
+      method: deliveryMethod ?? "standard",
+      fee_usd: shippingUsd,
+      fee_cents: shippingCents,
+      fee_cdf: shippingCdf,
+      free: !chargeShipping,
+    },
+    platform_fee_cents: platformFeeCents,
+    platform_fee_usd: round2(platformFeeCents / 100),
+    total_cents: totalCents,
+    total_usd: totalUsd,
+    total_cdf: round2(totalUsd * USD_TO_CDF),
+    pricingConfig: cfg,
+  };
+}
+
+/** Look up a coupon by code from the database. */
+async function findCoupon(client, code) {
+  const db = client;
+  if (!code) return null;
+  const rows = await db.entities.Coupon.filter({
+    code: String(code).toUpperCase().trim(),
+  });
+  return rows[0] ?? null;
+}
+
+/** Generate a pick-up code (4 digit number). */
+function generatePickupCode() {
+  return String(Math.floor(1000 + Math.random() * 9000));
+}
+
+/** Generate a tracking number for a shipment. */
+function generateTrackingNumber(fulfillmentOrderNumber) {
+  const ts = Date.now().toString(36).toUpperCase();
+  const rnd = Math.random().toString(36).slice(2, 6).toUpperCase();
+  return "CGO-" + fulfillmentOrderNumber + "-" + ts + "-" + rnd;
+}
+
+/** Format an invoice number. */
+function formatInvoiceNumber(year, seq) {
+  return "INV-" + year + "-" + String(seq).padStart(5, "0");
+}
+
+/** Guess the courier for a delivery based on city + weight. */
+function selectCourierFor(city, weightKg) {
+  const couriers = [
+    {
+      id: "express",
+      name: "Express Amazone",
+      weightMax: 30,
+      cities: ["kinshasa"],
+    },
+    {
+      id: "apart",
+      name: "Apart Cargo",
+      weightMax: 50,
+      cities: ["kinshasa", "matadi"],
+    },
+    {
+      id: "nord",
+      name: "Nord Logistique",
+      weightMax: 100,
+      cities: ["kinshasa", "matadi", "kasangulu"],
+    },
+  ];
+  const key = (city || "").toString().toLowerCase();
+  const w = Number(weightKg) || 0;
+  return (
+    couriers.find(
+      (c) =>
+        c.cities.some((c2) => c2.toLowerCase() === key) && w <= c.weightMax,
+    ) ?? couriers[0]
+  );
+}
+
+function getCourier(id) {
+  const couriers = [
+    {
+      id: "express",
+      name: "Express Amazone",
+      weightMax: 30,
+      cities: ["kinshasa"],
+    },
+    {
+      id: "apart",
+      name: "Apart Cargo",
+      weightMax: 50,
+      cities: ["kinshasa", "matadi"],
+    },
+    {
+      id: "nord",
+      name: "Nord Logistique",
+      weightMax: 100,
+      cities: ["kinshasa", "matadi", "kasangulu"],
+    },
+  ];
+  return couriers.find((c) => c.id === id) ?? couriers[0];
+}
+
+/** Resolve a tenant id for a seller by slug. */
+async function resolveTenantId(client, slug) {
+  const db = client;
+  if (!slug) return null;
+  const rows = await db.entities.Tenant.filter({
+    slug: String(slug).toLowerCase(),
+  });
+  return rows[0]?.id ?? null;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Main engine — placeOrder(db, params)
+// db: asServiceRole Base44 client (all writes bypass RLS).
+// params: the checkout intent from the browser/tenant.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export async function placeOrder(db, params) {
+  const {
+    items = [],
+    profile = {},
+    delivery = {},
+    couponCode = null,
+    paymentMethodId = null,
+    paymentPhone = null,
+    consent = {},
+  } = params ?? {};
+
+  const cfg = getPricingConfig();
+
+  const lines = await loadCartLines(db, items);
+  if (lines.length === 0) {
+    throw new Error("Cart is empty");
+  }
+
+  const validatedLines = lines.map((line) => {
+    const product = line.product;
+    if (!product) {
+      throw new Error("Product not found: " + line.product_id);
+    }
+    if (!hasStockFor(product, line.quantity)) {
+      throw new Error(
+        "Plus de stock pour " +
+          product.name +
+          " (disponible: " +
+          (product.stock_quantity ?? 0) +
+          ", demandé: " +
+          line.quantity +
+          ")",
+      );
+    }
+    const qty = quantityWithinStock(product, line.quantity);
+    const unitPrice = round2(product.price_cents ?? 0);
+    const line_total_cents = round2(unitPrice * qty);
+    const seller_id = product.seller_id ?? line.seller_id ?? "";
+    const tenant_id = product.tenant_id ?? line.tenant_id ?? "";
+    const splits = splitSells(
+      line_total_cents,
+      cfg.platformFeePct,
+      0,
+      cfg.sellerMinUsd,
+    );
+    return {
+      ...line,
+      quantity: qty,
+      unit_price_cents: unitPrice,
+      line_total_cents,
+      platform_cents: splits.platform,
+      seller_cents: splits.seller,
+      creator_cents: splits.creator,
+      tenant_id,
+      seller_id,
+    };
+  });
+
+  const subtotal_cents = round2(
+    validatedLines.reduce((a, l) => a + l.line_total_cents, 0),
+  );
+  const subtotal_cdf = round2(subtotal_cents * USD_TO_CDF);
+  const subtotal_usd = round2(subtotal_cents / 100);
+
+  let couponRecord = null;
+  let discount_cents = 0;
+  let discount_cdf = 0;
+  let discount_code = null;
+  if (couponCode) {
+    couponRecord = await findCoupon(db, couponCode);
+    if (couponRecord) {
+      const result = computeCouponDiscount(couponRecord, subtotal_cdf);
+      discount_cdf = result.discountCdf;
+      discount_code = result.code;
+      discount_cents = round2((discount_cdf / USD_TO_CDF) * 100);
+    }
+  }
+
+  const afterDiscount_cents = round2(subtotal_cents - discount_cents);
+  const afterDiscount_cdf = round2(subtotal_cdf - discount_cdf);
+
+  const shippingMethod = delivery?.method ?? "standard";
+  const freeThreshold_cents = round2(cfg.shippingFreeMinUsd * 100);
+  const chargeShipping = afterDiscount_cents < freeThreshold_cents;
+  const shipping_fee_usd = chargeShipping ? cfg.shippingFlatUsd : 0;
+  const shipping_fee_cents = round2(shipping_fee_usd * 100);
+  const shipping_fee_cdf = round2(shipping_fee_usd * USD_TO_CDF);
+
+  const total_cents = round2(afterDiscount_cents + shipping_fee_cents);
+  const total_usd = round2(total_cents / 100);
+  const total_cdf = round2(total_usd * USD_TO_CDF);
+
+  const platform_fee_cents = round2(subtotal_cents * cfg.platformFeePct);
+  const platform_fee_usd = round2(platform_fee_cents / 100);
+
+  const sessionId = genSessionId();
+  const userEmail = profile?.email ?? "";
+  const userPhone = profile?.phone ?? paymentPhone ?? "";
+
+  let tenant_id = readActiveTenantId();
+  if (!tenant_id) {
+    const firstTenant = validatedLines.find((l) => l.tenant_id);
+    tenant_id = firstTenant?.tenant_id ?? "";
+  }
+
+  const orderNumber = nextOrderNumber();
+
+  const sellerIds = Array.from(
+    new Set(validatedLines.map((l) => l.seller_id).filter(Boolean)),
+  );
+  const tenantIds = Array.from(
+    new Set(validatedLines.map((l) => l.tenant_id).filter(Boolean)),
+  );
+  const totalWeight = round2(
+    validatedLines.reduce((a, l) => a + l.weight_kg, 0),
+  );
+
+  const couponPayload = couponRecord
+    ? {
+        coupon_id: couponRecord.id,
+        code: couponRecord.code,
+        site_price: couponRecord.site_price,
+        customer_price: couponRecord.customer_price,
+        type: couponRecord.type,
+        use_count: round2(Number(couponRecord.use_count ?? 0) + 1),
+      }
+    : {};
+
+  const orderPayload = {
+    order_number: orderNumber,
+    status: "PENDING_PAYMENT",
+    payment_method: paymentMethodId ?? "",
+    payment_status: "PENDING",
+    payer_email: userEmail,
+    payer_phone: userPhone,
+    subtotal_cents: subtotal_cents,
+    subtotal_cdf: subtotal_cdf,
+    discount_cents: discount_cents,
+    discount_cdf: discount_cdf,
+    discount_code: discount_code ?? "",
+    platform_fee_cents: platform_fee_cents,
+    platform_fee_cdf: round2(platform_fee_cents * USD_TO_CDF),
+    total_cents,
+    total_cdf,
+    total_usd,
+    currency: "CDF",
+    items: validatedLines.map((l) => ({
+      product_id: l.product_id,
+      product_name: l.product_name,
+      unit_price_cents: l.unit_price_cents,
+      quantity: l.quantity,
+      line_total_cents: l.line_total_cents,
+      seller_id: l.seller_id,
+      tenant_id: l.tenant_id,
+      platform_cents: l.platform_cents,
+      seller_cents: l.seller_cents,
+      creator_cents: l.creator_cents,
+    })),
+    shipping_method: shippingMethod,
+    shipping_fee_cents: shipping_fee_cents,
+    shipping_fee_cdf: shipping_fee_cdf,
+    total_weight_kg: totalWeight,
+    tenant_id,
+    seller_ids: sellerIds,
+    tenant_ids: tenantIds,
+    session_id: sessionId,
+    coupon: couponPayload,
+    consent: {
+      terms: !!consent?.terms,
+      marketing: !!consent?.marketing,
+    },
+    source: "web",
+    customer_email: userEmail ?? "",
+    created_by_id: userEmail ?? "",
+    tenant_owner_email: userEmail ?? "",
+    metadata: {
+      buyer_name: profile?.name ?? "",
+      buyer_phone: userPhone,
+      items_count: validatedLines.length,
+    },
+  };
+
+  const order = await db.entities.Order.create(orderPayload);
+  if (!order) {
+    throw new Error("Failed to create Order");
+  }
+
+  const fulfillmentOrders = [];
+  const shipments = [];
+  const courier = selectCourierFor(
+    delivery?.address?.city ?? "kinshasa",
+    totalWeight,
+  );
+  for (const seller_id of sellerIds) {
+    const sellerLines = validatedLines.filter(
+      (l) => l.seller_id === seller_id,
+    );
+    const sellerSubtotal_cents = round2(
+      sellerLines.reduce((a, l) => a + l.line_total_cents, 0),
+    );
+    const sellerShippingCents = round2(
+      (shipping_fee_cents * sellerSubtotal_cents) /
+        (subtotal_cents || 1),
+    );
+    const sellerPlatformFeeCents = round2(
+      (platform_fee_cents * sellerSubtotal_cents) /
+        (subtotal_cents || 1),
+    );
+    const foNumber =
+      "FO-" + orderNumber + "-" + (seller_id?.toString()?.slice(0, 8) ?? "SELL");
+    const foPayload = {
+      order_number: orderNumber,
+      fulfillment_order_number: foNumber,
+      status: "RELEASED",
+      order_id: order.id,
+      seller_id,
+      tenant_id: sellerLines[0]?.tenant_id ?? tenant_id,
+      subtotal_cents: sellerSubtotal_cents,
+      shipping_fee_cents: sellerShippingCents,
+      platform_fee_cents: sellerPlatformFeeCents,
+      platform_fee_cdf: round2(sellerPlatformFeeCents * USD_TO_CDF),
+      total_cents: round2(sellerSubtotal_cents + sellerShippingCents),
+      items: sellerLines.map((l) => ({
+        product_id: l.product_id,
+        quantity: l.quantity,
+        unit_price_cents: l.unit_price_cents,
+        line_total_cents: l.line_total_cents,
+        platform_cents: l.platform_cents,
+        seller_cents: l.seller_cents,
+      })),
+      created_by_id: userEmail ?? "",
+    };
+    const fo = await db.entities.FulfillmentOrder.create(foPayload);
+    if (fo) fulfillmentOrders.push(fo);
+    const pickupCode = generatePickupCode();
+    const trackingNumber = generateTrackingNumber(foNumber);
+    const shipmentPayload = {
+      fulfillment_order_id: fo.id,
+      status: "PREPARING",
+      tracking_number: trackingNumber,
+      carrier: courier.name,
+      courier_id: courier.id,
+      pickup_code: pickupCode,
+      recipient_name: profile?.name ?? "",
+      recipient_phone: userPhone,
+      address_text: (delivery?.address ?? "").toString(),
+      estimated_delivery_days: 3,
+      weight_kg: totalWeight,
+      created_by_id: userEmail ?? "",
+    };
+    const shipment = await db.entities.Shipment.create(shipmentPayload);
+    if (shipment) shipments.push(shipment);
+  }
+
+  if (couponRecord && couponRecord.id) {
+    try {
+      await db.entities.Coupon.update(couponRecord.id, {
+        use_count: round2(Number(couponRecord.use_count ?? 0) + 1),
+      });
+    } catch (err) {
+      console.warn(
+        "[place-order] coupon use_count bump failed: " +
+          (err?.message ?? err),
+      );
+    }
+  }
+
+  const referralCode = getReferralCode(sessionId);
+  if (referralCode) {
+    try {
+      await db.entities.AffiliateClick.create({
+        code: referralCode,
+        order_id: order.id,
+        order_number: orderNumber,
+        amount_cents: total_cents,
+        status: "claimed",
+        metadata: { session_id: sessionId },
+      });
+    } catch (err) {
+      console.warn(
+        "[place-order] affiliate claim failed: " + (err?.message ?? err),
+      );
+    }
+  }
+
+  for (const seller_id of sellerIds) {
+    const sellerLines = validatedLines.filter(
+      (l) => l.seller_id === seller_id,
+    );
+    const sellerSubtotal_cents = round2(
+      sellerLines.reduce((a, l) => a + l.line_total_cents, 0),
+    );
+    const sellerShippingCents = round2(
+      (shipping_fee_cents * sellerSubtotal_cents) /
+        (subtotal_cents || 1),
+    );
+    const sellerPlatformFeeCents = round2(
+      (platform_fee_cents * sellerSubtotal_cents) /
+        (subtotal_cents || 1),
+    );
+    const sellerNet_cents = round2(
+      sellerSubtotal_cents + sellerShippingCents - sellerPlatformFeeCents,
+    );
+    if (sellerNet_cents <= 0) continue;
+
+    const sellerWallet = await getOrCreateWallet(db, {
+      owner_type: "seller",
+      owner_name: profile?.name ?? "Vendeur",
+      owner_email: userEmail,
+      owner_id: seller_id,
+      tenant_id,
+    });
+    await postTransaction(db, sellerWallet, {
+      type: "seller_credit",
+      direction: "credit",
+      amount: sellerNet_cents,
+      amount_cdf: round2(sellerNet_cents * USD_TO_CDF),
+      amount_usd: round2(sellerNet_cents / 100),
+      description: "Vente/" + orderNumber,
+      detail: { order_number: orderNumber, seller_id },
+      reference_type: "order",
+      reference_id: order.id,
+      metadata: { seller_id, tenant_id },
+    });
+  }
+
+  const platformWallet = await getOrCreateWallet(db, {
+    owner_type: "platform",
+    owner_name: "Congo Commerce Platform",
+    owner_email: "platform@congo-commerce.com",
+    owner_id: "platform",
+    tenant_id,
+  });
+  await postTransaction(db, platformWallet, {
+    type: "platform_fee",
+    direction: "credit",
+    amount: platform_fee_cents,
+    amount_cdf: round2(platform_fee_cents * USD_TO_CDF),
+    amount_usd: platform_fee_usd,
+    description: "Frais plateforme/" + orderNumber,
+    reference_type: "order",
+    reference_id: order.id,
+    metadata: { tenant_id },
+  });
+
+  const creatorIds = Array.from(
+    new Set(
+      validatedLines
+        .map((l) => l.product?.creator_id)
+        .filter(Boolean),
+    ),
+  );
+  for (const creator_id of creatorIds) {
+    const creatorLines = validatedLines.filter(
+      (l) => l.product?.creator_id === creator_id,
+    );
+    const creatorTotal_cents = round2(
+      creatorLines.reduce((a, l) => a + l.creator_cents, 0),
+    );
+    if (creatorTotal_cents <= 0) continue;
+    const creatorWallet = await getOrCreateWallet(db, {
+      owner_type: "creator",
+      owner_name: "Créateur",
+      owner_email: userEmail,
+      owner_id: creator_id,
+      tenant_id,
+    });
+    await postTransaction(db, creatorWallet, {
+      type: "creator_commission",
+      direction: "credit",
+      amount: creatorTotal_cents,
+      amount_cdf: round2(creatorTotal_cents * USD_TO_CDF),
+      amount_usd: round2(creatorTotal_cents / 100),
+      description: "Commission créateur/" + orderNumber,
+      reference_type: "order",
+      reference_id: order.id,
+      metadata: { creator_id, tenant_id },
+    });
+  }
+
+  const courierId = courier?.id;
+  if (courierId) {
+    const courierEarningsCents = round2(
+      shipping_fee_cents * cfg.courierCommissionPct,
+    );
+    if (courierEarningsCents > 0) {
+      const courierWallet = await getOrCreateWallet(db, {
+        owner_type: "courier",
+        owner_name: courier.name,
+        owner_email: "",
+        owner_id: courierId,
+        tenant_id,
+      });
+      await postTransaction(db, courierWallet, {
+        type: "courier_earning",
+        direction: "credit",
+        amount: courierEarningsCents,
+        amount_cdf: round2(courierEarningsCents * USD_TO_CDF),
+        amount_usd: round2(courierEarningsCents / 100),
+        description: "Livraison/" + orderNumber,
+        reference_type: "fulfillment",
+        reference_id: fulfillmentOrders[0]?.id ?? "",
+        metadata: { courier_id: courierId, tenant_id },
+      });
+    }
+  }
+
+  for (const line of validatedLines) {
+    const product = line.product;
+    if (!product?.id) continue;
+    const currentStock = Number(product.stock_quantity ?? 0);
+    const newStock = Math.max(0, currentStock - line.quantity);
+    try {
+      await db.entities.Product.update(product.id, {
+        stock_quantity: newStock,
+        sold_count: round2(
+          Number(product.sold_count ?? 0) + line.quantity,
+        ),
+      });
+    } catch (err) {
+      console.warn(
+        "[place-order] stock update failed for " +
+          product.id +
+          ": " +
+          (err?.message ?? err),
+      );
+    }
+  }
+
+  const finalOrder = await db.entities.Order.get(order.id);
+  if (!finalOrder) throw new Error("Order record missing after create");
+
+  await emitEvent(db, "order_placed", {
+    order_id: order.id,
+    order_number: orderNumber,
+    amount_cents: total_cents,
+    tenant_id,
+    seller_ids: sellerIds,
+    items_count: validatedLines.length,
+  });
+
+  await notifyFulfillmentStatus(
+    db,
+    fulfillmentOrders[0] ?? {},
+    "RELEASED",
+  );
+
+  try {
+    const flaggedOrders = await db.entities.Order.filter({
+      status: "PENDING_PAYMENT",
+      created_at: {
+        gte: new Date(Date.now() - 24 * 3600 * 1000).toISOString(),
+      },
+    });
+    const riskCount = flaggedOrders.length;
+    if (riskCount > 5) {
+      await emitEvent(db, "order_risk_review", {
+        order_id: order.id,
+        order_number: orderNumber,
+        reason: "high_volume_pending",
+      });
+    }
+  } catch (err) {
+    console.warn("[place-order] risk check skipped: " + (err?.message ?? err));
+  }
+
+  rememberOrder(sessionId, order.id);
+
+  return {
+    order,
+    fulfillments: fulfillmentOrders,
+    shipments,
+    total_cents,
+    total_cdf,
+    total_usd,
+    platform_fee_cents,
+    platform_fee_usd,
+    coupon: couponRecord,
+    shipping: {
+      method: shippingMethod,
+      fee_cents: shipping_fee_cents,
+      fee_cdf: shipping_fee_cdf,
+      fee_usd: shipping_fee_usd,
+    },
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Deno HTTP entry point — called by Base44 Functions runtime
+// ─────────────────────────────────────────────────────────────────────────────
+
+export default async function (request) {
+  const url = new URL(request.url);
+
+  if (request.method !== "POST") {
+    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+      status: 405,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  try {
+    const base44 = createClientFromRequest(request);
+    const db = base44.asServiceRole;
+
+    let user = null;
+    try {
+      user = await base44.auth.me().catch(() => null);
+    } catch {
+      user = null;
+    }
+
+    let intent = null;
+    try {
+      const body = await request.json();
+      intent = body?.params ?? body ?? null;
+    } catch {
+      return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    if (!intent || typeof intent !== "object") {
+      return new Response(JSON.stringify({ error: "Missing params" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const result = await placeOrder(db, intent);
+
+    return new Response(JSON.stringify(result), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store",
+      },
+    });
+  } catch (error) {
+    console.error("[place-order] Unhandled error:", error);
+    return new Response(
+      JSON.stringify({
+        error: error?.message ?? "Internal server error",
+        status: "failed",
+      }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      },
+    );
+  }
+}
+

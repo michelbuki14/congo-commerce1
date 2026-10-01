@@ -3,6 +3,7 @@ import { Star, BadgeCheck, PackageCheck } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import RatingStars from './RatingStars';
 import { getProfile, getSessionId } from '@/lib/session';
+import { fetchMyOrders } from '@/lib/customerAccount';
 import { timeAgo } from '@/lib/format';
 
 /** Only an order that actually reached the customer unlocks a review. */
@@ -27,7 +28,7 @@ export default function ProductReviews({ product, onChanged }) {
 
   useEffect(() => {
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [product.id]);
 
   // The right to review is read from this device's own orders — never assumed.
@@ -36,7 +37,7 @@ export default function ProductReviews({ product, onChanged }) {
     const check = async () => {
       const sessionId = getSessionId();
       const [orders, mine] = await Promise.all([
-        base44.entities.Order.filter({ session_id: sessionId }, '-created_date', 50).catch(() => []),
+        fetchMyOrders({ sessionId, limit: 50 }),
         base44.entities.Review.filter({ product_id: product.id, session_id: sessionId }).catch(() => []),
       ]);
       if (cancelled) return;

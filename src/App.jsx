@@ -16,6 +16,8 @@ import AdminOnly from '@/components/AdminOnly';
 import { CartProvider } from '@/lib/cart';
 import { CurrencyProvider } from '@/lib/currency';
 import AppLayout from '@/components/layout/AppLayout';
+import Backoffice from '@/pages/Backoffice';
+import SalesIntelligence from '@/pages/admin/SalesIntelligence';
 
 // Customer
 import Home from '@/pages/Home';
@@ -81,7 +83,7 @@ import CustomerLoyalty from '@/pages/CustomerLoyalty';
 import VendorRatings from '@/pages/VendorRatings';
 import BulkImport from '@/pages/BulkImport';
 import NotificationSettings from '@/pages/NotificationSettings';
-import NewsletterSignup from '@/pages/NewsletterSignup';
+import NewsletterPreferences from '@/pages/NewsletterPreferences';
 import SavedAddresses from '@/pages/SavedAddresses';
 import ProductComparison from '@/pages/ProductComparison';
 import PartnerDirectory from '@/pages/PartnerDirectory';
@@ -102,6 +104,10 @@ import SellerMessages from '@/pages/seller/SellerMessages';
 import SupportInbox from '@/pages/admin/SupportInbox';
 import DeveloperPortal from '@/pages/DeveloperPortal';
 import Warehouse from '@/pages/admin/Warehouse';
+import ChinaWarehouse from '@/pages/admin/ChinaWarehouse';
+import ShippingLabels from '@/pages/admin/ShippingLabels';
+import AdvancedAnalytics from '@/pages/admin/AdvancedAnalytics';
+import TicketAutomation from '@/pages/admin/TicketAutomation';
 
 // Seller
 import SellerDashboard from '@/pages/seller/SellerDashboard';
@@ -131,6 +137,7 @@ import AdminEvents from '@/pages/admin/AdminEvents';
 import AdminWorkflows from '@/pages/admin/AdminWorkflows';
 import AdminFraud from '@/pages/admin/AdminFraud';
 import AdminDisputes from '@/pages/admin/AdminDisputes';
+import AdminBilling from '@/pages/admin/AdminBilling';
 import ReturnsPortal from '@/pages/ReturnsPortal';
 import PayoutHistory from '@/pages/PayoutHistory';
 import PayoutSettings from '@/pages/PayoutSettings';
@@ -250,7 +257,7 @@ const AuthenticatedApp = () => {
           <Route path="/tax-compliance" element={<Navigate to="/tax-reports" replace />} />
           <Route path="/bulk-import" element={<BulkImport />} />
           <Route path="/notification-settings" element={<NotificationSettings />} />
-          <Route path="/newsletter-signup" element={<NewsletterSignup />} />
+          <Route path="/newsletter-signup" element={<NewsletterPreferences />} />
           <Route path="/saved-addresses" element={<SavedAddresses />} />
           <Route path="/user-profile" element={<UserProfile />} />
           <Route path="/payment-methods" element={<PaymentMethods />} />
@@ -304,6 +311,10 @@ const AuthenticatedApp = () => {
             <Route path="/finance" element={<FinancePortal />} />
             <Route path="/pickup-manager" element={<PickupManager />} />
             <Route path="/warehouse" element={<Warehouse />} />
+            <Route path="/china-warehouse" element={<ChinaWarehouse />} />
+            <Route path="/shipping-labels" element={<ShippingLabels />} />
+            <Route path="/analytics" element={<AdvancedAnalytics />} />
+            <Route path="/ticket-automation" element={<TicketAutomation />} />
             <Route path="/support-inbox" element={<SupportInbox />} />
             <Route path="/shipping-config" element={<ShippingConfig />} />
             <Route path="/admin" element={<AdminDashboard />} />
@@ -322,10 +333,17 @@ const AuthenticatedApp = () => {
             <Route path="/admin/events" element={<AdminEvents />} />
             <Route path="/admin/workflows" element={<AdminWorkflows />} />
             <Route path="/admin/fraud" element={<AdminFraud />} />
+            <Route path="/admin/billing" element={<AdminBilling />} />
             <Route path="/admin/disputes" element={<AdminDisputes />} />
             <Route path="/logistics-hub" element={<LogisticsHub />} />
             <Route path="/workflow-monitor" element={<WorkflowMonitor />} />
           </Route>
+        </Route>
+      </Route>
+      <Route element={<RequireLogin />}>
+        <Route element={<AdminOnly />}>
+          <Route path="/backoffice" element={<Backoffice />} />
+          <Route path="/backoffice/sales" element={<SalesIntelligence />} />
         </Route>
       </Route>
       <Route path="/login" element={<Login />} />

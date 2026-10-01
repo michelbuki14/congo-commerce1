@@ -2,15 +2,18 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { RotateCcw, ShieldCheck, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
 import StatusBadge from '@/components/StatusBadge';
-import { getOrderIds, getProfile, uid } from '@/lib/session';
+import { getProfile } from '@/lib/session';
+import { fetchMyOrders, openReturn } from '@/lib/customerAccount';
+import { loadMyReturns } from '@/lib/returns';
 import { formatUSD, formatDate } from '@/lib/format';
+import { RETURN_COPY } from '@/lib/returnCopy';
 
 const WINDOW_DAYS = 7;
 
 export default function ReturnsPortal() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const copy = RETURN_COPY[i18n.language === 'en' ? 'en' : 'fr'];
   const REASONS = [
     { id: 'not_received', label: t('returnsPortal.reasonNotReceived') },
     { id: 'wrong_product', label: t('returnsPortal.reasonWrongProduct') },
@@ -40,16 +43,11 @@ export default function ReturnsPortal() {
 
   useEffect(() => {
     (async () => {
-      const remembered = getOrderIds().slice(0, 20);
-      const loaded = await Promise.all(remembered.map((o) => base44.entities.Order.get(o.id).catch(() => null)));
-      setOrders(loaded.filter(Boolean));
-      const mine = await base44.entities.Return
-        .filter({ customer_phone: profile.phone || '—' }, '-created_date', 30)
-        .catch(() => []);
-      setReturns(mine);
+      setOrders(await fetchMyOrders({ limit: 20 }));
+      setReturns(await loadMyReturns(profile.phone || ''));
       setLoading(false);
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   const toggle = (key) => {
@@ -65,35 +63,24 @@ export default function ReturnsPortal() {
     }
     setSubmitting(true);
     try {
+      const byOrder = {};
       for (const key of selected) {
         const [orderId, index] = key.split('::');
         const order = orders.find((o) => o.id === orderId);
         const item = order?.items?.[Number(index)];
-        if (!item) continue;
-        await base44.entities.Return.create({
-          return_number: `RET-${uid('').slice(1, 7).toUpperCase()}`,
-          order_id: order.id,
-          order_number: order.order_number,
-          customer_name: profile.name || 'Client',
-          customer_phone: profile.phone || '',
+        if (!order || !item) continue;
+        byOrder[order.order_number] = byOrder[order.order_number] || [];
+        byOrder[order.order_number].push({
           product_id: item.product_id || '',
           product_title: item.title || '',
-          reason,
-          description,
-          refund_amount_usd: item.line_total_usd || 0,
-          status: 'requested',
-          tenant_id: order.tenant_id || '',
-          tenant_owner_email: order.tenant_owner_email || '',
+          refund_amount_usd: Number(item.line_total_usd) || 0,
         });
       }
-      await base44.entities.Notification.create({
-        title: 'Nouvelle demande de retour',
-        message: `${profile.name || 'Un client'} demande le retour de ${selected.length} article(s).`,
-        type: 'order',
-        audience: 'admin',
-        is_demo: true,
-      });
+      for (const [orderNumber, items] of Object.entries(byOrder)) {
+        await openReturn({ orderNumber, phone: profile.phone || '', reason, description, items });
+      }
       setMessage(t('returnsPortal.requestCovers', { count: selected.length }));
+      setReturns(await loadMyReturns(profile.phone || ''));
       setSelected([]);
       setDescription('');
     } catch {
@@ -226,9 +213,11 @@ export default function ReturnsPortal() {
                   <StatusBadge status={r.status} />
                 </div>
                 <p className="text-[11px] text-muted-foreground">
-                  {r.order_number} · {r.product_title} · {formatDate(r.created_date)}
+                  {r.order_number} · {r.product_title} · {formatDate(r.created_date)} · {formatUSD(r.refund_amount_usd)}
                 </p>
-              </div>
+                {r.resolution_notes && <p className="mt-1 text-xs text-muted-foreground">{r.resolution_notes}</p>}
+                {!['refunded', 'closed'].includes(r.status) && <Link to={`/disputes?order=${encodeURIComponent(r.order_number)}&phone=${encodeURIComponent(r.customer_phone)}&reason=${encodeURIComponent(r.reason)}`} className="mt-2 inline-block text-xs font-semibold text-primary">{copy.escalate}</Link>}
+                </div>
             ))}
           </div>
         ) : (

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 64 64" role="img" aria-label="CONGO COMMERCE">
+  <g fill="none" stroke-linecap="round" stroke-width="7">
+    <path d="M33.03 43.47 A14 14 0 1 1 33.03 20.53" stroke="#12A87A" stroke-dasharray="80" stroke-dashoffset="80">
+      <animate attributeName="stroke-dashoffset" from="80" to="0" dur="0.55s" begin="0.05s" fill="freeze"/>
+    </path>
+    <path d="M30.97 43.47 A14 14 0 1 0 30.97 20.53" stroke="#EDF2EE" stroke-dasharray="80" stroke-dashoffset="80">
+      <animate attributeName="stroke-dashoffset" from="80" to="0" dur="0.55s" begin="0.28s" fill="freeze"/>
+    </path>
+  </g>
+  <circle cx="32" cy="32" r="0" fill="#19C48D">
+    <animate attributeName="r" values="0;4.6;3.6" keyTimes="0;0.6;1" dur="0.45s" begin="0.72s" fill="freeze"/>
+  </circle>
+</svg>

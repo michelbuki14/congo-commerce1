@@ -3,13 +3,12 @@ import { createClientFromRequest } from "npm:@base44/sdk@0.8.49";
 /**
  * submit-review — base44/functions/submit-review/entry.ts
  *
- * PUBLIC review submission with server-side entitlement. The browser used to
- * assert `verified_purchase: true` itself while `Review.create` was public, so
- * anyone could forge verified reviews on any product. Now the server decides:
- * `verified_purchase` is true only when a DELIVERED order containing the
- * product matches the buyer's session or phone. One review per buyer/product.
- * The product rating aggregate is recomputed here too, so the public
- * `Product.update` path is no longer needed for reviews.
+ * Review submission for a signed-in buyer, with server-side entitlement.
+ * Ratings are aggregated back onto the product, so an anonymous writer could
+ * distort any product's score: the caller must be signed in, must actually
+ * have received the product, and may only review it once. The product rating
+ * aggregate is recomputed here too, so the public `Product.update` path is no
+ * longer needed for reviews.
  */
 
 function err(message: string, status = 400) {
@@ -21,6 +20,11 @@ export default async function (req: Request) {
     if (req.method !== "POST") return err("Method not allowed", 405);
     const base44 = createClientFromRequest(req);
     const db = base44.asServiceRole;
+
+    // Only a signed-in account may post a review.
+    const user = await base44.auth.me().catch(() => null);
+    if (!user) return err("Connectez-vous pour publier un avis.", 401);
+
     const body = await req.json().catch(() => ({}));
 
     const productId = String(body.product_id || "").trim();
@@ -35,33 +39,22 @@ export default async function (req: Request) {
     const product = await db.entities.Product.get(productId).catch(() => null);
     if (!product || product.status !== "published") return err("Produit indisponible.");
 
-    // Entitlement: a DELIVERED order with this product, same session or phone.
-    let entitled = false;
-    if (sessionId || phone) {
-      const candidates = sessionId
-        ? await db.entities.Order.filter({ session_id: sessionId }, "-created_date", 50).catch(() => [])
-        : [];
-      const order = (candidates || []).find(
-        (o: any) =>
-          o.status === "DELIVERED" &&
-          (o.items || []).some((i: any) => i.product_id === productId) &&
-          (!phone || [o.customer_phone, o.payment_phone].filter(Boolean).some((p: string) => String(p).replace(/\D/g, "").endsWith(phone.slice(-9)))),
-      );
-      entitled = !!order;
-      if (order) {
-        const [sessionDupes, phoneDupes] = await Promise.all([
-          sessionId
-            ? db.entities.Review.filter({ product_id: productId, session_id: sessionId }).catch(() => [])
-            : [],
-          phone
-            ? db.entities.Review.filter({ product_id: productId, customer_phone: phone }).catch(() => [])
-            : [],
-        ]);
-        if ((sessionDupes?.length || 0) + (phoneDupes?.length || 0) > 0) {
-          return err("Vous avez déjà publié un avis sur cet article.", 409);
-        }
-      }
-    }
+    // One review per account per product — the reviewer is the signed-in account,
+    // never a value the browser states about itself.
+    const dupes = await db.entities.Review
+      .filter({ product_id: productId, customer_email: user.email }, "-created_date", 1)
+      .catch(() => []);
+    if (dupes?.length) return err("Vous avez déjà publié un avis sur cet article.", 409);
+
+    // Entitlement: a DELIVERED order of this account that contains the product.
+    const [byEmail, byId] = await Promise.all([
+      db.entities.Order.filter({ customer_email: user.email }, "-created_date", 50).catch(() => []),
+      user.id ? db.entities.Order.filter({ created_by_id: user.id }, "-created_date", 50).catch(() => []) : [],
+    ]);
+    const entitled = [...(byEmail || []), ...(byId || [])].some(
+      (o: any) => o.status === "DELIVERED" && (o.items || []).some((i: any) => i.product_id === productId),
+    );
+    if (!entitled) return err("Seuls les acheteurs ayant reçu l’article peuvent publier un avis.", 403);
 
     const review = await db.entities.Review.create({
       tenant_id: product.tenant_id || "",
@@ -69,7 +62,8 @@ export default async function (req: Request) {
       product_id: product.id,
       product_title: product.title,
       seller_id: product.seller_id || "",
-      customer_name: name,
+      customer_name: user.full_name || name,
+      customer_email: user.email,
       customer_phone: phone,
       session_id: sessionId,
       order_number: "",

@@ -1,9 +1,6 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import fr from './fr';
-import en from './en';
-import ln from './ln';
-import sw from './sw';
+import { translations } from './resources.js';
 
 export const LANGUAGES = [
   { id: 'fr', label: 'FR', name: 'Français' },
@@ -28,10 +25,10 @@ function initialLanguage() {
 
 i18n.use(initReactI18next).init({
   resources: {
-    fr: { translation: fr },
-    en: { translation: en },
-    ln: { translation: ln },
-    sw: { translation: sw },
+    fr: { translation: translations.fr },
+    en: { translation: translations.en },
+    ln: { translation: translations.ln },
+    sw: { translation: translations.sw },
   },
   lng: initialLanguage(),
   fallbackLng: 'fr',

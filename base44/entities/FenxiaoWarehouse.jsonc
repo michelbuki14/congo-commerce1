@@ -1,0 +1,28 @@
+{
+  "name": "FenxiaoWarehouse",
+  "type": "object",
+  "properties": {
+    "tenant_id": { "type": "string" },
+    "tenant_owner_email": { "type": "string" },
+    "warehouse_id": { "type": "string" },
+    "warehouse_name": { "type": "string" },
+    "warehouse_type": { "type": "string", "enum": ["1688_cloud", "1688_partner", "third_party"] },
+    "is_opened": { "type": "boolean", "default": false },
+    "open_status": { "type": "string", "enum": ["not_opened", "opening", "opened", "failed"] },
+    "address": { "type": "string" },
+    "city": { "type": "string" },
+    "province": { "type": "string" },
+    "country": { "type": "string", "default": "China" },
+    "contact_name": { "type": "string" },
+    "contact_phone": { "type": "string" },
+    "created_by": { "type": "string" },
+    "created_date": { "type": "string" }
+  },
+  "required": ["warehouse_id", "warehouse_name", "warehouse_type", "created_by"],
+  "rls": {
+    "read": { "user_condition": { "role": "admin" } },
+    "create": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}

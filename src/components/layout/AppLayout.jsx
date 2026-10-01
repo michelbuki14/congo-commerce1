@@ -20,9 +20,9 @@ export default function AppLayout() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background pb-16 md:pb-8">
+    <div className="min-h-screen bg-background pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-8">
       <TopBar />
-      <main className="mx-auto w-full max-w-6xl px-3 py-3 md:px-6 md:py-5">
+      <main className="mx-auto w-full min-w-0 max-w-6xl px-3 py-5 md:px-6 md:py-7">
         <Outlet />
         <LegalFooter />
       </main>

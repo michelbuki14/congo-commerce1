@@ -2,11 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Package, FileText, MapPin } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { fetchMyOrders } from '@/lib/customerAccount';
 import InfoPage, { InfoSection } from '@/components/InfoPage';
 import EmptyState from '@/components/EmptyState';
 import StatusBadge from '@/components/StatusBadge';
-import { getSessionId } from '@/lib/session';
 import { useCurrency } from '@/lib/currency';
 import { formatDateTime } from '@/lib/format';
 
@@ -18,8 +17,7 @@ export default function OrderHistory() {
 
   useEffect(() => {
     (async () => {
-      const rows = await base44.entities.Order.filter({ session_id: getSessionId() }, '-created_date', 50).catch(() => []);
-      setOrders(rows);
+      setOrders(await fetchMyOrders({ limit: 50 }));
       setLoading(false);
     })();
   }, []);

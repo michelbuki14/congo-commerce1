@@ -5,6 +5,7 @@ import { BadgeCheck, Search, ShieldCheck } from 'lucide-react';
 import InfoPage, { InfoSection } from '@/components/InfoPage';
 import SellerRatingCard from '@/components/ratings/SellerRatingCard';
 import { RATING_SORTS, buildSellerMetrics, marketplaceStats, sortMetrics } from '@/lib/vendorRatings';
+import { fetchDisputeIndex } from '@/lib/customerAccount';
 
 export default function VendorRatings() {
   const { t } = useTranslation();
@@ -18,7 +19,7 @@ export default function VendorRatings() {
       const [sellers, reviews, disputes] = await Promise.all([
         base44.entities.Seller.filter({ status: 'active' }, 'name', 100).catch(() => []),
         base44.entities.Review.list('-created_date', 300).catch(() => []),
-        base44.entities.Dispute.list('-created_date', 200).catch(() => []),
+        fetchDisputeIndex(),
       ]);
       setMetrics(buildSellerMetrics({ sellers, reviews, disputes }));
       setLoading(false);

@@ -2,10 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { CheckCircle2, Wallet, MapPin, Truck, Package, Clock } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
 import { Image } from '@/components/ui/image';
 import StatusBadge from '@/components/StatusBadge';
-import { getOrderIds } from '@/lib/session';
+import { getProfile, getOrderIds } from '@/lib/session';
+import { fetchMyOrder } from '@/lib/customerAccount';
 import { formatUSD, formatDateTime } from '@/lib/format';
 import { SHIPMENT_STATUS_LABELS } from '@/lib/logistics';
 
@@ -21,19 +21,14 @@ export default function CheckoutSuccess() {
       const fromUrl = new URLSearchParams(window.location.search).get('order');
       const last = getOrderIds()[0];
       try {
-        let found = null;
-        if (fromUrl) {
-          const rows = await base44.entities.Order.filter({ order_number: fromUrl });
-          found = rows[0] || null;
-        }
-        if (!found && last?.id) {
-          found = await base44.entities.Order.get(last.id);
-        }
+        const { order: found, fulfillments: f } = await fetchMyOrder({
+          orderNumber: fromUrl || last?.order_number || '',
+          phone: getProfile().phone,
+        });
         if (!found) {
           setNotFound(true);
           return;
         }
-        const f = await base44.entities.FulfillmentOrder.filter({ order_id: found.id }, 'fulfillment_number', 50).catch(() => []);
         setOrder(found);
         setFulfillments(f);
       } catch {

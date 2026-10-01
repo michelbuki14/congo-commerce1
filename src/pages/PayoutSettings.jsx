@@ -40,21 +40,22 @@ export default function PayoutSettings() {
 
   useEffect(() => {
     if (loadingSeller) return;
-    if (!seller) {
-      setLoading(false);
-      return;
-    }
-    setForm({
-      payout_method: seller.payout_method || 'mpesa',
-      payout_holder: seller.payout_holder || seller.owner_name || '',
-      payout_account: seller.payout_account || '',
-      payout_bank_name: seller.payout_bank_name || '',
-    });
-    setLoading(false);
+    if (!seller) { setLoading(false); return; }
+    let active = true;
+    base44.functions.invoke('sellerPayout', { action: 'get', seller_id: seller.id })
+      .then(({ data }) => {
+        if (!active) return;
+        const details = data.details;
+        setSaved(details);
+        setForm({ payout_method: details?.payout_method || 'mpesa', payout_holder: details?.payout_holder || seller.owner_name || '', payout_account: details?.payout_account || '', payout_bank_name: details?.payout_bank_name || '' });
+      })
+      .catch((error) => { if (active) setMessage(error.response?.data?.error || 'Coordonnées indisponibles.'); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
   }, [seller, loadingSeller]);
 
   const method = METHODS.find((m) => m.id === form.payout_method) || METHODS[0];
-  const current = saved || seller;
+  const current = saved || {};
 
   const save = async (e) => {
     e.preventDefault();
@@ -65,21 +66,11 @@ export default function PayoutSettings() {
     }
     setSaving(true);
     try {
-      await base44.entities.Seller.update(seller.id, {
-        ...form,
-        payout_updated_at: new Date().toISOString(),
-      });
-      await base44.entities.AuditLog.create({
-        action: 'seller.payout_details_updated',
-        actor: 'seller',
-        entity: 'Seller',
-        entity_id: seller.id,
-        reference: seller.name,
-        severity: 'info',
-        details: { method: form.payout_method },
-      });
-      setSaved({ ...form, payout_updated_at: new Date().toISOString() });
+      const { data } = await base44.functions.invoke('sellerPayout', { action: 'save', seller_id: seller.id, ...form });
+      setSaved(data.details);
       setMessage(t('payout.saved'));
+    } catch (error) {
+      setMessage(error.response?.data?.error || 'Enregistrement impossible.');
     } finally {
       setSaving(false);
     }

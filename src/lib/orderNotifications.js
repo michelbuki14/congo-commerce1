@@ -1,42 +1,12 @@
 import { base44 } from '@/api/base44Client';
 import { buildOrderUpdate } from './orderMessages';
 
-/**
- * Order updates to the customer.
- *
- * Email goes out through the platform's own mail service as soon as a status
- * changes. When the customer left no address (or the send was refused) the
- * message is parked in the outbox with a one-tap WhatsApp / SMS link, so the
- * team can still reach them from a phone — the usual channel in the DRC.
- *
- * A customer update must never block an order, so every failure is recorded on
- * the message itself instead of thrown at the caller.
- */
-
-function waPhone(phone) {
-  const digits = String(phone || '').replace(/\D/g, '');
-  if (!digits) return '';
-  if (digits.startsWith('243')) return digits;
-  if (digits.startsWith('0')) return `243${digits.slice(1)}`;
-  if (digits.length <= 9) return `243${digits}`;
-  return digits;
-}
-
-export function whatsAppHref(record) {
-  const phone = waPhone(record?.customer_phone);
-  if (!phone) return '';
-  return `https://wa.me/${phone}?text=${encodeURIComponent(record.message || '')}`;
-}
-
-export function smsHref(record) {
-  const phone = String(record?.customer_phone || '').trim();
-  if (!phone) return '';
-  return `sms:${phone}?body=${encodeURIComponent(record.message || '')}`;
-}
-
-/** Marks a parked message as delivered by hand (phone channel). */
-export async function markNotificationSent(record, channel = 'whatsapp') {
-  return base44.entities.OrderNotification.update(record.id, {
+/** Marks a parked message as delivered by hand (phone channel).
+ *  Accepts an optional Base44 client so server functions can pass the
+ *  asServiceRole / db client instead of the browser client. */
+export async function markNotificationSent(client, record, channel = 'whatsapp') {
+  const db = client || base44;
+  return db.entities.OrderNotification.update(record.id, {
     status: 'sent',
     channel,
     provider: channel,
@@ -46,25 +16,24 @@ export async function markNotificationSent(record, channel = 'whatsapp') {
   });
 }
 
-/**
- * Sends (or retries) the stored message by email.
- *
- * The send itself happens on the server, which reads the recipient and the
- * text from the record the app already stored — the browser never chooses who
- * is written to.
- */
-export async function deliverEmail(record) {
-  const response = await base44.functions.invoke('sendOrderNotificationEmail', { notification_id: record.id });
+/** Sends (or retries) the stored message by email.
+ *  Accepts an optional Base44 client.
+ *  The send itself happens on the server, which reads the recipient and the
+ *  text from the record the app already stored — the browser never chooses who
+ *  is written to. */
+export async function deliverEmail(client, record) {
+  const db = client || base44;
+  const response = await db.functions.invoke('sendOrderNotificationEmail', { notification_id: record.id });
   const result = response?.data || {};
   if (result.notification) return result.notification;
-  return base44.entities.OrderNotification.get(record.id).catch(() => record);
+  return db.entities.OrderNotification.get(record.id).catch(() => record);
 }
 
-/**
- * Records and delivers the update for one milestone.
- * Pass `event` for the purchase confirmation, or `status` for a delivery step.
- */
-export async function notifyOrderStatus({ order, fulfillment = null, status = '', event = '' }) {
+/** Records and delivers the update for one milestone.
+ *  Pass `event` for the purchase confirmation, or `status` for a delivery step.
+ *  Accepts an optional Base44 client. */
+export async function notifyOrderStatus(client, { order, fulfillment = null, status = '', event = '' }) {
+  const db = client || base44;
   const update = buildOrderUpdate({ order, fulfillment, status, event });
   if (!update) return null;
 
@@ -73,7 +42,7 @@ export async function notifyOrderStatus({ order, fulfillment = null, status = ''
 
   try {
     // The customer's in-app feed stays in step with every channel.
-    await base44.entities.Notification.create({
+    await db.entities.Notification.create({
       tenant_id: String(order.tenant_id || ''),
       tenant_owner_email: String(order.tenant_owner_email || ''),
       title: update.subject,
@@ -100,7 +69,7 @@ export async function notifyOrderStatus({ order, fulfillment = null, status = ''
     };
 
     if (!email && !phone) {
-      return await base44.entities.OrderNotification.create({
+      return await db.entities.OrderNotification.create({
         ...base,
         channel: 'email',
         status: 'skipped',
@@ -109,16 +78,16 @@ export async function notifyOrderStatus({ order, fulfillment = null, status = ''
     }
 
     if (email) {
-      const queued = await base44.entities.OrderNotification.create({
+      const queued = await db.entities.OrderNotification.create({
         ...base,
         channel: 'email',
         provider: 'email',
         status: 'queued',
       });
-      return await deliverEmail(queued);
+      return await deliverEmail(db, queued);
     }
 
-    return await base44.entities.OrderNotification.create({
+    return await db.entities.OrderNotification.create({
       ...base,
       channel: 'whatsapp',
       provider: 'whatsapp',
@@ -130,10 +99,44 @@ export async function notifyOrderStatus({ order, fulfillment = null, status = ''
   }
 }
 
-/** Same, but resolves the order from a fulfillment record. */
-export async function notifyFulfillmentStatus(fulfillment, status) {
+/** Same, but resolves the order from a fulfillment record.
+ *  Accepts an optional Base44 client. */
+export async function notifyFulfillmentStatus(client, fulfillment, status) {
+  const db = client || base44;
   if (!fulfillment?.order_id) return null;
-  const order = await base44.entities.Order.get(fulfillment.order_id).catch(() => null);
+  // Try direct read first; fall back to deliveryDesk if the caller lacks read access.
+  let order = await db.entities.Order.get(fulfillment.order_id).catch(() => null);
+  if (!order) {
+    const response = await base44.functions
+      .invoke('deliveryDesk', { action: 'order', fulfillment_id: fulfillment.id })
+      .catch(() => null);
+    order = response?.data?.order || null;
+  }
   if (!order) return null;
-  return notifyOrderStatus({ order, fulfillment, status });
+  return notifyOrderStatus(db, { order, fulfillment, status });
+}
+
+// ── Read-only helpers kept at module level (no client needed) ──
+
+/** WhatsApp link for a parked message. */
+export function whatsAppHref(record) {
+  const phone = waPhone(record?.customer_phone);
+  if (!phone) return '';
+  return `https://wa.me/${phone}?text=${encodeURIComponent(record.message || '')}`;
+}
+
+/** SMS link for a parked message. */
+export function smsHref(record) {
+  const phone = String(record?.customer_phone || '').trim();
+  if (!phone) return '';
+  return `sms:${phone}?body=${encodeURIComponent(record.message || '')}`;
+}
+
+function waPhone(phone) {
+  const digits = String(phone || '').replace(/\D/g, '');
+  if (!digits) return '';
+  if (digits.startsWith('243')) return digits;
+  if (digits.startsWith('0')) return `243${digits.slice(1)}`;
+  if (digits.length <= 9) return `243${digits}`;
+  return digits;
 }

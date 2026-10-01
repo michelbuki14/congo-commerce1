@@ -13,7 +13,7 @@ const LINKS = [
   { to: '/seller/orders', key: 'sellerNav.orders' },
   { to: '/seller/import', key: 'seller.import' },
   { to: '/seller/wallet', key: 'sellerNav.wallet' },
-  { to: '/seller/settings', key: 'sellerNav.shop' },
+  { to: '/seller/settings', key: 'seller.shop' },
 ];
 
 const METHODS = ['M-Pesa', 'Airtel Money', 'Orange Money', 'Virement bancaire'];
@@ -43,7 +43,7 @@ export default function SellerWallet() {
   useEffect(() => {
     if (loadingSeller) return;
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [seller, loadingSeller]);
 
   const submitWithdrawal = async (e) => {

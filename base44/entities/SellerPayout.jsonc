@@ -1,0 +1,71 @@
+{
+  "name": "SellerPayout",
+  "type": "object",
+  "properties": {
+    "seller_id": {
+      "type": "string"
+    },
+    "owner_email": {
+      "type": "string"
+    },
+    "payout_method": {
+      "type": "string",
+      "enum": [
+        "mpesa",
+        "airtel",
+        "orange",
+        "bank"
+      ],
+      "default": "mpesa"
+    },
+    "payout_holder": {
+      "type": "string"
+    },
+    "payout_account": {
+      "type": "string"
+    },
+    "payout_bank_name": {
+      "type": "string"
+    },
+    "payout_updated_at": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000
+    }
+  },
+  "required": [
+    "seller_id",
+    "owner_email"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

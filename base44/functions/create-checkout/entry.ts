@@ -155,6 +155,7 @@ Deno.serve(async (req: Request) => {
       status: "pending",
       appUserId: appUser?.id ?? null,
       buyerEmail: appUser?.email ?? null,
+      created_by_id: appUser?.id ?? "",
       // The server-resolved product key — the webhook grant reads this to decide what to unlock.
       productId,
       productName,

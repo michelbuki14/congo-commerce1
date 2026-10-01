@@ -7,6 +7,8 @@ const STYLES = {
   PAID: 'bg-emerald-100 text-emerald-900',
   CONFIRMED: 'bg-sky-100 text-sky-900',
   PROCESSING: 'bg-indigo-100 text-indigo-900',
+  AWAITING_CUSTOMER_APPROVAL: 'bg-amber-100 text-amber-900',
+  PACKING: 'bg-indigo-100 text-indigo-900',
   READY_FOR_PICKUP: 'bg-violet-100 text-violet-900',
   PICKED_UP: 'bg-indigo-100 text-indigo-900',
   SHIPPED: 'bg-indigo-100 text-indigo-900',
@@ -41,6 +43,8 @@ const LABELS = {
   PAID: 'Payé',
   CONFIRMED: 'Confirmée',
   PROCESSING: 'En préparation',
+  AWAITING_CUSTOMER_APPROVAL: 'Validation client requise',
+  PACKING: 'Emballage en cours',
   READY_FOR_PICKUP: 'Prêt au retrait',
   PICKED_UP: 'Pris en charge',
   SHIPPED: 'Expédiée',
@@ -69,13 +73,17 @@ const LABELS = {
   ARCHIVED: 'Archivé',
 };
 
-export default function StatusBadge({ status, className = '' }) {
+export default function StatusBadge({ status, className = '', variant = 'default' }) {
   const { t } = useTranslation();
   if (!status) return null;
   const key = String(status).toUpperCase();
+  const label = t(`status.${key}`, { defaultValue: LABELS[key] || status });
+  if (variant === 'paper') {
+    return <span className={`paper-badge ${className}`}>{label}</span>;
+  }
   return (
     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${STYLES[key] || 'bg-secondary text-foreground'} ${className}`}>
-      {t(`status.${key}`, { defaultValue: LABELS[key] || status })}
+      {label}
     </span>
   );
 }

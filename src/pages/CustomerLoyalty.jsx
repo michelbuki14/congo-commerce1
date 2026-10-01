@@ -28,7 +28,7 @@ export default function CustomerLoyalty() {
       setRedemptions(data.redemptions);
       setLoading(false);
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   const summary = loyaltySummary({ orders, redemptions });
@@ -44,8 +44,8 @@ export default function CustomerLoyalty() {
     try {
       const record = await redeemReward({ reward, customer: profile, sessionId });
       setRedemptions((prev) => [record, ...prev]);
-      setFlash(t('customerLoyalty.rewardWon', { code: record.coupon_code }));
-      emitEvent('loyalty_redeemed', {
+      setFlash(`Récompense obtenue — présentez le code ${record.coupon_code} au moment du paiement.`);
+      emitEvent(base44, 'loyalty_redeemed', {
         category: 'account',
         source: 'LoyaltyRedemption',
         reference: record.coupon_code,

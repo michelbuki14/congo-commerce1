@@ -8,6 +8,10 @@
     "tenant_owner_email": {
       "type": "string"
     },
+    "created_by_id": {
+      "type": "string",
+      "description": "User who created the dispute"
+    },
     "order_number": {
       "type": "string"
     },
@@ -15,6 +19,9 @@
       "type": "string"
     },
     "customer_phone": {
+      "type": "string"
+    },
+    "customer_email": {
       "type": "string"
     },
     "seller_name": {
@@ -82,12 +89,37 @@
     "type"
   ],
   "rls": {
-    "create": null,
-    "read": null,
-    "update": {
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "data.tenant_owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
       "user_condition": {
         "role": "admin"
       }
+    },
+    "update": {
+      "$or": [
+        {
+          "data.tenant_owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     },
     "delete": {
       "user_condition": {

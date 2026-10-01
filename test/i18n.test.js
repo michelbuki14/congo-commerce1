@@ -3,8 +3,10 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import fr from '../src/i18n/fr.js';
-import en from '../src/i18n/en.js';
+import { translations } from '../src/i18n/resources.js';
+
+const fr = translations.fr;
+const en = translations.en;
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 

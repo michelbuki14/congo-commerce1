@@ -2,9 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { LifeBuoy, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
 import TicketThread from '@/components/support/TicketThread';
-import { getProfile, getSessionId, uid } from '@/lib/session';
+import { getProfile, getSessionId } from '@/lib/session';
+import { fetchMyTickets, openTicket } from '@/lib/customerAccount';
 import { formatDateTime } from '@/lib/format';
 
 export default function SupportTickets() {
@@ -44,14 +44,14 @@ export default function SupportTickets() {
   const [success, setSuccess] = useState('');
 
   const load = async () => {
-    const rows = await base44.entities.SupportTicket.filter({ session_id: sessionId }, '-created_date', 30).catch(() => []);
+    const rows = await fetchMyTickets({ sessionId });
     setTickets(rows);
     setLoading(false);
   };
 
   useEffect(() => {
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   const submit = async (e) => {
@@ -64,28 +64,16 @@ export default function SupportTickets() {
     }
     setSubmitting(true);
     try {
-      const number = `TCK-${uid('').slice(1, 7).toUpperCase()}`;
-      await base44.entities.SupportTicket.create({
-        ticket_number: number,
+      const ticket = await openTicket({
         subject: form.subject.trim(),
         category: form.category,
-        status: 'open',
-        priority: form.category === 'payment' ? 'high' : 'normal',
-        customer_name: form.name || 'Client',
-        customer_email: form.email,
-        customer_phone: form.phone,
-        order_number: form.order_number.trim().toUpperCase(),
-        session_id: sessionId,
-        messages: [{ author: 'customer', name: form.name || 'Client', body: form.message.trim(), at: new Date().toISOString() }],
+        orderNumber: form.order_number.trim().toUpperCase(),
+        message: form.message.trim(),
+        name: form.name || 'Client',
+        email: form.email,
+        phone: form.phone,
       });
-      await base44.entities.Notification.create({
-        title: 'Nouveau ticket support',
-        message: `${form.name || 'Un client'} — ${form.subject.trim()} (${number})`,
-        type: 'system',
-        audience: 'admin',
-        order_number: form.order_number.trim().toUpperCase(),
-      });
-      setSuccess(t('supportTickets.ticketOpened', { number }));
+      setSuccess(t('supportTickets.ticketOpened', { number: ticket?.ticket_number || '' }));
       setForm({ ...form, subject: '', message: '', order_number: '' });
       await load();
     } catch {

@@ -1,0 +1,32 @@
+{
+  "name": "SourcingRequisition",
+  "type": "object",
+  "properties": {
+    "tenant_id": { "type": "string" },
+    "tenant_owner_email": { "type": "string" },
+    "requisition_id": { "type": "string" },
+    "requisition_type": { "type": "string", "enum": ["replace_supplier", "topic_sourcing"], "default": "replace_supplier" },
+    "category_id": { "type": "string" },
+    "category_name": { "type": "string" },
+    "target_product_id": { "type": "string" },
+    "target_product_title": { "type": "string" },
+    "target_sku_id": { "type": "string" },
+    "theme_id": { "type": "string" },
+    "theme_name": { "type": "string" },
+    "theme_keywords": { "type": "array", "items": { "type": "string" } },
+    "requirements": { "type": "string" },
+    "status": { "type": "string", "enum": ["draft", "submitted", "bidding", "result_ready", "completed", "cancelled"], "default": "draft" },
+    "created_by": { "type": "string" },
+    "created_date": { "type": "string" },
+    "submitted_at": { "type": "string" },
+    "bidding_deadline": { "type": "string" },
+    "completed_at": { "type": "string" }
+  },
+  "required": ["requisition_id", "requisition_type", "category_id", "created_by"],
+  "rls": {
+    "read": { "user_condition": { "role": "admin" } },
+    "create": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}

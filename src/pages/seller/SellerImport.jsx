@@ -52,7 +52,7 @@ export default function SellerImport() {
 
   useEffect(() => {
     if (suppliers.length) runSearch();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [suppliers]);
 
   const preview = useMemo(() => {
@@ -80,7 +80,7 @@ export default function SellerImport() {
 
   const writeDescription = async () => {
     if (!selected) return;
-    const text = await generateProductDescription({ title: draft.title, category: selected.category, attributes: selected.attributes });
+    const text = await generateProductDescription({ title: draft.title, category: selected.category, attributes: selected.attributes, sellerId: seller?.id });
     if (text) setDraft((d) => ({ ...d, description: text }));
   };
 
@@ -90,7 +90,7 @@ export default function SellerImport() {
     try {
       const supplier = suppliers.find((s) => s.id === selected.supplierId);
       const category = categories.find((c) => c.id === draft.category_id);
-      const tags = await suggestProductTags({ title: draft.title, description: draft.description });
+      const tags = await suggestProductTags({ title: draft.title, description: draft.description, sellerId: seller?.id });
       const product = await base44.entities.Product.create({
         tenant_id: seller.tenant_id || '',
         tenant_owner_email: seller.email || '',

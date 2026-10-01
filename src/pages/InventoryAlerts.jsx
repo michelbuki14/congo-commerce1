@@ -23,8 +23,6 @@ const COLUMN_KEYS = [
   { key: 'state', labelKey: 'colState' },
 ];
 
-const settingKey = (email) => `inventory_alerts:${String(email || '').toLowerCase()}`;
-
 export default function InventoryAlerts() {
   const { t } = useTranslation();
   const srcLabel = (k) => t(`inventoryAlerts.${SOURCE_KEYS[k] || 'sourceSeller'}`);
@@ -47,13 +45,14 @@ export default function InventoryAlerts() {
     (async () => {
       const [rows, settings] = await Promise.all([
         base44.entities.Product.list('-sold_count', 300).catch(() => []),
-        base44.entities.PlatformSetting.filter({ key: settingKey(user.email) }).catch(() => []),
+        base44.entities.PartnerPreference.filter({ key: 'inventory_alerts' }).catch(() => []),
       ]);
       setProducts(rows);
-      if (settings[0]) {
-        setSettingId(settings[0].id);
-        setThreshold(Number(settings[0].value?.default_threshold) || 5);
-        setOverrides(settings[0].value?.overrides || {});
+      const saved = settings[0];
+      if (saved) {
+        if (settings[0]) setSettingId(saved.id);
+        setThreshold(Number(saved.value?.default_threshold) || 5);
+        setOverrides(saved.value?.overrides || {});
       }
     })().finally(() => setLoading(false));
   }, [user]);
@@ -91,14 +90,9 @@ export default function InventoryAlerts() {
     try {
       const value = { default_threshold: Number(threshold) || 0, overrides };
       if (settingId) {
-        await base44.entities.PlatformSetting.update(settingId, { value });
+        await base44.entities.PartnerPreference.update(settingId, { value });
       } else {
-        const created = await base44.entities.PlatformSetting.create({
-          key: settingKey(user.email),
-          label: t('inventoryAlerts.settingLabel'),
-          group: 'inventory',
-          value,
-        });
+        const created = await base44.entities.PartnerPreference.create({ key: 'inventory_alerts', value });
         setSettingId(created.id);
       }
       setNotice(t('inventoryAlerts.saved'));

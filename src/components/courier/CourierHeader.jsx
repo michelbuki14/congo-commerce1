@@ -34,8 +34,8 @@ export default function CourierHeader({ user, fleets, activeFleet, isAdmin, cour
           </div>
         </div>
 
-        <div className="ml-auto flex items-center gap-3">
-          <div className="text-right">
+        <div className="flex w-full min-w-0 items-center justify-between gap-3 border-t border-border pt-3 sm:ml-auto sm:w-auto sm:border-0 sm:pt-0">
+          <div className="min-w-0 break-words sm:text-right">
             <p className="text-sm font-semibold">{name || t('courierHeader.signedIn')}</p>
             {user?.email && <p className="text-[11px] text-muted-foreground">{user.email}</p>}
           </div>
@@ -46,12 +46,12 @@ export default function CourierHeader({ user, fleets, activeFleet, isAdmin, cour
       </div>
 
       {isAdmin ? (
-        <label className="mt-3 flex items-center gap-2 border-t border-border pt-3 text-[11px] text-muted-foreground">
+        <label className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
           {t('courierHeader.deliverFor')}
           <select
             value={activeFleet?.id || ''}
             onChange={(e) => onSelectFleet(e.target.value)}
-            className="h-9 rounded-lg border border-border bg-background px-2 text-sm text-foreground"
+            className="h-11 min-w-0 max-w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground"
           >
             {couriers.length === 0 && <option value="">{t('courierHeader.noCarrier')}</option>}
             {couriers.map((c) => (

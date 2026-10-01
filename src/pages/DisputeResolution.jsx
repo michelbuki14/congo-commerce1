@@ -7,6 +7,7 @@ import OpsHeader from '@/components/ops/OpsHeader';
 import StatCard from '@/components/ops/StatCard';
 import DisputeCaseCard from '@/components/disputes/DisputeCaseCard';
 import { OPEN_STATUSES, threadFor } from '@/lib/disputeResolution';
+import { fetchSellerDisputes, fetchSellerThreads } from '@/lib/customerAccount';
 import { formatUSD } from '@/lib/format';
 
 export default function DisputeResolution() {
@@ -34,11 +35,10 @@ export default function DisputeResolution() {
     const [cases, threads] = await Promise.all([
       isAdmin
         ? base44.entities.Dispute.list('-created_date', 100).catch(() => [])
-        : Promise.all([
-            base44.entities.Dispute.filter({ tenant_owner_email: actor.email }, '-created_date', 100).catch(() => []),
-            seller ? base44.entities.Dispute.filter({ seller_name: seller.name }, '-created_date', 100).catch(() => []) : [],
-          ]).then(([mine, byName]) => [...mine, ...byName].reduce((acc, d) => (acc.some((x) => x.id === d.id) ? acc : [...acc, d]), [])),
-      base44.entities.SupportTicket.list('-created_date', 100).catch(() => []),
+        : fetchSellerDisputes(),
+      isAdmin
+        ? base44.entities.SupportTicket.list('-created_date', 100).catch(() => [])
+        : fetchSellerThreads(),
     ]);
     setDisputes(cases);
     setTickets(threads);

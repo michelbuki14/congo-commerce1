@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { MessageSquareWarning, Paperclip, Send } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useActiveSeller } from '@/lib/seller';
+import { fetchSellerDisputes, fetchSellerThreads, sendCaseMessage } from '@/lib/customerAccount';
 import OpsHeader from '@/components/ops/OpsHeader';
 import StatCard from '@/components/ops/StatCard';
 import StatusBadge from '@/components/StatusBadge';
@@ -39,9 +40,9 @@ export default function MerchantDisputes() {
   useEffect(() => {
     if (!seller && !user) return;
     Promise.all([
-      seller ? base44.entities.Dispute.filter({ seller_name: seller.name }, '-created_date', 100).catch(() => []) : [],
+      seller ? fetchSellerDisputes() : [],
       user ? base44.entities.Dispute.filter({ tenant_owner_email: user.email }, '-created_date', 100).catch(() => []) : [],
-      base44.entities.SupportTicket.list('-created_date', 100).catch(() => []),
+      fetchSellerThreads(),
     ])
       .then(([byName, byTenant, threads]) => {
         const merged = [...byName, ...byTenant].reduce((acc, d) => (acc.some((x) => x.id === d.id) ? acc : [...acc, d]), []);
@@ -69,24 +70,15 @@ export default function MerchantDisputes() {
         const uploaded = await base44.integrations.Core.UploadPrivateFile({ file });
         fileUri = uploaded.file_uri;
       }
-      const ticket = await base44.entities.SupportTicket.create({
-        ticket_number: `MED-${Date.now().toString(36).toUpperCase()}`,
-        subject: `Réponse vendeur — litige ${dispute.order_number}`,
-        category: 'order',
-        status: 'open',
-        priority: 'high',
-        order_number: dispute.order_number,
-        customer_name: dispute.customer_name || '',
-        customer_phone: dispute.customer_phone || '',
-        assigned_to: 'mediation',
-        messages: [{
-          author: 'seller',
-          body: `${seller?.name ? `${seller.name} — ` : ''}${reply.trim()}`,
-          at: new Date().toISOString(),
-          file_uri: fileUri || undefined,
-          attachment_name: file?.name || undefined,
-        }],
+      const ticket = await sendCaseMessage({
+        orderNumber: dispute.order_number,
+        body: `${seller?.name ? `${seller.name} — ` : ''}${reply.trim()}`,
+        author: 'seller',
+        authorName: seller?.name || '',
+        fileUri,
+        attachmentName: file?.name || '',
       });
+      if (!ticket) throw new Error(t('merchantDisputes.sendFailed'));
       setTickets((prev) => [ticket, ...prev]);
       setReply('');
       setFile(null);

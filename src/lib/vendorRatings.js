@@ -28,12 +28,14 @@ export function buildSellerMetrics({ sellers = [], reviews = [], disputes = [], 
       ? round2(ratings.reduce((a, b) => a + b, 0) / ratings.length)
       : Number(seller.rating) || 0;
     const name = String(seller.name || '').trim().toLowerCase();
-    const sellerDisputes = disputes.filter((d) => String(d.seller_name || '').trim().toLowerCase() === name);
-    const openDisputes = sellerDisputes.filter((d) => ['open', 'investigating', 'escalated'].includes(d.status));
-    const orders = Number(seller.orders_count) || 0;
+    // The dispute index carries per-shop counts, never the individual cases.
+    const disputeCounts = disputes.find((d) => String(d.seller_name || '').trim().toLowerCase() === name) || {};
+    const disputeCount = Number(disputeCounts.disputes) || 0;
+    const openDisputeCount = Number(disputeCounts.open_disputes) || 0;
+    const orders = Number(Number(seller.orders_count) || 0);
     const catalogue = products.filter((p) => p.seller_id === seller.id && p.status !== 'archived').length;
     const productsCount = catalogue || Number(seller.products_count) || 0;
-    const disputeRate = orders ? Math.min(1, sellerDisputes.length / orders) : sellerDisputes.length ? 1 : 0;
+    const disputeRate = orders ? Math.min(1, disputeCount / orders) : disputeCount ? 1 : 0;
     const trustScore = trustScoreFor({ avgRating, disputeRate, orders, reviewsCount: ratings.length });
     const fiveStars = ratings.filter((r) => r >= 5).length;
     return {
@@ -45,8 +47,8 @@ export function buildSellerMetrics({ sellers = [], reviews = [], disputes = [], 
       fiveStars,
       orders,
       productsCount,
-      disputes: sellerDisputes.length,
-      openDisputes: openDisputes.length,
+      disputes: disputeCount,
+      openDisputes: openDisputeCount,
       disputeRate,
       trustScore,
       level: trustLevel(trustScore),

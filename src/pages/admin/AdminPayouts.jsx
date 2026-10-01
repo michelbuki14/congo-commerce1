@@ -47,6 +47,7 @@ export default function AdminPayouts() {
         wallet_id: wallet.id,
         owner_type: wallet.owner_type,
         owner_name: wallet.owner_name,
+        owner_email: wallet.owner_email || '',
         type: 'REFUND',
         direction: 'credit',
         amount_usd: amount,

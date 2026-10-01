@@ -126,10 +126,27 @@ export const SHIPMENT_STATUS_FLOW = [
   'CANCELLED',
 ];
 
+/**
+ * International imports never touch a local courier: the goods are received at
+ * our own warehouse abroad, approved by the customer, then flown to destination.
+ */
+export const INTL_TRACKING_FLOW = [
+  'PENDING',
+  'CONFIRMED',
+  'PROCESSING',
+  'AWAITING_CUSTOMER_APPROVAL',
+  'PACKING',
+  'IN_TRANSIT',
+  'OUT_FOR_DELIVERY',
+  'DELIVERED',
+];
+
 export const SHIPMENT_STATUS_LABELS = {
   PENDING: 'status.PENDING',
   CONFIRMED: 'status.CONFIRMED',
   PROCESSING: 'status.PROCESSING',
+  AWAITING_CUSTOMER_APPROVAL: 'status.AWAITING_CUSTOMER_APPROVAL',
+  PACKING: 'status.PACKING',
   READY_FOR_PICKUP: 'status.READY_FOR_PICKUP',
   PICKED_UP: 'status.PICKED_UP',
   IN_TRANSIT: 'status.IN_TRANSIT',

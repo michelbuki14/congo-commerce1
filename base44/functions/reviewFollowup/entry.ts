@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
 import { requireAdmin } from '../../shared/security.ts';
+import { postWalletEntry } from '../../shared/walletLedger.ts';
 
 /**
  * Runs on every new review (triggered by the "Review Followup" workflow).
@@ -32,12 +33,13 @@ async function rewardSeller(base44, review, tenant) {
     .filter({ owner_type: 'seller', owner_name: ownerName })
     .catch(() => []);
   const wallet = wallets[0] || await base44.asServiceRole.entities.Wallet.create({
-    ...tenant,
-    owner_type: 'seller',
-    owner_id: review.seller_id || '',
-    owner_name: ownerName,
-    owner_email: seller?.email || '',
-    balance_usd: 0,
+      ...tenant,
+      owner_type: 'seller',
+      owner_id: review.seller_id || '',
+      owner_name: ownerName,
+      owner_email: seller?.email || '',
+      created_by_id: review.seller_id || '',
+      balance_usd: 0,
     pending_usd: 0,
     lifetime_credit_usd: 0,
     lifetime_debit_usd: 0,
@@ -45,24 +47,17 @@ async function rewardSeller(base44, review, tenant) {
     status: 'active',
   });
 
-  const updated = await base44.asServiceRole.entities.Wallet.update(wallet.id, {
-    balance_usd: round2((wallet.balance_usd || 0) + REVIEW_BONUS_USD),
-    lifetime_credit_usd: round2((wallet.lifetime_credit_usd || 0) + REVIEW_BONUS_USD),
-  });
-
-  await base44.asServiceRole.entities.WalletTransaction.create({
+  await postWalletEntry(base44.asServiceRole, wallet, {
     ...tenant,
-    wallet_id: wallet.id,
-    owner_type: 'seller',
-    owner_name: ownerName,
     type: 'CREDIT',
     direction: 'credit',
-    amount_usd: REVIEW_BONUS_USD,
-    balance_after_usd: updated.balance_usd,
-    currency: 'USD',
+    amount: REVIEW_BONUS_USD,
+    owner_type: 'seller',
+    owner_name: ownerName,
+    owner_email: wallet.owner_email || seller?.email || '',
     description: `Prime avis 5 étoiles — ${review.product_title || 'article'}`,
     reference,
-    idempotency_key: reference,
+    idempotencyKey: reference,
     order_number: review.order_number || '',
     status: 'posted',
   });

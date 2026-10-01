@@ -1,5 +1,6 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.49";
 import { requireAdmin } from "../../shared/security.ts";
+import { postWalletEntry } from "../../shared/walletLedger.ts";
 
 /**
  * request-withdrawal — base44/functions/request-withdrawal/entry.ts
@@ -51,25 +52,21 @@ export default async function (req: Request) {
       return err(`Solde disponible insuffisant — disponible : ${available} USD.`, 409);
     }
 
-    const updated = await db.entities.Wallet.update(wallet.id, {
-      balance_usd: round2((wallet.balance_usd || 0) - amount),
-      lifetime_debit_usd: round2((wallet.lifetime_debit_usd || 0) + amount),
-    });
-    const tx = await db.entities.WalletTransaction.create({
-      wallet_id: wallet.id,
-      tenant_id: wallet.tenant_id || "",
-      tenant_owner_email: wallet.tenant_owner_email || "",
-      owner_type: wallet.owner_type,
-      owner_name: wallet.owner_name,
+    const posted = await postWalletEntry(db, wallet, {
       type: "PAYOUT",
       direction: "debit",
-      amount_usd: amount,
-      balance_after_usd: updated.balance_usd,
-      currency: "USD",
+      amount,
       description: `Retrait vers ${method} — ${String(body.account || "")}`.slice(0, 200),
       reference: `WD-${Date.now().toString(36).toUpperCase()}`,
       status: "pending",
     });
+    // The balance was read a moment ago; a concurrent debit may have taken it
+    // since, in which case the ledger refuses the movement.
+    if (!posted.ok) {
+      return err(`Solde disponible insuffisant — disponible : ${posted.available ?? available} USD.`, 409);
+    }
+    const updated = posted.wallet;
+    const tx = posted.transaction;
     await db.entities.AuditLog.create({
       action: "wallet.withdrawal_requested",
       actor: user.email,

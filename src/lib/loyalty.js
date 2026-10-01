@@ -1,5 +1,6 @@
 import { base44 } from '@/api/base44Client';
 import { round2 } from './format';
+import { fetchMyOrders } from '@/lib/customerAccount';
 
 /**
  * LOYALTY ENGINE
@@ -113,12 +114,11 @@ function dedupe(list) {
 }
 
 export async function loadLoyaltyData({ sessionId, phone } = {}) {
-  const [bySession, byPhone, redemptions] = await Promise.all([
-    base44.entities.Order.filter({ session_id: sessionId }, '-created_date', 100).catch(() => []),
-    phone ? base44.entities.Order.filter({ customer_phone: phone }, '-created_date', 100).catch(() => []) : Promise.resolve([]),
+  const [orders, redemptions] = await Promise.all([
+    fetchMyOrders({ sessionId, phone, limit: 100 }),
     base44.entities.LoyaltyRedemption.filter({ session_id: sessionId }, '-created_date', 100).catch(() => []),
   ]);
-  return { orders: dedupe([...bySession, ...byPhone]), redemptions };
+  return { orders: dedupe(orders), redemptions };
 }
 
 export function generateRewardCode(prefix = 'FID') {

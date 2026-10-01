@@ -6,6 +6,7 @@ import { base44 } from '@/api/base44Client';
 import { useCart } from '@/lib/cart';
 import { useCurrency } from '@/lib/currency';
 import { loadPlatformConfig } from '@/lib/config';
+import { findIntlOption, getIntlOptions, intlWeightKg } from '@/lib/intlDelivery';
 import { listPaymentProviders } from '@/lib/payments';
 import { buildCheckoutQuote, findCoupon, placeOrder } from '@/lib/orderService';
 import { getProfile, saveProfile } from '@/lib/session';
@@ -32,6 +33,7 @@ export default function Checkout() {
   const [profile, setProfile] = useState(getProfile());
   const [deliveryMethod, setDeliveryMethod] = useState('home_delivery');
   const [pickupPointId, setPickupPointId] = useState('');
+  const [intlOptionId, setIntlOptionId] = useState('');
   const [notes, setNotes] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('mpesa');
   const [payPhone, setPayPhone] = useState(() => getProfile().phone || '');
@@ -72,6 +74,13 @@ export default function Checkout() {
     ? Number(selectedPickup?.fee_usd || 0)
     : Number(selectedZone?.fee_usd || 0);
 
+  // Imported goods never ride a partner courier: our own delivery team carries
+  // them, on its own tariff, and the customer picks the service level here.
+  const intlOptions = getIntlOptions();
+  const selectedIntlOption = findIntlOption(intlOptionId) || intlOptions[0] || null;
+  const hasIntl = (quote?.lines || []).some((l) => l.product.source_type === 'international_supplier');
+  const intlWeight = intlWeightKg(quote?.lines || []);
+
   useEffect(() => {
     if (!items.length) {
       setLoadingQuote(false);
@@ -79,7 +88,7 @@ export default function Checkout() {
     }
     let alive = true;
     setLoadingQuote(true);
-    buildCheckoutQuote({ items, deliveryFee, coupon })
+    buildCheckoutQuote({ items, deliveryFee, coupon, intlOption: selectedIntlOption })
       .then((q) => {
         if (alive) setQuote(q);
       })
@@ -92,7 +101,7 @@ export default function Checkout() {
     return () => {
       alive = false;
     };
-  }, [items, deliveryFee, coupon]);
+  }, [items, deliveryFee, coupon, selectedIntlOption?.id]);
 
   const groups = useMemo(() => {
     if (!quote?.lines?.length) return [];
@@ -182,7 +191,7 @@ export default function Checkout() {
     setSubmitting(true);
     saveProfile(profile);
     try {
-      const result = await placeOrder({
+      const result = await placeOrder(base44, {
         items,
         profile,
         delivery: {
@@ -191,6 +200,7 @@ export default function Checkout() {
           address: profile.address,
           pickup_point_id: selectedPickup?.id || '',
           pickup_point_name: selectedPickup?.name || '',
+          intl_option_id: hasIntl ? selectedIntlOption?.id || '' : '',
           notes,
         },
         couponCode: coupon?.code || '',
@@ -198,16 +208,19 @@ export default function Checkout() {
         paymentPhone: chargePhone,
         consent,
       });
-      if (activeProvider?.hostedCheckout) {
-        const res = await base44.functions.invoke('create-checkout', { productId: result.order.order_number });
+      // Hosted checkout (card) is now handled inside the server function — it
+      // returns redirectUrl when the provider requires a redirect. The client-side
+      // create-checkout call is removed: prices and splits are locked down
+      // server-side, so no separate client-side step is needed.
+      if (result.redirectUrl) {
         clear();
-        window.location.href = res.data.redirectUrl;
+        window.location.href = result.redirectUrl;
         return;
       }
       clear();
       navigate(`/order/${result.order.order_number}`);
     } catch (err) {
-      setError(err.message || t('checkout.failed'));
+      setError(err.response?.data?.error || err.message || t('checkout.failed'));
     } finally {
       setSubmitting(false);
     }
@@ -225,6 +238,11 @@ export default function Checkout() {
       notes,
       setNotes,
       groups,
+      showIntl: hasIntl,
+      intlOptions,
+      setIntlOptionId,
+      selectedIntlOption,
+      intlWeight,
     },
     {
       providers,
@@ -255,7 +273,10 @@ export default function Checkout() {
 
   return (
     <form onSubmit={submit} className="space-y-5 pb-32 md:pb-6">
-      <h1 className="text-lg font-bold md:text-xl">{t('checkout.title')}</h1>
+      <div className="space-y-2">
+        <Link to="/cart" className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4" />{t('checkout.backToCart')}</Link>
+        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">{t('checkout.title')}</h1>
+      </div>
 
       <CheckoutSteps steps={STEPS} current={step} />
 
@@ -273,20 +294,19 @@ export default function Checkout() {
       </div>
 
       {/* Desktop : toutes les étapes sur une seule page */}
-      <div className="hidden space-y-5 md:block">
-        {STEP_COMPONENTS.map((StepComponent, i) => (
-          <StepComponent key={i} {...stepProps[i]} />
-        ))}
+      <div className="hidden items-start gap-6 md:grid lg:grid-cols-[minmax(0,1fr)_22rem]">
+        <div className="min-w-0 space-y-5">
+          <StepDelivery {...stepProps[0]} />
+          <StepPayment {...stepProps[1]} />
+        </div>
+        <aside className="min-w-0 space-y-5 lg:sticky lg:top-40">
+          <StepReview {...stepProps[2]} />
+          <button type="submit" disabled={submitting || loadingQuote} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-4 py-4 text-sm font-bold text-primary-foreground disabled:opacity-50">
+            <ShieldCheck className="h-4 w-4 shrink-0" />
+            {submitting ? t('checkout.processing') : t('checkout.payAmount', { total: quote ? formatUSD(quote.total) : '' })}
+          </button>
+        </aside>
       </div>
-
-      <button
-        type="submit"
-        disabled={submitting || loadingQuote}
-        className="hidden w-full items-center justify-center gap-2 rounded-full bg-primary py-4 text-sm font-bold text-primary-foreground disabled:opacity-50 md:flex"
-      >
-        <ShieldCheck className="h-4 w-4" />
-        {submitting ? t('checkout.processing') : t('checkout.payAmount', { total: quote ? formatUSD(quote.total) : '' })}
-      </button>
 
       <MobileActionBar>
         {step === 0 ? (

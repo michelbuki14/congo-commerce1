@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Gavel, AlertCircle } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
 import StatusBadge from '@/components/StatusBadge';
+import { openDispute, fetchMyDisputes } from '@/lib/customerAccount';
 import { getProfile } from '@/lib/session';
 import { formatUSD, formatDate } from '@/lib/format';
 
@@ -32,14 +32,13 @@ export default function DisputePanel() {
   const [success, setSuccess] = useState('');
 
   const load = async (phone) => {
-    const rows = await base44.entities.Dispute.filter({ customer_phone: phone || '—' }, '-created_date', 30).catch(() => []);
-    setDisputes(rows);
+    setDisputes(await fetchMyDisputes({ phone }));
     setLoading(false);
   };
 
   useEffect(() => {
     load(profile.phone);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   const submit = async (e) => {
@@ -53,26 +52,11 @@ export default function DisputePanel() {
     setSubmitting(true);
     try {
       const number = form.order_number.trim().toUpperCase();
-      const orderRows = await base44.entities.Order.filter({ order_number: number }).catch(() => []);
-      const order = orderRows[0];
-      await base44.entities.Dispute.create({
-        order_number: number,
-        customer_name: profile.name || 'Client',
-        customer_phone: form.phone || profile.phone || '',
-        seller_name: order?.items?.[0]?.seller_name || '',
+      await openDispute({
+        orderNumber: number,
+        phone: form.phone || profile.phone || '',
         type: form.type,
         description: form.description,
-        amount_usd: order?.total_usd || 0,
-        status: 'open',
-        priority: 'normal',
-      });
-      await base44.entities.Notification.create({
-        title: 'Nouveau litige ouvert',
-        message: `${profile.name || 'Un client'} ouvre un litige sur ${number}.`,
-        type: 'order',
-        audience: 'admin',
-        order_number: number,
-        is_demo: true,
       });
       setSuccess(t('disputePanel.disputeOpened'));
       setForm({ ...form, order_number: '', description: '' });

@@ -26,6 +26,10 @@
     "customer_email": {
       "type": "string"
     },
+    "created_by_id": {
+      "type": "string",
+      "description": "User who placed the order"
+    },
     "city": {
       "type": "string"
     },
@@ -175,9 +179,34 @@
     "order_number"
   ],
   "rls": {
-    "create": null,
-    "read": null,
-    "update": null,
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "data.customer_email": "{{user.email}}"
+        },
+        {
+          "data.tenant_owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
     "delete": {
       "user_condition": {
         "role": "admin"

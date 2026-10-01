@@ -39,7 +39,7 @@ export default function OrderReturns() {
       setReturns(requests);
       setLoading(false);
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   const toggle = (key) => {
@@ -92,7 +92,7 @@ export default function OrderReturns() {
         type: 'order',
         audience: 'admin',
       });
-      emitEvent('return_requested', {
+      emitEvent(base44, 'return_requested', {
         category: 'order',
         source: 'Return',
         reference: created.map((r) => r.order_number).join(', '),

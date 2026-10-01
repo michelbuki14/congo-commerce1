@@ -162,6 +162,7 @@ export async function postLedger(base44, options = {}) {
     wallet_id: wallet.id,
     owner_type: wallet.owner_type,
     owner_name: wallet.owner_name,
+    owner_email: wallet.owner_email || '',
     type: options.type || 'CREDIT',
     direction,
     amount_usd: amount,

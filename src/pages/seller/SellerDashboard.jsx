@@ -7,7 +7,10 @@ import { useActiveSeller } from '@/lib/seller';
 import { sellerInsights } from '@/lib/ai';
 import DashboardNav from '@/components/DashboardNav';
 import StatusBadge from '@/components/StatusBadge';
+import { Image } from '@/components/ui/image';
 import { formatUSD } from '@/lib/format';
+
+const HERO_IMAGE = 'https://media.base44.com/images/public/6ab43a1371d65d1a911b0fe7/5c6b76710_generated_016c1e6f.jpg';
 
 const LINKS = [
   { to: '/seller', key: 'sellerNav.dashboard', end: true },
@@ -15,7 +18,7 @@ const LINKS = [
   { to: '/seller/orders', key: 'sellerNav.orders' },
   { to: '/seller/import', key: 'seller.import' },
   { to: '/seller/wallet', key: 'sellerNav.wallet' },
-  { to: '/seller/settings', key: 'sellerNav.shop' },
+  { to: '/seller/settings', key: 'seller.shop' },
 ];
 
 const TILES = [
@@ -59,9 +62,7 @@ export default function SellerDashboard() {
       setWallet(wallets[0] || null);
       setLoading(false);
 
-      const revenue = f.reduce((s, x) => s + (x.subtotal_usd || 0), 0);
-      const top = [...p].sort((a, b) => (b.sold_count || 0) - (a.sold_count || 0)).slice(0, 5).map((x) => x.title);
-      const tips = await sellerInsights({ storeName: seller.name, topProducts: top, revenue: Math.round(revenue), orders: f.length });
+      const tips = await sellerInsights({ sellerId: seller.id });
       if (alive && tips.length) setInsights(tips);
     })();
     return () => {
@@ -69,21 +70,25 @@ export default function SellerDashboard() {
     };
   }, [seller]);
 
-  if (loadingSeller) return <div className="h-40 animate-pulse rounded-2xl bg-secondary" />;
+  if (loadingSeller) {
+    return (
+      <div className="paper-console">
+        <div className="paper-skeleton-block h-40 animate-pulse" />
+      </div>
+    );
+  }
 
   if (!seller) {
     return (
-      <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
-        <Store className="mx-auto h-8 w-8 text-muted-foreground" />
-        <p className="mt-2 font-semibold">{t('seller.noShop')}</p>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {t('seller.noShopDesc')}
-        </p>
-        {isAdmin && (
-          <Link to="/admin/users" className="mt-4 inline-block rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground">
-            {t('seller.createShop')}
-          </Link>
-        )}
+      <div className="paper-console">
+        <div className="paper-empty">
+          <Store className="paper-empty-icon" />
+          <p className="paper-empty-title">{t('seller.noShop')}</p>
+          <p className="paper-empty-desc">{t('seller.noShopDesc')}</p>
+          {isAdmin && (
+            <Link to="/admin/users" className="paper-empty-cta">{t('seller.createShop')}</Link>
+          )}
+        </div>
       </div>
     );
   }
@@ -92,103 +97,121 @@ export default function SellerDashboard() {
   const pending = fulfillments.filter((f) => !['DELIVERED', 'CANCELLED', 'RETURNED'].includes(f.status));
   const published = products.filter((p) => p.status === 'published').length;
 
-  return (
-    <div className="space-y-5 pb-8">
-      <DashboardNav title={t('seller.title')} links={LINKS} />
+  const stats = [
+    { icon: Package, key: 'seller.publishedProducts', value: `${published}/${products.length}` },
+    { icon: TrendingUp, key: 'seller.revenue', value: formatUSD(revenue) },
+    { icon: ShoppingBag, key: 'seller.toProcess', value: pending.length },
+    { icon: WalletIcon, key: 'wallet.available', value: formatUSD(wallet?.balance_usd || 0) },
+  ];
 
-      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card p-3">
-        <Store className="h-4 w-4 text-primary" />
-        <span className="text-xs font-semibold">{t('seller.managedShop')}</span>
+  return (
+    <div className="paper-console">
+      <div className="paper-hero">
+        <Image src={HERO_IMAGE} alt="" />
+      </div>
+
+      <DashboardNav title={t('seller.title')} links={LINKS} variant="paper" />
+
+      <div className="paper-shop">
+        <span className="paper-shopmark" />
+        <strong>{t('seller.managedShop')}</strong>
         {isAdmin ? (
           <select
             value={seller.id}
             onChange={(e) => selectSeller(e.target.value)}
-            className="h-9 flex-1 rounded-lg border border-border bg-background px-2 text-sm"
+            aria-label={t('seller.managedShop')}
+            className="paper-shop-select"
           >
             {sellers.map((s) => (
               <option key={s.id} value={s.id}>{s.name}</option>
             ))}
           </select>
         ) : (
-          <span className="text-sm font-semibold">{seller.name}</span>
+          <span className="paper-shopname">{seller.name}</span>
         )}
       </div>
 
-      {loading ? (
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-24 animate-pulse rounded-xl bg-secondary" />
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          {[
-            { icon: Package, key: 'seller.publishedProducts', value: `${published}/${products.length}` },
-            { icon: TrendingUp, key: 'seller.revenue', value: formatUSD(revenue) },
-            { icon: ShoppingBag, key: 'seller.toProcess', value: pending.length },
-            { icon: WalletIcon, key: 'wallet.available', value: formatUSD(wallet?.balance_usd || 0) },
-          ].map((k) => (
-            <div key={k.key} className="rounded-xl border border-border bg-card p-3.5">
-              <k.icon className="h-4 w-4 text-primary" />
-              <p className="mt-1.5 text-lg font-bold">{k.value}</p>
-              <p className="text-[11px] text-muted-foreground">{t(k.key)}</p>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {!!insights.length && (
-        <section className="rounded-2xl border border-primary/25 bg-primary/5 p-4">
-          <h2 className="flex items-center gap-2 text-sm font-bold">
-            <Sparkles className="h-4 w-4 text-primary" /> {t('seller.aiTips')}
-          </h2>
-          <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
-            {insights.map((tip, i) => (
-              <li key={i}>• {tip}</li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      <section className="rounded-2xl border border-border bg-card p-4">
-        <h2 className="mb-3 text-sm font-bold">{t('seller.latestOrders')}</h2>
-        {fulfillments.length ? (
-          <div className="space-y-2">
-            {fulfillments.slice(0, 6).map((f) => (
-              <div key={f.id} className="flex items-center justify-between rounded-xl border border-border px-3 py-2.5">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold">{f.order_number}</p>
-                  <p className="text-[11px] text-muted-foreground">
-                    {f.fulfillment_number} · {t('seller.itemCount', { count: (f.items || []).length })}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <StatusBadge status={f.status} />
-                  <span className="text-sm font-semibold">{formatUSD(f.subtotal_usd)}</span>
-                </div>
+      <main className="paper-main">
+        <div className="paper-col">
+          <section className="paper-section">
+            <h2 className="paper-label">{t('seller.overview', { defaultValue: 'Aperçu' })}</h2>
+            {loading ? (
+              <div className="paper-stats">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="paper-stat paper-skeleton-block animate-pulse" />
+                ))}
               </div>
-            ))}
-            <Link to="/seller/orders" className="inline-block text-xs font-semibold text-primary">
-              {t('seller.viewAllOrders')}
-            </Link>
-          </div>
-        ) : (
-          <p className="text-xs text-muted-foreground">{t('seller.noOrders')}</p>
-        )}
-      </section>
+            ) : (
+              <div className="paper-stats">
+                {stats.map((k) => (
+                  <div key={k.key} className="paper-stat">
+                    <k.icon className="paper-stat-icon" />
+                    <p className="paper-value">{k.value}</p>
+                    <p className="paper-caption">{t(k.key)}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
 
-      <section className="grid gap-2 md:grid-cols-3">
-        {TILES.map((tile) => (
-          <Link key={tile.to} to={tile.to} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3.5">
-            <tile.icon className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium">{t(tile.key)}</span>
-          </Link>
-        ))}
-        <Link to="/admin" className="flex items-center gap-3 rounded-xl border border-border bg-card p-3.5">
-          <BarChart3 className="h-4 w-4 text-primary" />
-          <span className="text-sm font-medium">{t('seller.adminView')}</span>
-        </Link>
-      </section>
+          {!!insights.length && (
+            <section className="paper-section paper-ai">
+              <h2 className="paper-label">
+                <Sparkles className="paper-stat-icon" /> {t('seller.aiTips')}
+              </h2>
+              <ul className="paper-tips">
+                {insights.map((tip, i) => (
+                  <li key={i}>• {tip}</li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </div>
+
+        <div className="paper-col paper-col-right">
+          <section className="paper-section paper-orders">
+            <h2 className="paper-label">{t('seller.latestOrders')}</h2>
+            {fulfillments.length ? (
+              <>
+                <div className="paper-orderlist">
+                  {fulfillments.slice(0, 6).map((f) => (
+                    <div key={f.id} className="paper-order">
+                      <div className="min-w-0">
+                        <div className="paper-orderno">{f.order_number}</div>
+                        <div className="paper-meta">
+                          {f.fulfillment_number} · {t('seller.itemCount', { count: (f.items || []).length })}
+                        </div>
+                      </div>
+                      <div className="paper-details">
+                        <StatusBadge status={f.status} variant="paper" />
+                        <span className="paper-money">{formatUSD(f.subtotal_usd)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <Link to="/seller/orders" className="paper-all">
+                  {t('seller.viewAllOrders')}
+                </Link>
+              </>
+            ) : (
+              <p className="paper-caption">{t('seller.noOrders')}</p>
+            )}
+          </section>
+        </div>
+
+        <section className="paper-tiles">
+          {TILES.map((tile) => (
+            <Link key={tile.to} to={tile.to} className="paper-tile">
+              <tile.icon className="paper-tile-icon" />
+              <span>{t(tile.key)}</span>
+            </Link>
+          ))}
+          {isAdmin && <Link to="/admin" className="paper-tile">
+                      <BarChart3 className="paper-tile-icon" />
+                      <span>{t('seller.adminView')}</span>
+                    </Link>}
+        </section>
+      </main>
     </div>
   );
 }

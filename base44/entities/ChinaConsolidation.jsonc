@@ -1,0 +1,29 @@
+{
+  "name": "ChinaConsolidation",
+  "type": "object",
+  "properties": {
+    "tenant_id": { "type": "string" },
+    "tenant_owner_email": { "type": "string" },
+    "consolidation_id": { "type": "string" },
+    "warehouse_id": { "type": "string" },
+    "warehouse_name": { "type": "string" },
+    "receipt_ids": { "type": "array", "items": { "type": "string" } },
+    "items": { "type": "array", "items": { "type": "object" } },
+    "total_cost_usd": { "type": "number", "default": 0 },
+    "status": { "type": "string", "enum": ["consolidated", "packed", "shipped", "delivered"], "default": "consolidated" },
+    "created_by": { "type": "string" },
+    "created_date": { "type": "string" }
+  },
+  "required": ["consolidation_id", "warehouse_id"],
+  "rls": {
+    "read": {
+      "$or": [
+        { "user_condition": { "role": "admin" } },
+        { "data.tenant_owner_email": "{{user.email}}" }
+      ]
+    },
+    "create": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}

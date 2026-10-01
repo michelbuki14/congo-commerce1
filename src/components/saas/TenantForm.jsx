@@ -23,7 +23,7 @@ const EMPTY = {
   vat_rate: 16,
 };
 
-export default function TenantForm({ initial, onSubmit, submitting = false, submitLabel }) {
+export default function TenantForm({ initial, onSubmit, submitting = false, submitLabel, lockOwnerEmail = false }) {
   const { t } = useTranslation();
   const resolvedLabel = submitLabel || t('tenantForm.save');
   const [form, setForm] = useState({ ...EMPTY, ...(initial || {}) });
@@ -71,7 +71,7 @@ export default function TenantForm({ initial, onSubmit, submitting = false, subm
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="t-email">{t('tenantForm.email')}</Label>
-          <Input id="t-email" type="email" value={form.owner_email} onChange={(e) => set('owner_email', e.target.value)} placeholder="vous@exemple.cd" />
+          <Input id="t-email" type="email" value={form.owner_email} onChange={(e) => set('owner_email', e.target.value)} placeholder="vous@exemple.cd" disabled={lockOwnerEmail} />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="t-phone">{t('tenantForm.phone')}</Label>

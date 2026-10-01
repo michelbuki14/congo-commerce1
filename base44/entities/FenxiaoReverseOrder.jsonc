@@ -1,0 +1,99 @@
+{
+  "name": "FenxiaoReverseOrder",
+  "type": "object",
+  "properties": {
+    "tenant_id": {
+      "type": "string"
+    },
+    "tenant_owner_email": {
+      "type": "string"
+    },
+    "reverse_order_id": {
+      "type": "string"
+    },
+    "original_order_id": {
+      "type": "string"
+    },
+    "downstream_order_no": {
+      "type": "string"
+    },
+    "reverse_type": {
+      "type": "string",
+      "enum": [
+        "return",
+        "refund",
+        "exchange"
+      ],
+      "default": "return"
+    },
+    "reverse_reason": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "submitted",
+        "approved",
+        "rejected",
+        "completed"
+      ],
+      "default": "pending"
+    },
+    "item_refund_amount": {
+      "type": "number",
+      "default": 0
+    },
+    "shipping_refund_amount": {
+      "type": "number",
+      "default": 0
+    },
+    "total_refund_amount": {
+      "type": "number",
+      "default": 0
+    },
+    "submitted_at": {
+      "type": "string"
+    },
+    "approved_at": {
+      "type": "string"
+    },
+    "completed_at": {
+      "type": "string"
+    },
+    "created_by": {
+      "type": "string"
+    },
+    "created_date": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "reverse_order_id",
+    "original_order_id",
+    "downstream_order_no",
+    "created_by"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

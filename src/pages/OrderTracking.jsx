@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Search, Truck, Clock, MapPin, Circle, CheckCircle2 } from 'lucide-react';
 import StatusBadge from '@/components/StatusBadge';
+import IntlApprovalCard from '@/components/tracking/IntlApprovalCard';
 import { getOrderIds, getProfile } from '@/lib/session';
 import { lookupOrder } from '@/lib/orderLookup';
 import { formatUSD, formatDateTime } from '@/lib/format';
@@ -14,10 +15,16 @@ export default function OrderTracking() {
   const [number, setNumber] = useState(initial);
   const [phone, setPhone] = useState(getProfile().phone || '');
   const [order, setOrder] = useState(null);
+  const [fulfillments, setFulfillments] = useState([]);
   const [shipments, setShipments] = useState([]);
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState('');
   const history = getOrderIds();
+  // International imports get their own card: photo from our origin warehouse,
+  // then the customer's approval before we ship to the destination.
+  const intlFulfillments = fulfillments.filter(
+    (f) => f.source_type === 'international_supplier' && !['CANCELLED', 'RETURNED', 'FAILED'].includes(f.status),
+  );
 
   const lookup = async (raw) => {
     const value = String(raw ?? number).trim().toUpperCase();
@@ -31,9 +38,11 @@ export default function OrderTracking() {
       const data = await lookupOrder(value, phone.trim() || getProfile().phone);
       setNumber(data.order.order_number);
       setOrder(data.order);
+      setFulfillments(data.fulfillments || []);
       setShipments(data.shipments || []);
     } catch (e) {
       setOrder(null);
+      setFulfillments([]);
       setShipments([]);
       setError(e.message || t('orderTracking.trackingUnavailable'));
     } finally {
@@ -43,7 +52,7 @@ export default function OrderTracking() {
 
   useEffect(() => {
     if (initial) lookup(initial);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   const updates = shipments
@@ -139,6 +148,18 @@ export default function OrderTracking() {
               </p>
             )}
           </section>
+
+          {intlFulfillments.map((f) => (
+            <IntlApprovalCard
+              key={f.id}
+              fulfillment={f}
+              order={order}
+              phone={phone}
+              onConfirmed={(updated) =>
+                setFulfillments((prev) => prev.map((x) => (x.id === updated.id ? { ...x, ...updated } : x)))
+              }
+            />
+          ))}
 
           {shipments.length ? (
             shipments.map((s) => {
