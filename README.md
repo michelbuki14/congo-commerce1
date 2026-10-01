@@ -1,30 +1,69 @@
 # Congo Commerce
 
-Congo Commerce is a modern commerce platform built on Base44, designed to streamline storefront operations, sales workflows, and business tooling in a single app experience.
+**The all-in-one commerce platform for teams that move fast.** Build, deploy, and scale your storefront operations without the headache. Congo Commerce brings inventory management, sales workflows, and business automation together in one beautiful, extensible platform.
 
-## Overview
+## Why Congo Commerce
 
-This repository contains the source for the Congo Commerce application, including the React + Vite frontend and the Base44-powered integration layer. It is built for rapid iteration, local development, and deployment through the Base44 platform.
+Managing commerce operations shouldn't require 10 different tools. Congo Commerce unifies your workflow—from storefront management to order fulfillment—in a single app that gets out of your way and lets you focus on growing your business.
 
-## Why this project exists
+- **Built on Base44** — Deploy anywhere, iterate instantly
+- **Developer-first** — Extend with code, not config
+- **Real-time collaboration** — Your team stays in sync
+- **Local-first development** — Build and test offline
 
-Congo Commerce brings essential commerce workflows together in one place, enabling teams to manage operations more efficiently while keeping the product experience flexible and easy to extend.
+## What's included
 
-## Tech stack
+| Feature | Description |
+|---------|-------------|
+| **Inventory Management** | Track stock, manage SKUs, and automate reordering |
+| **Order Processing** | Process orders, track fulfillment, and manage shipping |
+| **Sales Dashboard** | Real-time insights into revenue, customers, and trends |
+| **Team Collaboration** | Shared workflows with role-based access control |
+| **Extensibility** | Open API and SDK for custom integrations |
+| **Local Backend** | Run everything locally during development with Deno |
 
-- React
-- Vite
-- TypeScript / JavaScript
-- Base44 SDK and CLI
-- Tailwind-based UI patterns
+## How it works
 
-## Prerequisites
+```
+┌─────────────────────────────────────────────┐
+│  Your Team                                  │
+│  (Browser)                                  │
+└────────────┬────────────────────────────────┘
+             │
+        ┌────▼────────────────────┐
+        │  Congo Commerce UI      │
+        │  (React + Vite)         │
+        │                         │
+        │  • Inventory            │
+        │  • Orders               │
+        │  • Analytics            │
+        └────┬────────────────────┘
+             │
+        ┌────▼──────────────────────────────┐
+        │  Base44 Backend (Local or Hosted)  │
+        │                                   │
+        │  • Entities & Functions            │
+        │  • Auth & Permissions              │
+        │  • Integrations & APIs             │
+        └────┬──────────────────────────────┘
+             │
+        ┌────▼──────────────────┐
+        │ Your Data & Services  │
+        │ (In-memory or remote) │
+        └───────────────────────┘
+```
 
-Before working with the project locally, make sure you have:
+**During local development:** The Base44 CLI starts both frontend and backend on your machine. You can work offline, test new features, and deploy when ready.
+
+**In production:** Your code syncs through Git and deploys through the Base44 dashboard, keeping your infrastructure simple and your deployments reliable.
+
+## Getting started
+
+### Prerequisites
 
 - Node.js and npm
 - Deno
-- The Base44 CLI
+- Base44 CLI
 
 Install the CLI:
 
@@ -32,21 +71,15 @@ Install the CLI:
 npm install -g base44@latest
 ```
 
-Verify the installation:
-
-```bash
-base44 --help
-```
-
-## Local development
-
-The recommended workflow for this project is to run the app through the Base44 CLI so the local backend is started correctly.
-
-> Important: do not use `npm run dev` as the primary local development command for this Base44 app unless you are intentionally working against a remote hosted backend.
-
 ### One-time setup
 
 ```bash
+# Clone the repo
+git clone https://github.com/michelbuki14/congo-commerce1
+cd congo-commerce1
+
+# Install and link
+npm install
 base44 login
 base44 link
 ```
@@ -57,62 +90,73 @@ base44 link
 base44 dev
 ```
 
-This command starts the local Base44 backend and frontend together. The application URL is printed in the terminal, typically on `http://localhost:5173`.
+Open the URL printed in your terminal (usually `http://localhost:5173`). Your app is now running with a local backend—no need to wait for cloud deployments.
 
-### Frontend-only mode with hosted backend
+### Work against hosted backend
 
 ```bash
 base44 dev --remote
 ```
 
-This is useful for UI-driven work while connected to the live hosted Base44 backend. Note that writes in this mode target production data.
-
-## Project scripts
-
-Common commands used in the repo:
-
-```bash
-npm install
-npm run build
-npm run lint
-npm run typecheck
-npm run test
-```
+Connected to live data? Use this for frontend-only work. ⚠️ Writes go to production.
 
 ## Project structure
 
 ```text
-.
-├── src/                 # Frontend application source
-├── base44/              # Base44 project configuration
-├── public/              # Static assets
-├── scripts/             # Utility and data scripts
-├── package.json         # Dependencies and scripts
-├── vite.config.js       # Vite configuration
-├── .env.local           # Local environment values (do not commit secrets)
-├── README.md            # Project documentation
-├── AGENTS.md            # Local workflow and Base44 guidance
-└── third_party/         # Vendored third-party patches
+congo-commerce1/
+├── src/                   # React application
+│   ├── pages/            # UI pages and routes
+│   ├── components/        # Reusable React components
+│   ├── api/              # Base44 client and API layer
+│   └── styles/           # Tailwind and custom styles
+├── base44/               # Base44 config
+├── public/               # Static assets
+├── scripts/              # Utilities and data scripts
+├── package.json          # Dependencies and scripts
+├── vite.config.js        # Vite configuration
+└── README.md             # You are here
 ```
 
-## Publishing
+## Development workflow
 
-After you push your changes, publish the app from the Base44 dashboard:
+1. **Make your changes** — Edit files in `src/` and see live updates in the browser
+2. **Test locally** — Use `base44 dev` to verify everything works
+3. **Push to Git** — Commit and push your changes to GitHub
+4. **Deploy** — Open `base44 dashboard open` and publish from the dashboard
+
+The repo syncs with Base44 through Git, so your deployment is as simple as a Git push.
+
+## Available commands
 
 ```bash
-base44 dashboard open
+npm run dev          # Frontend only (against remote backend)
+npm run build        # Build for production
+npm run lint         # Check code quality
+npm run typecheck    # TypeScript type checking
+npm run test         # Run tests
 ```
 
-This repository syncs with Base44 through Git, so publishing is handled through the dashboard rather than a direct CLI deploy.
+For the full Base44 experience, always use:
 
-## Notes
-
-- Run `base44 link` after cloning a fresh copy of the project.
-- Local entity data is in-memory only and resets when the local Base44 backend restarts.
-- Never commit secrets or environment values from `.env.local`.
+```bash
+base44 dev           # Local backend + frontend
+base44 dev --remote  # Frontend + hosted backend
+```
 
 ## Resources
 
-- Base44 CLI overview: https://docs.base44.com/developers/references/cli/get-started/overview.md
-- Base44 local development docs: https://docs.base44.com/developers/backend/overview/local-dev/local-development-overview
-- Support: https://app.base44.com/support
+- [Base44 CLI Reference](https://docs.base44.com/developers/references/cli/get-started/overview.md)
+- [Local Development Guide](https://docs.base44.com/developers/backend/overview/local-dev/local-development-overview)
+- [Base44 Support](https://app.base44.com/support)
+
+## Contributing
+
+We welcome contributions! Please read our contribution guidelines and feel free to open issues or submit pull requests.
+
+## License
+
+This project is proprietary software. See the LICENSE file for details.
+
+---
+
+**Built with ❤️ by the Congo Commerce team. Deployed by Base44.**
