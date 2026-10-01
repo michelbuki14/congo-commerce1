@@ -1,5 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
-import { pageUrl } from '../../shared/app.ts';
+import { escapeHtml, pageUrl } from '../../shared/app.ts';
 import { UPGRADE_OFFER, daysSince, loadPlanContext, sellerEmail, sellerPlan, sendSellerOutreach } from '../../shared/sellers.ts';
 import { requireAdmin } from '../../shared/security.ts';
 
@@ -64,7 +64,7 @@ export default async function (req) {
       const message = lines.join('\n');
       const html = `
         <div style="font-family:system-ui,-apple-system,sans-serif;color:#111;line-height:1.6">
-          <p>Bonjour ${seller.owner_name || seller.name || ''},</p>
+          <p>Bonjour ${escapeHtml(seller.owner_name || seller.name || '')},</p>
           <p>Votre boutique n'a pas enregistré de mouvement sur ses commandes depuis <strong>${idle} jours</strong>. Pour vous aider à repartir, nous vous offrons <strong>${UPGRADE_OFFER.percent} % de réduction</strong> sur les ${UPGRADE_OFFER.months} premiers mois d'un plan payant.</p>
           <p>Votre code : <strong style="font-size:18px">${UPGRADE_OFFER.code}</strong><br/>
           Offre valable ${UPGRADE_OFFER.valid_days} jours, jusqu'au ${deadline}.</p>

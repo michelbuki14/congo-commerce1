@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Search, ShoppingBag, Heart, Bell, Store, ShieldCheck, MessageCircle } from 'lucide-react';
+import { Search, ShoppingBag, Heart, Bell, Store, ShieldCheck, MessageCircle, Menu } from 'lucide-react';
 import { useCart } from '@/lib/cart';
 import CurrencyToggle from '@/components/CurrencyToggle';
 import LanguageToggle from '@/components/LanguageToggle';

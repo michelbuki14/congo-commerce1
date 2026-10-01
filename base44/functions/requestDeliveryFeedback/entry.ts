@@ -1,5 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
-import { pageUrl } from '../../shared/app.ts';
+import { escapeHtml, pageUrl } from '../../shared/app.ts';
 import { orderNumber, resolveFulfillment, tenantOf } from '../../shared/fulfillments.ts';
 import { requireAdmin } from '../../shared/security.ts';
 
@@ -26,7 +26,12 @@ async function itemLinks(base44, fulfillment, order) {
       : null;
     links.push({
       title: item?.title || product?.title || 'votre article',
-      url: product?.slug ? pageUrl(`/product/${product.slug}`) : pageUrl('/order-history'),
+      // The slug is seller-controlled: it is encoded as a single path segment
+      // here and attribute-escaped again at the sink, so it can never break out
+      // of the href in the e-mail body.
+      url: product?.slug
+        ? pageUrl(`/product/${encodeURIComponent(String(product.slug))}`)
+        : pageUrl('/order-history'),
     });
   }
   return links;
@@ -122,7 +127,7 @@ export default async function (req) {
         <p>Bonjour ${String(order?.customer_name || '').replace(/[<>&]/g, '')},</p>
         <p>Votre commande <strong>${reference}</strong> vous a été livrée il y a quelques jours. Qu'avez-vous pensé de votre achat ?</p>
         <ul style="padding-left:18px">
-          ${links.map((link) => `<li><a href="${link.url}">${String(link.title).replace(/[<>&]/g, '')}</a></li>`).join('')}
+          ${links.map((link) => `<li><a href="${escapeHtml(link.url)}">${escapeHtml(link.title)}</a></li>`).join('')}
         </ul>
         <p>Votre note aide les autres clients à choisir en confiance.</p>
         <p style="font-size:13px;color:#555">Si quelque chose ne s'est pas bien passé, répondez à cet e-mail : notre équipe vous aidera.</p>

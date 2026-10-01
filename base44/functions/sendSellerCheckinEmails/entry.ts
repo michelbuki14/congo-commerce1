@@ -1,5 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.49';
-import { pageUrl } from '../../shared/app.ts';
+import { escapeHtml, pageUrl } from '../../shared/app.ts';
 import { daysSince, loadPlanContext, sellerEmail, sellerPlan, sendSellerOutreach } from '../../shared/sellers.ts';
 import { requireAdmin } from '../../shared/security.ts';
 
@@ -60,7 +60,7 @@ export default async function (req) {
       const message = lines.join('\n');
       const html = `
         <div style="font-family:system-ui,-apple-system,sans-serif;color:#111;line-height:1.6">
-          <p>Bonjour ${seller.owner_name || seller.name || ''},</p>
+          <p>Bonjour ${escapeHtml(seller.owner_name || seller.name || '')},</p>
           <p>Nous avons remarqué que votre boutique n'a pas enregistré de mouvement sur ses commandes depuis <strong>${idle} jours</strong>. Tout va bien ?</p>
           <p>Ce qui aide le plus nos vendeurs à repartir :</p>
           <ul style="padding-left:18px">
