@@ -67,10 +67,10 @@
     "customer_session"
   ],
   "rls": {
-    "read": {
+    "create": {
       "$or": [
         {
-          "data.tenant_id": "{{user.tenant_id}}"
+          "data.customer_email": "{{user.email}}"
         },
         {
           "user_condition": {
@@ -79,10 +79,14 @@
         }
       ]
     },
-    "create": {
+    "read": {
       "$or": [
         {
-          "data.customer_email": "{{user.email}}"
+          "data.participants": {
+            "$in": [
+              "{{user.email}}"
+            ]
+          }
         },
         {
           "user_condition": {
