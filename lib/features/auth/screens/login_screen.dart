@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/config/app_constants.dart';
-import '../../../core/config/app_theme.dart';
+import '../../../core/providers/providers.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -35,13 +35,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _errorMessage = null;
     });
     
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 1));
-    
-    if (!mounted) return;
-    
-    setState(() => _isLoading = false);
-    context.go('/');
+    try {
+      await ref.read(authNotifierProvider.notifier).login(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        rememberMe: _rememberMe,
+      );
+      
+      if (!mounted) return;
+      
+      context.go('/');
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      });
+    }
   }
 
   @override

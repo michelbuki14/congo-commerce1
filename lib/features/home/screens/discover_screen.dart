@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/providers/providers.dart';
 
 class DiscoverScreen extends ConsumerWidget {
   const DiscoverScreen({super.key});
@@ -33,7 +32,7 @@ class DiscoverScreen extends ConsumerWidget {
               gradient: LinearGradient(
                 colors: [
                   theme.colorScheme.primary,
-                  theme.colorScheme.primary.withOpacity(0.7),
+                  theme.colorScheme.primary.withValues(alpha: 0.7),
                 ],
               ),
               borderRadius: BorderRadius.circular(16),
@@ -44,7 +43,7 @@ class DiscoverScreen extends ConsumerWidget {
                   child: Icon(
                     Icons.play_circle_fill,
                     size: 64,
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                   ),
                 ),
                 Positioned(
@@ -65,7 +64,7 @@ class DiscoverScreen extends ConsumerWidget {
                       Text(
                         'Discover products through video',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: Colors.white.withOpacity(0.85),
+                          color: Colors.white.withValues(alpha: 0.85),
                         ),
                       ),
                     ],
@@ -120,7 +119,7 @@ class _ActivityTile extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 18,
-              backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+              backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
               child: Text(
                 activity.$1.substring(0, 1),
                 style: TextStyle(

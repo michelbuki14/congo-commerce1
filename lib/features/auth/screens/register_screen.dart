@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/config/app_constants.dart';
+import '../../../core/providers/providers.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -21,6 +22,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -36,10 +38,25 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     if (!_formKey.currentState!.validate()) return;
     
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 1));
-    if (!mounted) return;
-    setState(() => _isLoading = false);
-    context.go('/');
+    
+    try {
+      await ref.read(authNotifierProvider.notifier).register(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        firstName: _nameController.text.trim(),
+        lastName: '',
+        phone: _phoneController.text.trim().isNotEmpty ? _phoneController.text.trim() : null,
+      );
+      
+      if (!mounted) return;
+      
+      context.go('/');
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      });
+    }
   }
 
   @override
@@ -72,8 +89,25 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       ),
                 ),
                 const SizedBox(height: 32),
-                
-                // Name
+                 
+                                  // Error message
+                                  if (_errorMessage != null)
+                                    Container(
+                                      padding: const EdgeInsets.all(12),
+                                      margin: const EdgeInsets.only(bottom: 16),
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(context).colorScheme.errorContainer,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        _errorMessage!,
+                                        style: TextStyle(
+                                          color: Theme.of(context).colorScheme.onErrorContainer,
+                                        ),
+                                      ),
+                                    ),
+                 
+                                  // Name
                 TextFormField(
                   controller: _nameController,
                   textCapitalization: TextCapitalization.words,

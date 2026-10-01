@@ -119,7 +119,7 @@ class ProductCard extends ConsumerWidget {
                           minimumSize: const Size(40, 40),
                           backgroundColor: isWishlisted
                               ? theme.colorScheme.primary
-                              : theme.colorScheme.surface.withOpacity(0.9),
+                              : theme.colorScheme.surface.withValues(alpha: 0.9),
                           foregroundColor: isWishlisted
                               ? theme.colorScheme.onPrimary
                               : theme.colorScheme.onSurface,

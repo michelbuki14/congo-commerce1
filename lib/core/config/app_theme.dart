@@ -138,7 +138,7 @@ class AppTheme {
           borderSide: BorderSide(color: destructive, width: 2),
         ),
         labelStyle: GoogleFonts.poppins(fontSize: 14, color: mutedForeground),
-        hintStyle: GoogleFonts.poppins(fontSize: 14, color: mutedForeground.withOpacity(0.7)),
+        hintStyle: GoogleFonts.poppins(fontSize: 14, color: mutedForeground.withValues(alpha: 0.7)),
       ),
       
       chipTheme: ChipThemeData(
@@ -160,7 +160,7 @@ class AppTheme {
       
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: card,
-        indicatorColor: secondary.withOpacity(0.12),
+        indicatorColor: secondary.withValues(alpha: 0.12),
         elevation: 8,
         height: 64,
         labelTextStyle: WidgetStatePropertyAll(

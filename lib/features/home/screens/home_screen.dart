@@ -141,12 +141,16 @@ class _HeroBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 160,
+      // Intrinsic height, not a fixed 160: the fixed box left 112px after
+      // padding for content needing ~140px, which overflowed by 28px at the
+      // narrow test viewport. Min-height keeps the visual weight on wide
+      // screens while letting the column grow when the text needs it to.
+      constraints: const BoxConstraints(minHeight: 160),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
             Theme.of(context).colorScheme.primary,
-            Theme.of(context).colorScheme.primary.withOpacity(0.8),
+            Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -161,14 +165,14 @@ class _HeroBanner extends StatelessWidget {
             child: Icon(
               Icons.shopping_bag,
               size: 120,
-              color: Colors.white.withOpacity(0.1),
+              color: Colors.white.withValues(alpha: 0.1),
             ),
           ),
           Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   'The best of Congo\nand the world',
@@ -181,14 +185,14 @@ class _HeroBanner extends StatelessWidget {
                 Text(
                   'Kinshasa delivery in 2-4 days',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.white.withOpacity(0.85),
+                        color: Colors.white.withValues(alpha: 0.85),
                       ),
                 ),
                 const SizedBox(height: 12),
                 SizedBox(
                   height: 36,
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () => context.go('/products'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
                       foregroundColor: Colors.black,
@@ -237,7 +241,7 @@ class _CategoryStrip extends StatelessWidget {
                   width: 56,
                   height: 56,
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary.withOpacity(0.08),
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Icon(

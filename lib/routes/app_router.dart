@@ -19,22 +19,29 @@ import '../features/cart/screens/checkout_screen.dart';
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/',
+    // ref.listen, not ref.read: read() snapshots the value once when the router
+    // is built, so a later sign-in would never re-run this guard. GoRouter
+    // re-evaluates redirect on every navigation, so listening is what makes
+    // login -> / and logout -> /login actually take effect.
+    refreshListenable: GoRouterRefreshStream(ref),
     redirect: (context, state) {
-      final authState = ref.read(authStateProvider);
+      final authState = ref.read(authNotifierProvider);
       final isAuthRoute = state.matchedLocation == '/login' || state.matchedLocation == '/register';
-      
+
+      // Still restoring a stored session: hold on the splash rather than
+      // flashing the login form at a signed-in user.
       if (authState == AuthState.unknown) {
         return isAuthRoute ? null : '/login';
       }
-      
+
       if (authState == AuthState.unauthenticated) {
         return isAuthRoute ? null : '/login';
       }
-      
+
       if (authState == AuthState.authenticated && isAuthRoute) {
         return '/';
       }
-      
+
       return null;
     },
     routes: [
@@ -143,6 +150,20 @@ class AppShell extends ConsumerWidget {
           );
         }).toList(),
       ),
+    );
+  }
+}
+
+/// Bridges Riverpod provider changes into GoRouter's [refreshListenable].
+///
+/// GoRouter re-runs its `redirect` guard whenever this fires. Without it the
+/// guard only sees the auth value that existed when the router was built, so a
+/// successful sign-in would never navigate away from /login.
+class GoRouterRefreshStream extends ChangeNotifier {
+  GoRouterRefreshStream(Ref ref) {
+    ref.listen<AuthState>(
+      authNotifierProvider,
+      (_, __) => notifyListeners(),
     );
   }
 }
