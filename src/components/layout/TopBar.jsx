@@ -6,12 +6,15 @@ import { useCart } from '@/lib/cart';
 import CurrencyToggle from '@/components/CurrencyToggle';
 import LanguageToggle from '@/components/LanguageToggle';
 import BrandLogo from '@/components/BrandLogo';
+import ThemeToggle from '@/components/ThemeToggle';
+import MobileDrawer from '@/components/MobileDrawer';
 
 export default function TopBar() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { count } = useCart();
   const [term, setTerm] = useState('');
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const submit = (e) => {
     e.preventDefault();
@@ -20,7 +23,18 @@ export default function TopBar() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur pt-[env(safe-area-inset-top)]">
-      <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-3 py-2.5 md:px-6">
+              <button
+            type="button"
+            onClick={() => setDrawerOpen(true)}
+            className="md:hidden flex h-11 w-11 items-center justify-center rounded-full hover:bg-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label="Ouvrir le menu"
+            aria-expanded={false}
+            aria-controls="mobile-drawer"
+          >
+            <Menu className="h-6 w-6" aria-hidden="true" />
+          </button>
+
+<div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-3 py-2.5 md:px-6">
         <Link to="/" className="flex shrink-0 items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md" aria-label="Congo Commerce — accueil">
           <BrandLogo />
         </Link>
@@ -41,6 +55,7 @@ export default function TopBar() {
 
         <CurrencyToggle className="hidden sm:inline-flex" />
         <LanguageToggle className="hidden h-11 sm:block" />
+          <ThemeToggle className="hidden sm:inline-flex" />
 
         <div className="flex items-center gap-1">
           <Link to="/wishlist" aria-label={t('nav.wishlist')} className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
@@ -69,6 +84,8 @@ export default function TopBar() {
           </Link>
         </div>
       </div>
+    
+      <MobileDrawer isOpen={drawerOpen} onClose={() => setDrawerOpen(false)} />
     </header>
   );
 }

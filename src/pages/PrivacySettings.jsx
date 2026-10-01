@@ -83,7 +83,6 @@ export default function PrivacySettings() {
         )}
       </InfoSection>
 
-      <InfoSection title={t('privacySettings.rightsTitle')}>
       <InfoSection title={t('privacySettings.accountTitle')}>
         <p>
           {t('privacySettings.accountText')}
@@ -96,13 +95,14 @@ export default function PrivacySettings() {
               alert(t('privacySettings.deleteSuccess'));
               window.location.href = '/';
             }
-          }
-          }
+          }}
           className="inline-flex items-center gap-1.5 rounded-full border border-destructive px-4 py-2 text-xs font-semibold text-destructive"
         >
           <Trash2 className="h-3.5 w-3.5" /> {t('privacySettings.deleteAccount')}
         </button>
       </InfoSection>
+
+      <InfoSection title={t('privacySettings.rightsTitle')}>
         <p>
           {t('privacySettings.rightsText')}
         </p>
