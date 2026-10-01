@@ -736,7 +736,7 @@ export default {
   emptyTitle: "No orders on this device",
   emptyText: "Your orders appear here after a purchase, or link one with its number above.",
   emptyCta: "View my orders",
-,\n    "noItemsSelected": "No items selected"},
+  noItemsSelected: "No items selected" },
   disputes: {
   title: "Disputes & buyer protection",
   buyerProtection: "If an item never arrives, arrives damaged, or does not match the description, open a dispute. Our team mediates between you and the seller, and a refund can be credited to your wallet.",

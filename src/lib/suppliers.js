@@ -27,8 +27,9 @@ import { round2 } from './format';
  */
 function getEnvVar(key, defaultValue) {
   // @ts-ignore
-  if (typeof importMetaEnv !== 'undefined' && importMetaEnv[key]) {
-    return importMetaEnv[key];
+  const env = (typeof import.meta !== 'undefined' && import.meta.env) || {};
+  if (env[key]) {
+    return env[key];
   }
   return defaultValue;
 }
