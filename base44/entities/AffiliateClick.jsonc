@@ -61,7 +61,7 @@
     "read": {
       "$or": [
         {
-          "data.tenant_id": "{{user.tenant_id}}"
+          "data.tenant_owner_email": "{{user.email}}"
         },
         {
           "user_condition": {
