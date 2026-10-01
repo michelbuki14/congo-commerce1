@@ -3,6 +3,14 @@
 @tailwind utilities;
 
 @layer base {
+  body {
+    overscroll-behavior-y: none;
+  }
+
+  button, a, .bottom-nav-item {
+    -webkit-user-select: none;
+    user-select: none;
+  }
   :root {
     --background: 0 0% 98%;
     --foreground: 0 0% 7%;
@@ -82,6 +90,14 @@
 
 
 @layer base {
+  body {
+    overscroll-behavior-y: none;
+  }
+
+  button, a, .bottom-nav-item {
+    -webkit-user-select: none;
+    user-select: none;
+  }
   * {
     @apply border-border outline-ring/50;
   }

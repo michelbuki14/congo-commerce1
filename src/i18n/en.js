@@ -1158,6 +1158,9 @@ export default {
   courierSub: "Deliveries & earnings",
   adminSpace: "Admin",
   adminSub: "Marketplace management",
+  deleteAccount: "Delete Account",
+  deleteConfirm: "Are you sure you want to delete your account? This action is irreversible.",
+  deleteSuccess: "Your account has been successfully deleted.",
 },
   userProfile: {
   hello: "Hello{{commaName}}",

@@ -1,3 +1,30 @@
+
+// Page transition variants
+const pageVariants = {
+  initial: {
+    opacity: 0,
+    x: 20,
+  },
+  animate: {
+    opacity: 1,
+    x: 0,
+    transition: {
+      type: "spring",
+      stiffness: 300,
+      damping: 20,
+    },
+  },
+  exit: {
+    opacity: 0,
+    x: -20,
+    transition: {
+      type: "spring",
+      stiffness: 300,
+      damping: 20,
+    },
+  },
+};
+
 import { motion, AnimatePresence } from 'framer-motion';
 import React, { useEffect } from 'react';
 import { Outlet } from 'react-router-dom';

@@ -1161,6 +1161,9 @@ export default {
   courierSub: "Courses & gains",
   adminSpace: "Administration",
   adminSub: "Pilotage de la place de marché",
+  deleteAccount: "Supprimer le compte",
+  deleteConfirm: "Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible.",
+  deleteSuccess: "Votre compte a été supprimé avec succès.",
 },
   userProfile: {
   hello: "Bonjour{{commaName}}",
