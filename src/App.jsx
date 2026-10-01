@@ -214,6 +214,7 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit">
+      <Routes>
       <Route element={<AppLayout />}>
         <Route path="/" element={<Home />} />
         <Route path="/discover" element={<Discover />} />
@@ -376,9 +377,10 @@ const AuthenticatedApp = () => {
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/oauth/consent" element={<OAuthCons</motion.div>/>
+      <Route path="/oauth/consent" element={<OAuthConsent />} />
       <Route path="*" element={<PageNotFound />} />
-    </Routes>
+      </Routes>
+    </motion.div>
   );
 };
 

@@ -1,11 +1,11 @@
-import React from 'react'
+import React from 'react';
 import { useEffect } from 'react';
-import ReactDOM from 'react-dom/client'
-import App from '@/App.jsx'
-import '@/index.css'
-import '@/i18n'
+import ReactDOM from 'react-dom/client';
+import App from '@/App.jsx';
+import '@/index.css';
+import '@/i18n';
 
-ReactDOM.createRoot(document.getElementById('root')).render(
+function Root() {
   useEffect(() => {
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
       document.documentElement.classList.add('dark');
@@ -13,5 +13,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       document.documentElement.classList.remove('dark');
     }
   }, []);
-  <App />
-)
+
+  return <App />;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<Root />);
