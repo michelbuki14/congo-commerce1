@@ -1,14 +1,26 @@
 # Congo Commerce
 
-Congo Commerce is a Base44 app for managing commerce workflows, storefront operations, and related business tooling. This repository contains the app source for the frontend and Base44 integration layer.
+Congo Commerce is a modern commerce platform built on Base44, designed to streamline storefront operations, sales workflows, and business tooling in a single app experience.
 
 ## Overview
 
-This project is built as a Base44 application using React + Vite, with Base44-managed backend support and local development through the Base44 CLI.
+This repository contains the source for the Congo Commerce application, including the React + Vite frontend and the Base44-powered integration layer. It is built for rapid iteration, local development, and deployment through the Base44 platform.
+
+## Why this project exists
+
+Congo Commerce brings essential commerce workflows together in one place, enabling teams to manage operations more efficiently while keeping the product experience flexible and easy to extend.
+
+## Tech stack
+
+- React
+- Vite
+- TypeScript / JavaScript
+- Base44 SDK and CLI
+- Tailwind-based UI patterns
 
 ## Prerequisites
 
-Before you start, make sure you have:
+Before working with the project locally, make sure you have:
 
 - Node.js and npm
 - Deno
@@ -20,7 +32,7 @@ Install the CLI:
 npm install -g base44@latest
 ```
 
-Verify it works:
+Verify the installation:
 
 ```bash
 base44 --help
@@ -28,7 +40,9 @@ base44 --help
 
 ## Local development
 
-Important: do not run `npm run dev` directly for this Base44 app unless you are only working against a remote hosted backend. The local Base44 backend must be started through the CLI.
+The recommended workflow for this project is to run the app through the Base44 CLI so the local backend is started correctly.
+
+> Important: do not use `npm run dev` as the primary local development command for this Base44 app unless you are intentionally working against a remote hosted backend.
 
 ### One-time setup
 
@@ -37,23 +51,25 @@ base44 login
 base44 link
 ```
 
-### Start the app locally
+### Run locally
 
 ```bash
 base44 dev
 ```
 
-This starts the local Base44 backend and frontend together. The frontend URL will be printed in the terminal, usually something like `http://localhost:5173`.
+This command starts the local Base44 backend and frontend together. The application URL is printed in the terminal, typically on `http://localhost:5173`.
 
-### Frontend only against a hosted backend
+### Frontend-only mode with hosted backend
 
 ```bash
 base44 dev --remote
 ```
 
-Use this when you want to work on the UI while using the live hosted Base44 backend. Note that writes in this mode go to production data.
+This is useful for UI-driven work while connected to the live hosted Base44 backend. Note that writes in this mode target production data.
 
-## Available project scripts
+## Project scripts
+
+Common commands used in the repo:
 
 ```bash
 npm install
@@ -68,33 +84,35 @@ npm run test
 ```text
 .
 ├── src/                 # Frontend application source
-├── base44/              # Base44 configuration
+├── base44/              # Base44 project configuration
 ├── public/              # Static assets
-├── scripts/             # Utility scripts
-├── package.json         # Project scripts and dependencies
+├── scripts/             # Utility and data scripts
+├── package.json         # Dependencies and scripts
 ├── vite.config.js       # Vite configuration
-├── .env.local           # Local environment variables (do not commit secrets)
+├── .env.local           # Local environment values (do not commit secrets)
 ├── README.md            # Project documentation
-└── AGENTS.md            # Agent workflow and Base44 guidance
+├── AGENTS.md            # Local workflow and Base44 guidance
+└── third_party/         # Vendored third-party patches
 ```
 
-## Publishing changes
+## Publishing
 
-After pushing your changes to GitHub, open the Base44 dashboard and publish the app:
+After you push your changes, publish the app from the Base44 dashboard:
 
 ```bash
 base44 dashboard open
 ```
 
-This repository syncs with Base44 through Git, so publishing is done through the dashboard rather than a direct CLI deploy.
+This repository syncs with Base44 through Git, so publishing is handled through the dashboard rather than a direct CLI deploy.
 
 ## Notes
 
-- `base44 link` is required for each fresh clone.
+- Run `base44 link` after cloning a fresh copy of the project.
 - Local entity data is in-memory only and resets when the local Base44 backend restarts.
-- Do not commit secrets or `.env.local` contents.
+- Never commit secrets or environment values from `.env.local`.
 
-## References
+## Resources
 
-- Base44 CLI docs: https://docs.base44.com/developers/references/cli/get-started/overview.md
+- Base44 CLI overview: https://docs.base44.com/developers/references/cli/get-started/overview.md
 - Base44 local development docs: https://docs.base44.com/developers/backend/overview/local-dev/local-development-overview
+- Support: https://app.base44.com/support
