@@ -26,8 +26,9 @@ import { round2 } from './format';
  */
 function getEnvVar(key, defaultValue) {
   // @ts-ignore
-  if (typeof importMetaEnv !== 'undefined' && importMetaEnv[key]) {
-    return importMetaEnv[key];
+  const env = (typeof import.meta !== 'undefined' && import.meta.env) || {};
+  if (env[key]) {
+    return env[key];
   }
   // For Deno (functions) we might need a different approach, but this file is frontend-only.
   // If running in Deno, we would use Deno.env.get(key).
