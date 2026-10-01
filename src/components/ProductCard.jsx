@@ -23,8 +23,8 @@ export default function ProductCard({ product }) {
   const isIntl = product.source_type === 'international_supplier';
 
   return (
-    <div className="group relative overflow-hidden rounded-xl border border-border bg-card">
-      <Link to={`/product/${product.slug || product.id}`} className="block">
+    <article className="group relative overflow-hidden rounded-xl border border-border bg-card">
+      <Link to={`/product/${product.slug || product.id}`} className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-xl" aria-label={`${product.title}, ${format(product.price_usd)}`}>
         <div className="relative aspect-square w-full overflow-hidden bg-secondary">
           <Image
             src={product.images?.[0]}
@@ -78,11 +78,11 @@ export default function ProductCard({ product }) {
         type="button"
         aria-label={t('product.addToWishlist')}
         onClick={() => setLiked(toggleWishlist(product.id).includes(product.id))}
-        className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-card/90 shadow-sm"
+        className="absolute right-1.5 top-1.5 flex h-10 w-10 items-center justify-center rounded-full bg-card/90 shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
-        <Heart className={`h-4 w-4 ${liked ? 'fill-primary text-primary' : 'text-foreground'}`} />
+        <Heart className={`h-5 w-5 ${liked ? 'fill-primary text-primary' : 'text-foreground'}`} />
       </button>
 
-    </div>
+    </article>
   );
 }

@@ -18,7 +18,7 @@ export default function BottomNav() {
   const { count } = useCart();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card/95 backdrop-blur md:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card/95 backdrop-blur md:hidden" aria-label="Navigation principale">
       <div className="grid grid-cols-5">
         {ITEMS.map((item) => {
           const Icon = item.icon;
@@ -27,16 +27,19 @@ export default function BottomNav() {
             <Link
               key={item.path}
               to={item.path}
-              className={`relative flex flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition-colors ${
+              aria-current={active ? 'page' : undefined}
+              aria-label={t(item.key)}
+              className={`relative flex min-h-[48px] flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring ${
                 active ? 'text-primary' : 'text-muted-foreground'
               }`}
             >
               <Icon className="h-5 w-5" strokeWidth={active ? 2.4 : 1.8} />
               {item.badge && count > 0 && (
-                <span className="absolute right-[22%] top-0.5 min-w-[16px] rounded-full bg-primary px-1 text-[9px] leading-4 text-primary-foreground">
+                <span className="absolute right-[22%] top-1.5 min-w-[18px] rounded-full bg-primary px-1 text-[9px] leading-5 text-primary-foreground">
                   {count}
                 </span>
               )}
+              <span className="sr-only">{t(item.key)}</span>
               {t(item.key)}
             </Link>
           );

@@ -182,32 +182,35 @@ export default function ProductDetail() {
             {view3d && product.model_3d_url ? (
               <Product3DViewer modelUrl={product.model_3d_url} fallbackImage={product.images?.[activeImage]} title={product.title} />
             ) : (
-              <Image src={product.images?.[activeImage]} alt={product.title} className="h-full w-full object-cover" />
+              <Image src={product.images?.[activeImage]} alt={`${product.title} - image principale`} className="h-full w-full object-cover" />
             )}
             <button
               type="button"
               onClick={() => setLiked(toggleWishlist(product.id).includes(product.id))}
-              className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-card/90"
+              className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-card/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               aria-label={t('productDetail.favorite')}
             >
-              <Heart className={`h-5 w-5 ${liked ? 'fill-primary text-primary' : ''}`} />
+              <Heart className={`h-5 w-5 ${liked ? 'fill-primary text-primary' : ''}`} aria-hidden="true" />
             </button>
             {product.is_flash_sale && (
-              <span className="absolute left-3 top-3 flex items-center gap-1 rounded-full bg-amber-400 px-2.5 py-1 text-[11px] font-bold text-amber-950">
-                <Zap className="h-3 w-3" /> {t('productDetail.flashSale')}
+              <span className="absolute left-3 top-3 flex items-center gap-1 rounded-full bg-amber-400 px-2.5 py-1 text-[11px] font-bold text-amber-950" aria-label="Flash sale">
+                <Zap className="h-3 w-3" aria-hidden="true" /> {t('productDetail.flashSale')}
               </span>
             )}
           </div>
           {product.images?.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto">
+            <div className="flex gap-2 overflow-x-auto" role="tablist" aria-label="Miniatures du produit">
               {product.images.map((img, i) => (
                 <button
                   key={img + i}
                   type="button"
+                  role="tab"
+                  aria-selected={i === activeImage}
+                  aria-label={`${t('productDetail.image')} ${i + 1} sur ${product.images.length}`}
                   onClick={() => setActiveImage(i)}
-                  className={`h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 ${i === activeImage ? 'border-primary' : 'border-transparent'}`}
+                  className={`min-h-16 min-w-16 shrink-0 overflow-hidden rounded-lg border-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${i === activeImage ? 'border-primary' : 'border-transparent'}`}
                 >
-                  <Image src={img} alt="" className="h-full w-full object-cover" />
+                  <Image src={img} alt={`${product.title} - vue ${i + 1}`} className="h-full w-full object-cover" />
                 </button>
               ))}
             </div>
@@ -257,13 +260,15 @@ export default function ProductDetail() {
           {(product.variants || []).map((v) => (
             <div key={v.name}>
               <p className="mb-1.5 text-xs font-semibold text-muted-foreground">{v.name}</p>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2" role="group" aria-label={v.name}>
                 {(v.options || []).map((opt) => (
                   <button
                     key={opt}
                     type="button"
+                    aria-pressed={selection[v.name] === opt}
+                    aria-label={`${v.name} ${opt}`}
                     onClick={() => setSelection((s) => ({ ...s, [v.name]: opt }))}
-                    className={`rounded-full border px-3.5 py-1.5 text-xs font-medium ${
+                    className={`rounded-full border px-3.5 py-1.5 text-xs font-medium min-h-10 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                       selection[v.name] === opt ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-card'
                     }`}
                   >
@@ -286,15 +291,17 @@ export default function ProductDetail() {
               type="button"
               disabled={outOfStock}
               onClick={() => add(false)}
-              className="flex flex-1 items-center justify-center gap-2 rounded-full border border-primary py-3 text-sm font-semibold text-primary disabled:opacity-40"
+              className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full border border-primary py-3 text-sm font-semibold text-primary disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label={t('productDetail.addToCart')}
             >
-              <ShoppingBag className="h-4 w-4" /> {t('productDetail.addToCart')}
+              <ShoppingBag className="h-4 w-4" aria-hidden="true" /> {t('productDetail.addToCart')}
             </button>
             <button
               type="button"
               disabled={outOfStock}
               onClick={() => add(true)}
-              className="flex-1 rounded-full bg-primary py-3 text-sm font-semibold text-primary-foreground disabled:opacity-40"
+              className="flex min-h-11 flex-1 items-center justify-center rounded-full bg-primary py-3 text-sm font-semibold text-primary-foreground disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label={t('productDetail.buyNow')}
             >
               {t('productDetail.buyNow')}
             </button>

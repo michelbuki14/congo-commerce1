@@ -7,7 +7,7 @@ import React from 'react';
  */
 export default function MobileActionBar({ children }) {
   return (
-    <div className="fixed inset-x-0 bottom-[54px] z-30 border-t border-border bg-card/95 px-3 py-2 backdrop-blur md:hidden">
+    <div className="fixed inset-x-0 bottom-[64px] z-30 border-t border-border bg-card/95 px-3 py-2.5 backdrop-blur md:hidden" role="region" aria-label="Barre d'actions mobile">
       <div className="mx-auto flex w-full max-w-6xl items-center gap-2">{children}</div>
     </div>
   );

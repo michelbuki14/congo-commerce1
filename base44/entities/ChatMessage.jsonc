@@ -25,6 +25,12 @@
     "body": {
       "type": "string",
       "maxLength": 2000
+    },
+    "tenant_id": {
+      "type": "string"
+    },
+    "tenant_owner_email": {
+      "type": "string"
     }
   },
   "required": [
@@ -36,7 +42,7 @@
     "read": {
       "$or": [
         {
-          "data.participants": "{{user.email}}"
+          "data.tenant_id": "{{user.tenant_id}}"
         },
         {
           "user_condition": {

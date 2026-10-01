@@ -53,6 +53,12 @@
     "canceledAt": {
       "type": "string",
       "format": "date-time"
+    },
+    "tenant_id": {
+      "type": "string"
+    },
+    "tenant_owner_email": {
+      "type": "string"
     }
   },
   "required": [
@@ -63,10 +69,7 @@
     "read": {
       "$or": [
         {
-          "data.appUserId": "{{user.id}}"
-        },
-        {
-          "created_by_id": "{{user.id}}"
+          "data.tenant_id": "{{user.tenant_id}}"
         },
         {
           "user_condition": {

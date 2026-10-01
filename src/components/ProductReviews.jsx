@@ -82,11 +82,11 @@ export default function ProductReviews({ product, onChanged }) {
   const canReview = !entitlement.loading && !!entitlement.order && !entitlement.alreadyReviewed;
 
   return (
-    <section className="space-y-3">
+    <section className="space-y-3" aria-labelledby="reviews-heading">
       <div className="flex items-center justify-between">
-        <h2 className="text-base font-bold">Avis clients ({reviews.length})</h2>
+        <h2 id="reviews-heading" className="text-base font-bold">Avis clients ({reviews.length})</h2>
         {canReview && (
-          <button type="button" onClick={() => setOpen((o) => !o)} className="text-xs font-semibold text-primary">
+          <button type="button" onClick={() => setOpen((o) => !o)} className="text-xs font-semibold text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded">
             {open ? 'Annuler' : 'Écrire un avis'}
           </button>
         )}
@@ -94,7 +94,7 @@ export default function ProductReviews({ product, onChanged }) {
 
       {!entitlement.loading && !canReview && (
         <p className="flex items-center gap-1.5 rounded-xl border border-dashed border-border bg-card p-3 text-xs text-muted-foreground">
-          <PackageCheck className="h-3.5 w-3.5 shrink-0" />
+          <PackageCheck className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           {entitlement.alreadyReviewed
             ? 'Vous avez déjà publié un avis sur cet article.'
             : 'Seuls les clients ayant reçu cet article peuvent publier un avis.'}
@@ -103,37 +103,43 @@ export default function ProductReviews({ product, onChanged }) {
 
       {open && canReview && (
         <form onSubmit={submit} className="space-y-3 rounded-xl border border-border bg-card p-3">
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-[11px] text-muted-foreground" id="review-form-desc">
             Achat vérifié — commande {entitlement.order.order_number}
           </p>
           <div>
             <p className="mb-1 text-xs font-semibold text-muted-foreground">Votre note</p>
-            <div className="flex gap-1">
+            <div className="flex gap-1" role="radiogroup" aria-labelledby="review-form-desc" aria-label="Choisir une note">
               {[1, 2, 3, 4, 5].map((n) => (
-                <button key={n} type="button" onClick={() => setRating(n)} aria-label={`${n} étoiles`}>
-                  <Star className={`h-6 w-6 ${n <= rating ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/40'}`} />
+                <button key={n} type="button" role="radio" aria-checked={rating === n} aria-label={`${n} étoiles`} onClick={() => setRating(n)} className="p-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded">
+                  <Star className={`h-6 w-6 ${n <= rating ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/40'}`} aria-hidden="true" />
                 </button>
               ))}
             </div>
           </div>
+          <label className="sr-only" htmlFor="review-name">Votre nom</label>
           <input
+            id="review-name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Votre nom"
             className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
+            required
           />
+          <label className="sr-only" htmlFor="review-comment">Commentaire</label>
           <textarea
+            id="review-comment"
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             rows={3}
             placeholder="Qualité, taille, délai de livraison…"
             className="w-full rounded-lg border border-border bg-background p-3 text-sm"
+            required
           />
-          {error && <p className="text-xs text-destructive">{error}</p>}
+          {error && <p role="alert" className="text-xs text-destructive">{error}</p>}
           <button
             type="submit"
             disabled={saving}
-            className="w-full rounded-full bg-primary py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+            className="w-full rounded-full bg-primary py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             {saving ? 'Envoi…' : 'Publier mon avis'}
           </button>
@@ -149,17 +155,17 @@ export default function ProductReviews({ product, onChanged }) {
       ) : reviews.length ? (
         <div className="space-y-2">
           {reviews.map((r) => (
-            <div key={r.id} className="rounded-xl border border-border bg-card p-3">
+            <article key={r.id} className="rounded-xl border border-border bg-card p-3">
               <div className="flex items-center justify-between">
                 <p className="flex items-center gap-1 text-sm font-semibold">
                   {r.customer_name}
-                  {r.verified_purchase && r.order_number && <BadgeCheck className="h-3.5 w-3.5 text-emerald-600" />}
+                  {r.verified_purchase && r.order_number && <BadgeCheck className="h-3.5 w-3.5 text-emerald-600" aria-label="Achat vérifié" />}
                 </p>
-                <span className="text-[11px] text-muted-foreground">{timeAgo(r.created_date)}</span>
+                <time className="text-[11px] text-muted-foreground" dateTime={r.created_date}>{timeAgo(r.created_date)}</time>
               </div>
               <RatingStars rating={r.rating} />
               {r.comment && <p className="mt-1.5 text-sm text-muted-foreground">{r.comment}</p>}
-            </div>
+            </article>
           ))}
         </div>
       ) : (

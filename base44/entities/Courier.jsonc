@@ -58,6 +58,12 @@
     "is_mock": {
       "type": "boolean",
       "default": true
+    },
+    "tenant_id": {
+      "type": "string"
+    },
+    "tenant_owner_email": {
+      "type": "string"
     }
   },
   "required": [
@@ -68,7 +74,7 @@
     "read": {
       "$or": [
         {
-          "data.email": "{{user.email}}"
+          "data.tenant_id": "{{user.tenant_id}}"
         },
         {
           "user_condition": {
