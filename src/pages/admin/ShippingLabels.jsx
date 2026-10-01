@@ -76,19 +76,19 @@ export default function ShippingLabelsPage() {
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder={t('search')} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-10" />
+          <Input placeholder={t('common.search')} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-10" />
         </div>
         <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
-          <option value="">{t('allStatus')}</option>
+          <option value="">{t('common.allStatus')}</option>
           <option value="pending">Pending</option>
           <option value="generated">Generated</option>
           <option value="printed">Printed</option>
           <option value="in_transit">In Transit</option>
           <option value="delivered">Delivered</option>
         </select>
-        <Button onClick={load} variant="outline" size="sm" className="gap-1.5"><RefreshCw className="h-4 w-4" /> {t('refresh')}</Button>
+        <Button onClick={load} variant="outline" size="sm" className="gap-1.5"><RefreshCw className="h-4 w-4" /> {t('common.refresh')}</Button>
         <Button onClick={handlePrintAll} disabled={saving || !labels.filter((l) => l.status !== 'printed' && l.status !== 'delivered').length} className="gap-1.5">
-          <Printer className="h-4 w-4" /> {t('printAll')}
+          <Printer className="h-4 w-4" /> {t('common.printAll')}
         </Button>
       </div>
 
@@ -120,23 +120,23 @@ export default function ShippingLabelsPage() {
             )}
 
             <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-              <span>{t('generated')}: {formatDate(label.generated_at)}</span>
+              <span>{t('common.generated')}: {formatDate(label.generated_at)}</span>
               <span>{label.package?.items_count || 0} articles · {label.package?.weight_kg || 0}kg</span>
             </div>
 
             <div className="flex gap-2 pt-1">
               <Button size="sm" variant="outline" onClick={() => handlePrint([label.id])} disabled={saving} className="flex-1 gap-1.5">
-                <Printer className="h-3 w-3" /> {t('print')}
+                <Printer className="h-3 w-3" /> {t('common.print')}
               </Button>
               {label.label_url && (
                 <Button size="sm" variant="outline" onClick={() => window.open(label.label_url, '_blank')} className="flex-1 gap-1.5">
-                  <Download className="h-3 w-3" /> {t('download')}
+                  <Download className="h-3 w-3" /> {t('common.download')}
                 </Button>
               )}
             </div>
           </div>
         ))}
-        {!filtered.length && <p className="text-sm text-muted-foreground md:col-span-3">{t('noLabels', 'Aucune étiquette')}</p>}
+        {!filtered.length && <p className="text-sm text-muted-foreground md:col-span-3">{t('common.noLabels', 'Aucune étiquette')}</p>}
       </div>
     </div>
   );

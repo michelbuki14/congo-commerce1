@@ -37,7 +37,7 @@ export default function ChinaWarehousePanel() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-bold">{t('chinaWarehouse.receipts', 'Réceptions Chine')}</h2>
-        <button type="button" onClick={load} className="rounded-full border border-border bg-card px-3 py-1 text-xs">{t('refresh')}</button>
+        <button type="button" onClick={load} className="rounded-full border border-border bg-card px-3 py-1 text-xs">{t('common.refresh')}</button>
       </div>
       {errors.load && <p className="text-xs text-destructive">{errors.load}</p>}
       <div className="space-y-2">
@@ -52,21 +52,21 @@ export default function ChinaWarehousePanel() {
             </div>
             <div className="mt-2 flex flex-wrap gap-3 text-xs text-muted-foreground">
               <span className="flex items-center gap-1"><Package className="h-3 w-3" /> {po.items?.length || 0} articles</span>
-              <span>{t('cost')}: {po.total_cost_usd ? `$${Number(po.total_cost_usd).toFixed(2)}` : '—'}</span>
-              <span>{t('expected')}: {po.expected_date || '—'}</span>
+              <span>{t('common.cost')}: {po.total_cost_usd ? `$${Number(po.total_cost_usd).toFixed(2)}` : '—'}</span>
+              <span>{t('common.expected')}: {po.expected_date || '—'}</span>
             </div>
             <div className="mt-2 flex gap-2">
               {po.status === 'received' && (
                 <button type="button" onClick={async () => {
                   await base44.functions.invoke('chinaSourcing', { action: 'inspect', receipt_id: po.id, status: 'approved', notes: 'Qualité OK' });
                   load();
-                }} className="rounded-full bg-emerald-600 px-3 py-1 text-[10px] font-semibold text-white">{t('approve')}</button>
+                }} className="rounded-full bg-emerald-600 px-3 py-1 text-[10px] font-semibold text-white">{t('common.approve')}</button>
               )}
               {po.status === 'received' && (
                 <button type="button" onClick={async () => {
                   await base44.functions.invoke('chinaSourcing', { action: 'inspect', receipt_id: po.id, status: 'rejected', notes: 'Qualité défectueuse' });
                   load();
-                }} className="rounded-full bg-destructive px-3 py-1 text-[10px] font-semibold text-white">{t('reject')}</button>
+                }} className="rounded-full bg-destructive px-3 py-1 text-[10px] font-semibold text-white">{t('common.reject')}</button>
               )}
             </div>
           </div>

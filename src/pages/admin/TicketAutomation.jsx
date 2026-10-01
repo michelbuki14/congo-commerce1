@@ -85,10 +85,10 @@ export default function TicketAutomation() {
 
       <div className="flex flex-wrap gap-2">
         <Button onClick={checkSLA} disabled={saving} variant="outline" className="gap-1.5">
-          <AlertTriangle className="h-4 w-4" /> {t('checkSLA', 'Vérifier SLA')}
+          <AlertTriangle className="h-4 w-4" /> {t('common.checkSLA', 'Vérifier SLA')}
         </Button>
         <select value={filter} onChange={(e) => setFilter(e.target.value)} className="h-10 rounded-lg border border-border bg-background px-3 text-sm">
-          <option value="">{t('all')}</option>
+          <option value="">{t('common.all')}</option>
           <option value="open">Open</option>
           <option value="routed">Routed</option>
           <option value="escalated">Escalated</option>
@@ -115,13 +115,13 @@ export default function TicketAutomation() {
             {ticket.status === 'open' && (
               <div className="mt-2 flex gap-2">
                 <Button size="sm" variant="outline" onClick={() => autoRoute(ticket.id)} disabled={saving} className="gap-1.5">
-                  <Zap className="h-3 w-3" /> {t('autoRoute', 'Routage auto')}
+                  <Zap className="h-3 w-3" /> {t('common.autoRoute', 'Routage auto')}
                 </Button>
               </div>
             )}
           </div>
         ))}
-        {!tickets.length && <p className="text-sm text-muted-foreground">{t('noTickets', 'Aucun ticket')}</p>}
+        {!tickets.length && <p className="text-sm text-muted-foreground">{t('common.noTickets', 'Aucun ticket')}</p>}
       </div>
     </div>
   );

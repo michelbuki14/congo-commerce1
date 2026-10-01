@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from 'react-router-dom';
-import { X, LayoutGrid, Compass, ShoppingBag, User, Heart, MessageCircle, Bell, Store, ShieldCheck, Menu } from 'lucide-react';
+import { X, LayoutGrid, Compass, ShoppingBag, User, Heart, MessageCircle, Bell, Store, ShieldCheck } from 'lucide-react';
 import { useCart } from '@/lib/cart';
 
 const ITEMS = [

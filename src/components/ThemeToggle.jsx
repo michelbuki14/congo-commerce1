@@ -1,30 +1,35 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Sun, Moon } from 'lucide-react';
 
 export default function ThemeToggle({ className = '' }) {
   const { t } = useTranslation();
+  const [isDark, setIsDark] = useState(true);
 
+  // Read the stored preference (falling back to whatever the document already
+  // has) and keep React in sync with it, so the pressed state actually updates
+  // when the visitor switches.
   useEffect(() => {
     const saved = localStorage.getItem('theme');
-    if (saved) {
-      document.documentElement.classList.toggle('dark', saved === 'dark');
-    }
+    const dark = saved
+      ? saved === 'dark'
+      : document.documentElement.classList.contains('dark');
+    setIsDark(dark);
+    document.documentElement.classList.toggle('dark', dark);
   }, []);
 
-  const isDark = document.documentElement.classList.contains('dark');
-
-  const toggleTheme = () => {
-    const newDark = !isDark;
-    document.documentElement.classList.toggle('dark', newDark);
-    localStorage.setItem('theme', newDark ? 'dark' : 'light');
+  // Explicit set, not a toggle: each button states which theme it selects.
+  const applyTheme = (dark) => {
+    setIsDark(dark);
+    document.documentElement.classList.toggle('dark', dark);
+    localStorage.setItem('theme', dark ? 'dark' : 'light');
   };
 
   return (
     <div className={`inline-flex items-center rounded-full border border-border bg-card p-0.5 text-xs font-semibold ${className}`} role="group" aria-label={t('theme.label')}>
       <button
         type="button"
-        onClick={toggleTheme}
+        onClick={() => applyTheme(false)}
         aria-pressed={!isDark}
         aria-label={t('theme.light')}
         className={`rounded-full px-2.5 py-1 transition-colors ${!isDark ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}
@@ -34,7 +39,7 @@ export default function ThemeToggle({ className = '' }) {
       </button>
       <button
         type="button"
-        onClick={toggleTheme}
+        onClick={() => applyTheme(true)}
         aria-pressed={isDark}
         aria-label={t('theme.dark')}
         className={`rounded-full px-2.5 py-1 transition-colors ${isDark ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'}`}

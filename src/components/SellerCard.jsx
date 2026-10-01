@@ -10,6 +10,12 @@ import { compactNumber } from '@/lib/format';
 export default function SellerCard({ seller }) {
   const { t } = useTranslation();
   const [sales, setSales] = useState(Number(seller.total_sales) || 0);
+  // A rating is only shown when real reviews back it. `products_count` was
+  // being rendered as the review count, which read as a rated shop with zero
+  // reviews. Shops without reviews are labelled the way the trust model
+  // already describes them (see lib/vendorRatings.js trustLevel).
+  const rating = Number(seller.rating) || 0;
+  const reviewsCount = Number(seller.reviews_count) || 0;
 
   // Social proof: the seller's own counter when set, otherwise the units sold
   // across their published catalogue.
@@ -51,7 +57,11 @@ export default function SellerCard({ seller }) {
           <span>{t('sellerCard.followers', { count: compactNumber(seller.followers_count || 0) })}</span>
         </div>
         <div className="flex items-center gap-2">
-          <RatingStars rating={seller.rating || 0} count={seller.products_count || 0} />
+          {reviewsCount > 0 ? (
+            <RatingStars rating={rating} count={reviewsCount} />
+          ) : (
+            <span className="text-[11px] text-muted-foreground">{t('rating.new')}</span>
+          )}
           {sales > 0 && <span className="text-[11px] text-muted-foreground">{t('sellerCard.sales', { count: compactNumber(sales) })}</span>}
         </div>
       </div>
