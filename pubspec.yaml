@@ -9,6 +9,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  # Required for MaterialApp localizations: MaterialLocalizations.of() returns
+  # null for any locale DefaultMaterialLocalizations does not cover (fr, ln,
+  # sw), which crashes every TextField subtree at first build.
+  flutter_localizations:
+    sdk: flutter
   
   # State Management
   flutter_riverpod: ^2.6.1

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/config/app_constants.dart';
@@ -34,6 +35,13 @@ class CongoCommerceApp extends ConsumerWidget {
       supportedLocales: AppConstants.supportedLocales
           .map((code) => Locale(code))
           .toList(),
+      // Without these, MaterialLocalizations.of() is null for fr/ln/sw and
+      // every TextField throws during first build.
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
     );
   }
 }
