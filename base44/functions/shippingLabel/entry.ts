@@ -2,6 +2,48 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 
 const fail = (error, status = 400) => Response.json({ error }, { status });
 const ESC = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const lower = (v) => String(v ?? '').trim().toLowerCase();
+const isAdmin = (user) => String(user?.role || '') === 'admin';
+
+/**
+ * A label carries the recipient's name, street address and phone, and it
+ * decides what the warehouse prints — so it may only be touched by a platform
+ * admin or by a partner bound to the order behind it (the selling shop, the
+ * courier carrying it, or the tenant that sold it). Order numbers and label ids
+ * are both caller-supplied and enumerable, so ownership is proved from the
+ * stored records here, never from the request body.
+ */
+async function mayManageOrder(db, user, orderNumber) {
+  if (isAdmin(user)) return true;
+  const email = lower(user?.email);
+  if (!email || !orderNumber) return false;
+  const rows = await db.entities.Order
+    .filter({ order_number: orderNumber }, '-created_date', 1)
+    .catch(() => []);
+  const order = rows?.[0];
+  if (!order) return false;
+  if (lower(order.tenant_owner_email) === email) return true;
+
+  const fulfillments = await db.entities.FulfillmentOrder
+    .filter({ order_id: order.id }, '-created_date', 5)
+    .catch(() => []);
+  if ((fulfillments || []).some((f) =>
+    lower(f.seller_email) === email ||
+    lower(f.courier_email) === email ||
+    lower(f.tenant_owner_email) === email)) return true;
+
+  // A shop owner whose Seller record matches one of the order's items.
+  const sellers = await db.entities.Seller.filter({ email: user.email }, 'name', 5).catch(() => []);
+  const names = (sellers || []).map((s) => String(s.name || '').trim()).filter(Boolean);
+  return names.length > 0 && (order.items || []).some((i) => names.includes(String(i.seller_name || '').trim()));
+}
+
+async function mayManageLabel(db, user, label) {
+  if (!label) return false;
+  if (isAdmin(user)) return true;
+  if (lower(label.tenant_owner_email) === lower(user?.email)) return true;
+  return mayManageOrder(db, user, label.order_number);
+}
 
 export default async function(req: Request): Promise<Response> {
   try {
@@ -15,9 +57,9 @@ export default async function(req: Request): Promise<Response> {
 
     switch (action) {
       case 'generate': return generateLabel(db, body, user);
-      case 'list': return listLabels(db, body);
-      case 'get': return getLabel(db, body);
-      case 'print': return printLabels(db, body);
+      case 'list': return listLabels(db, body, user);
+      case 'get': return getLabel(db, body, user);
+      case 'print': return printLabels(db, body, user);
       case 'update-status': return updateStatus(db, body, user);
       default: return fail('Action invalide');
     }
@@ -30,6 +72,7 @@ export default async function(req: Request): Promise<Response> {
 async function generateLabel(db, body, user) {
   const { order_number, fulfillment_number, carrier, recipient, package_info, shipping_cost_usd } = body;
   if (!order_number || !carrier) return fail('order_number et carrier requis');
+  if (!(await mayManageOrder(db, user, order_number))) return fail('Accès refusé', 403);
 
   const label_id = `LBL-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
   const tracking_number = generateTracking(carrier);
@@ -53,8 +96,13 @@ async function generateLabel(db, body, user) {
   return Response.json({ label, tracking_number });
 }
 
-async function listLabels(db, body) {
+async function listLabels(db, body, user) {
   const { order_number, status } = body;
+  // A non-admin may only list labels for one order they are bound to; an
+  // unscoped list would hand them every order's recipient details.
+  if (!isAdmin(user) && (!order_number || !(await mayManageOrder(db, user, order_number)))) {
+    return fail('Accès refusé', 403);
+  }
   const filters: Record<string, unknown> = {};
   if (order_number) filters.order_number = order_number;
   if (status) filters.status = status;
@@ -62,25 +110,26 @@ async function listLabels(db, body) {
   return Response.json({ labels });
 }
 
-async function getLabel(db, body) {
+async function getLabel(db, body, user) {
   const { label_id } = body;
   if (!label_id) return fail('label_id requis');
   const label = await db.entities.ShippingLabel.get(label_id).catch(() => null);
   if (!label) return fail('Étiquette introuvable', 404);
+  if (!(await mayManageLabel(db, user, label))) return fail('Accès refusé', 403);
   return Response.json({ label });
 }
 
-async function printLabels(db, body) {
+async function printLabels(db, body, user) {
   const { label_ids } = body;
   if (!label_ids?.length) return fail('label_ids requis');
   const now = new Date().toISOString();
   const results = [];
   for (const id of label_ids) {
-    const label = await db.entities.ShippingLabel.get(id);
-    if (label) {
-      const updated = await db.entities.ShippingLabel.update(id, { status: 'printed', printed_at: now });
-      results.push(updated);
-    }
+    const label = await db.entities.ShippingLabel.get(id).catch(() => null);
+    if (!label) continue;
+    if (!(await mayManageLabel(db, user, label))) return fail('Accès refusé', 403);
+    const updated = await db.entities.ShippingLabel.update(id, { status: 'printed', printed_at: now });
+    results.push(updated);
   }
   return Response.json({ labels: results, count: results.length });
 }
@@ -88,6 +137,9 @@ async function printLabels(db, body) {
 async function updateStatus(db, body, user) {
   const { label_id, status } = body;
   if (!label_id || !status) return fail('label_id et status requis');
+  const existing = await db.entities.ShippingLabel.get(label_id).catch(() => null);
+  if (!existing) return fail('Étiquette introuvable', 404);
+  if (!(await mayManageLabel(db, user, existing))) return fail('Accès refusé', 403);
   const label = await db.entities.ShippingLabel.update(label_id, { status });
   await db.entities.AuditLog.create({ action: 'shipping_label.status_changed', actor: user.email, entity: 'ShippingLabel', entity_id: label_id, details: { status } });
   return Response.json({ label });

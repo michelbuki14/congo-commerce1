@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
+import { requireAdmin } from '../../shared/security.ts';
 
 const fail = (error, status = 400) => Response.json({ error }, { status });
 
@@ -6,8 +7,11 @@ export default async function(req: Request): Promise<Response> {
   try {
     if (req.method !== 'POST') return fail('Méthode non autorisée', 405);
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me().catch(() => null);
-    if (!user?.email) return fail('Authentification requise', 401);
+    // These figures are platform-wide revenue and customer counts, read with
+    // the service role — operator-only business intelligence, so the caller
+    // must be an administrator.
+    const auth = await requireAdmin(base44);
+    if (!auth.ok) return auth.response;
     const db = base44.asServiceRole;
     const body = await req.json().catch(() => ({}));
     const action = String(body.action || '');
