@@ -32,6 +32,9 @@ dependencies:
   path_provider: ^2.1.0
   hive: ^2.2.3
   hive_flutter: ^1.1.0
+  # Auth tokens: Android Keystore / iOS Keychain.
+  flutter_secure_storage: ^10.0.0
+
   
   # Serialization
   # UI & Theming
@@ -51,15 +54,10 @@ dependencies:
   mime: ^2.0.0
   
   # File & Media
-  file_picker: ^8.1.0
+  file_picker: ^13.1.0
   image: ^4.2.0
   image_picker: ^1.1.2
   
-  # Desktop Features (Windows)
-  window_manager: ^0.4.3
-  tray_manager: ^0.2.4
-  hotkey_manager: ^0.2.0
-  protocol_handler: ^0.2.0
   url_launcher: ^6.3.0
   
 dev_dependencies:
@@ -71,6 +69,26 @@ dev_dependencies:
   riverpod_generator: ^2.6.4
   custom_lint: ^0.7.3
   riverpod_lint: ^2.6.4
+
+# flutter_secure_storage 9.x pins flutter_secure_storage_windows 3.x, whose
+# plugin C++ includes <atlstr.h> and therefore needs the ATL component of the
+# Visual Studio C++ workload. ATL is not installed on this build machine and its
+# installer requires interactive UAC elevation, so 3.x makes
+# `flutter build windows` fail with error C1083.
+#
+# 4.x of the Windows backend replaced the ATL/CCom credential handling with
+# win32 FFI over DPAPI, which compiles with the plain MSVC toolchain. Upgrading
+# flutter_secure_storage to 10.x pulls that 4.x backend in; the override makes
+# the intent explicit rather than incidental.
+#
+# The desktop-only plugins (window_manager, tray_manager, hotkey_manager,
+# protocol_handler) were removed entirely: none were referenced from lib/, and
+# protocol_handler 0.2.0 pins win32_registry ^1.0.2, which is unsolvable
+# against the win32 6.x that the 4.x storage backend needs. Add them back when
+# the desktop shell actually uses them, and expect the same conflict to return.
+dependency_overrides:
+  flutter_secure_storage_windows:
+    path: third_party/flutter_secure_storage_windows
 
 flutter:
   uses-material-design: true

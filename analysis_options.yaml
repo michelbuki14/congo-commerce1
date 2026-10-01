@@ -15,6 +15,9 @@ analyzer:
     - android/**
     - ios/**
     - windows/**
+    # Vendored pub packages are patched locally (see third_party/README.md)
+    # and are not held to this project's lint set.
+    - third_party/**
 
 linter:
   # The lint rules applied to this project can be customized in the
