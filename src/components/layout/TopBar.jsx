@@ -26,102 +26,102 @@ export default function TopBar() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur pt-[env(safe-area-inset-top)]">
-      <button
-        type="button"
-        onClick={() => setDrawerOpen(true)}
-        className="md:hidden flex h-11 w-11 items-center justify-center rounded-full hover:bg-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        aria-label={t('nav.menu')}
-        aria-expanded={drawerOpen}
-        aria-controls="mobile-drawer"
-      >
-        <Menu className="h-6 w-6" aria-hidden="true" />
-      </button>
-
-      <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-3 py-2.5 md:px-6">
-        <Link to="/" className="flex shrink-0 items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md" aria-label="Congo Commerce — accueil">
-          <BrandLogo />
-        </Link>
-
-        {/* Primary Navigation - visible on desktop */}
-        <nav className="hidden md:flex items-center gap-1 mx-2" aria-label={t('nav.primary')}>
-          <Link
-            to="/"
-            className="px-3 py-2 text-sm font-medium rounded-lg hover:bg-secondary transition-colors"
-            aria-current={window.location.pathname === '/' ? 'page' : undefined}
+          <button
+            type="button"
+            onClick={() => setDrawerOpen(true)}
+            className="md:hidden flex h-14 w-14 items-center justify-center rounded-full hover:bg-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label={t('nav.menu')}
+            aria-expanded={drawerOpen}
+            aria-controls="mobile-drawer"
           >
-            {t('nav.home')}
-          </Link>
-          <Link
-            to="/discover"
-            className="px-3 py-2 text-sm font-medium rounded-lg hover:bg-secondary transition-colors"
-            aria-current={window.location.pathname.startsWith('/discover') ? 'page' : undefined}
-          >
-            {t('nav.discover')}
-          </Link>
-          <Link
-            to="/categories"
-            className="px-3 py-2 text-sm font-medium rounded-lg hover:bg-secondary transition-colors"
-            aria-current={window.location.pathname.startsWith('/categories') ? 'page' : undefined}
-          >
-            {t('nav.categories')}
-          </Link>
-        </nav>
+            <Menu className="h-7 w-7" aria-hidden="true" />
+          </button>
 
-        <form onSubmit={submit} className="relative flex-1 max-w-xl md:max-w-md" role="search">
-          <label htmlFor="site-search" className="sr-only">
-            {t('nav.searchPlaceholder')}
-          </label>
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
-          <input
-            id="site-search"
-            value={term}
-            onChange={(e) => setTerm(e.target.value)}
-            placeholder={t('nav.searchPlaceholder')}
-            className="h-11 w-full rounded-full border border-border bg-background pl-9 pr-3 text-sm outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-ring"
-          />
-        </form>
+          <div className="mx-auto flex w-full max-w-6xl items-center gap-4 px-4 py-3 md:px-8">
+            <Link to="/" className="flex shrink-0 items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md" aria-label="Congo Commerce — accueil">
+              <BrandLogo />
+            </Link>
 
-        <div className="flex items-center gap-2">
-                  <CurrencyToggle className="hidden md:inline-flex" />
-                  <LanguageToggle className="hidden h-11 md:block" />
-                  <ThemeToggle className="hidden md:inline-flex" />
+            {/* Primary Navigation - visible on desktop */}
+            <nav className="hidden md:flex items-center gap-2 mx-3" aria-label={t('nav.primary')}>
+              <Link
+                to="/"
+                className="px-4 py-2.5 text-sm font-medium rounded-lg hover:bg-secondary transition-colors"
+                aria-current={window.location.pathname === '/' ? 'page' : undefined}
+              >
+                {t('nav.home')}
+              </Link>
+              <Link
+                to="/discover"
+                className="px-4 py-2.5 text-sm font-medium rounded-lg hover:bg-secondary transition-colors"
+                aria-current={window.location.pathname.startsWith('/discover') ? 'page' : undefined}
+              >
+                {t('nav.discover')}
+              </Link>
+              <Link
+                to="/categories"
+                className="px-4 py-2.5 text-sm font-medium rounded-lg hover:bg-secondary transition-colors"
+                aria-current={window.location.pathname.startsWith('/categories') ? 'page' : undefined}
+              >
+                {t('nav.categories')}
+              </Link>
+            </nav>
 
-                  {/* User actions - desktop only */}
-                  <div className="hidden md:flex items-center gap-1">
-                    <Link
-                      to="/wishlist"
-                      aria-label={t('nav.wishlist')}
-                      className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    >
-                      <Heart className="h-5 w-5" aria-hidden="true" />
-                    </Link>
-                    <Link
-                      to="/messages"
-                      aria-label={t('nav.messages')}
-                      className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    >
-                      <MessageCircle className="h-5 w-5" aria-hidden="true" />
-                    </Link>
-                    <Link
-                      to="/notifications"
-                      aria-label={t('nav.notifications')}
-                      className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    >
-                      <Bell className="h-5 w-5" aria-hidden="true" />
-                    </Link>
+            <form onSubmit={submit} className="relative flex-1 max-w-xl md:max-w-lg" role="search">
+              <label htmlFor="site-search" className="sr-only">
+                {t('nav.searchPlaceholder')}
+              </label>
+              <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+              <input
+                id="site-search"
+                value={term}
+                onChange={(e) => setTerm(e.target.value)}
+                placeholder={t('nav.searchPlaceholder')}
+                className="h-12 w-full rounded-full border border-border bg-background pl-11 pr-4 text-sm outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-ring"
+              />
+            </form>
 
-                    {/* User menu dropdown */}
-                    <div className="relative">
-                      <button
-                        type="button"
-                        onClick={() => setUserMenuOpen(!userMenuOpen)}
-                        className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                        aria-expanded={userMenuOpen}
-                        aria-haspopup="true"
-                        aria-label={user ? t('nav.profile') : t('nav.login')}
-                      >
-                        <User className="h-5 w-5" aria-hidden="true" />
-                      </button>
+            <div className="flex items-center gap-3">
+                      <CurrencyToggle className="hidden md:inline-flex" />
+                      <LanguageToggle className="hidden h-12 md:block" />
+                      <ThemeToggle className="hidden md:inline-flex" />
+
+                      {/* User actions - desktop only */}
+                      <div className="hidden md:flex items-center gap-2">
+                        <Link
+                          to="/wishlist"
+                          aria-label={t('nav.wishlist')}
+                          className="flex h-12 w-12 items-center justify-center rounded-full hover:bg-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                          <Heart className="h-5.5 w-5.5" aria-hidden="true" />
+                        </Link>
+                        <Link
+                          to="/messages"
+                          aria-label={t('nav.messages')}
+                          className="flex h-12 w-12 items-center justify-center rounded-full hover:bg-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                          <MessageCircle className="h-5.5 w-5.5" aria-hidden="true" />
+                        </Link>
+                        <Link
+                          to="/notifications"
+                          aria-label={t('nav.notifications')}
+                          className="flex h-12 w-12 items-center justify-center rounded-full hover:bg-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                          <Bell className="h-5.5 w-5.5" aria-hidden="true" />
+                        </Link>
+
+                        {/* User menu dropdown */}
+                        <div className="relative">
+                          <button
+                            type="button"
+                            onClick={() => setUserMenuOpen(!userMenuOpen)}
+                            className="flex h-12 w-12 items-center justify-center rounded-full hover:bg-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            aria-expanded={userMenuOpen}
+                            aria-haspopup="true"
+                            aria-label={user ? t('nav.profile') : t('nav.login')}
+                          >
+                            <User className="h-5.5 w-5.5" aria-hidden="true" />
+                          </button>
 
               {userMenuOpen && (
                 <>
@@ -225,18 +225,18 @@ export default function TopBar() {
             </div>
 
             <Link
-              to="/cart"
-              aria-label={t('nav.cart')}
-              className="relative flex h-11 w-11 items-center justify-center rounded-full hover:bg-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <ShoppingBag className="h-5 w-5" aria-hidden="true" />
-              {count > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 min-w-[20px] rounded-full bg-primary px-1.5 text-center text-[10px] font-bold leading-5 text-primary-foreground">
-                  {count}
-                  <span className="sr-only">{t('cart.items', { count })}</span>
-                </span>
-              )}
-            </Link>
+                          to="/cart"
+                          aria-label={t('nav.cart')}
+                          className="relative flex h-12 w-12 items-center justify-center rounded-full hover:bg-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                          <ShoppingBag className="h-5.5 w-5.5" aria-hidden="true" />
+                          {count > 0 && (
+                            <span className="absolute -right-0.5 -top-0.5 min-w-[20px] rounded-full bg-primary px-1.5 text-center text-[10px] font-bold leading-5 text-primary-foreground">
+                              {count}
+                              <span className="sr-only">{t('cart.items', { count })}</span>
+                            </span>
+                          )}
+                        </Link>
           </div>
         </div>
       </div>
