@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:congo_commerce_flutter/core/config/app_constants.dart';
 import 'package:congo_commerce_flutter/core/models/product_model.dart';
 import 'package:congo_commerce_flutter/core/providers/providers.dart';
+import 'package:congo_commerce_flutter/core/services/cart_persistence.dart';
 
 ProductModel _product({
   required String id,
@@ -22,7 +23,9 @@ ProductModel _product({
 void main() {
   group('CartNotifier', () {
     test('adds, updates, and removes items', () {
-      final container = ProviderContainer();
+      final container = ProviderContainer(
+        overrides: [cartPersistenceProvider.overrideWithValue(InMemoryCartPersistence())],
+      );
       addTearDown(container.dispose);
 
       final notifier = container.read(cartProvider.notifier);
@@ -44,7 +47,9 @@ void main() {
     });
 
     test('merges duplicate products into one row', () {
-      final container = ProviderContainer();
+      final container = ProviderContainer(
+        overrides: [cartPersistenceProvider.overrideWithValue(InMemoryCartPersistence())],
+      );
       addTearDown(container.dispose);
 
       final notifier = container.read(cartProvider.notifier);
@@ -56,7 +61,9 @@ void main() {
     });
 
     test('counts distinct sellers for multi-vendor order splitting', () {
-      final container = ProviderContainer();
+      final container = ProviderContainer(
+        overrides: [cartPersistenceProvider.overrideWithValue(InMemoryCartPersistence())],
+      );
       addTearDown(container.dispose);
 
       final notifier = container.read(cartProvider.notifier);

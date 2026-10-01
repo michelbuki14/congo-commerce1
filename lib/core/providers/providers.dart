@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -6,13 +8,26 @@ import '../models/cart_model.dart';
 import '../models/product_model.dart';
 import '../models/user_model.dart';
 import '../services/api_client.dart';
+import '../services/auth_service.dart';
+import '../services/cart_persistence.dart';
 import '../services/product_repository.dart';
+import '../services/token_storage.dart';
 
 // ─── Service providers ─────────────────────────────────────────────────────
 
 /// API client provider
 final apiClientProvider = Provider<ApiClient>((ref) {
-  return ApiClient();
+  return ApiClient(tokens: ref.watch(tokenStorageProvider));
+});
+
+/// Auth service provider
+final authServiceProvider = Provider<AuthService>((ref) {
+  return AuthService(tokens: ref.watch(tokenStorageProvider));
+});
+
+/// Token storage provider. Overridden in tests with [InMemoryTokenStorage].
+final tokenStorageProvider = Provider<TokenStorage>((ref) {
+  return SecureTokenStorage();
 });
 
 /// Product repository provider
@@ -22,20 +37,136 @@ final productRepositoryProvider = Provider<ProductRepository>((ref) {
 
 // ─── Auth providers ─────────────────────────────────────────────────────────
 
-/// Current user provider (null when signed out)
-final currentUserProvider = StateProvider<UserModel?>((ref) => null);
-
-/// Auth loading state
-final authLoadingProvider = StateProvider<bool>((ref) => true);
-
-/// Auth state provider
-final authStateProvider = StateProvider<AuthState>((ref) => AuthState.unknown);
-
 enum AuthState {
   unknown,
   authenticated,
   unauthenticated,
 }
+
+/// Current user provider (null when signed out)
+final currentUserProvider = StateProvider<UserModel?>((ref) => null);
+
+/// Auth notifier for managing auth state with real API calls
+class AuthNotifier extends StateNotifier<AuthState> {
+  AuthNotifier(this._ref) : super(AuthState.unknown) {
+    _initAuth();
+  }
+
+  final Ref _ref;
+
+  Future<void> _initAuth() async {
+      // Restore a stored session on cold start.
+      final authService = _ref.read(authServiceProvider);
+      final tokens = _ref.read(tokenStorageProvider);
+    final hasSession =
+        await tokens.getAccessToken() != null || await tokens.getRefreshToken() != null;
+
+      if (!hasSession) {
+        state = AuthState.unauthenticated;
+        return;
+      }
+
+      try {
+        final user = await authService.getCurrentUser();
+        _ref.read(currentUserProvider.notifier).state = user;
+        state = AuthState.authenticated;
+      } catch (_) {
+        // The stored access token may have expired; try the refresh token once.
+        if (await authService.refreshToken()) {
+          try {
+            final user = await authService.getCurrentUser();
+            _ref.read(currentUserProvider.notifier).state = user;
+            state = AuthState.authenticated;
+            return;
+          } catch (_) {
+            // Refresh succeeded but /me still failed — treat as signed out.
+          }
+        }
+        await _ref.read(tokenStorageProvider).clearAll();
+        _ref.read(currentUserProvider.notifier).state = null;
+        state = AuthState.unauthenticated;
+      }
+    }
+
+  Future<void> login({
+      required String email,
+      required String password,
+      bool rememberMe = false,
+    }) async {
+      final authService = _ref.read(authServiceProvider);
+
+      try {
+        final user = await authService.login(
+          email: email,
+          password: password,
+          rememberMe: rememberMe,
+        );
+        _ref.read(currentUserProvider.notifier).state = user;
+        state = AuthState.authenticated;
+      } catch (_) {
+        // Stay on AuthState.unknown rather than flipping to unauthenticated: the
+        // router redirects unknown away from /login, which would bounce the user
+        // out of the form before they can read the error.
+        state = AuthState.unauthenticated;
+        rethrow;
+      }
+    }
+
+  Future<void> register({
+      required String email,
+      required String password,
+      required String firstName,
+      required String lastName,
+      String? phone,
+    }) async {
+      final authService = _ref.read(authServiceProvider);
+
+      try {
+        final user = await authService.register(
+          email: email,
+          password: password,
+          firstName: firstName,
+          lastName: lastName,
+          phone: phone,
+        );
+        _ref.read(currentUserProvider.notifier).state = user;
+        state = AuthState.authenticated;
+      } catch (_) {
+        state = AuthState.unauthenticated;
+        rethrow;
+      }
+    }
+
+  Future<void> logout() async {
+    try {
+      final authService = _ref.read(authServiceProvider);
+      await authService.logout();
+    } finally {
+      await _ref.read(tokenStorageProvider).clearAll();
+      _ref.read(currentUserProvider.notifier).state = null;
+      state = AuthState.unauthenticated;
+    }
+  }
+
+  Future<void> refreshUser() async {
+    try {
+      final authService = _ref.read(authServiceProvider);
+      final user = await authService.getCurrentUser();
+      _ref.read(currentUserProvider.notifier).state = user;
+      state = AuthState.authenticated;
+    } catch (e) {
+      state = AuthState.unauthenticated;
+    }
+  }
+}
+
+final authNotifierProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
+  return AuthNotifier(ref);
+});
+
+final authStateProvider = Provider<AuthState>((ref) {
+  return ref.watch(authNotifierProvider);
+});
 
 // ─── Locale & theme providers ───────────────────────────────────────────────
 
@@ -48,22 +179,72 @@ final themeModeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.light);
 
 // ─── Cart providers ─────────────────────────────────────────────────────────
 
-/// Shopping cart provider
+/// Cart persistence provider. Overridden in tests with
+/// [InMemoryCartPersistence].
+final cartPersistenceProvider = Provider<CartPersistence>((ref) {
+  return SharedPrefsCartPersistence();
+});
+
+/// Shopping cart provider.
+///
+/// Restores any saved cart on construction and writes it back on every
+/// mutation, so a restart no longer empties the cart.
 class CartNotifier extends StateNotifier<CartModel> {
-  CartNotifier(this._ref) : super(const CartModel()) {
-    _loadCart();
+  CartNotifier(this._persistence) : super(const CartModel()) {
+    _restore();
   }
-  
-  final Ref _ref;
-  
-  void _loadCart() {
-    // Load cart from local storage
-    // TODO: Implement persistence
-  }
-  
+
+  final CartPersistence _persistence;
+
+  /// Tracks disposal explicitly rather than using StateNotifier.mounted: during
+    /// the provider factory's first call `mounted` is still false, so guarding on
+    /// it would skip the initial restore entirely. Assigning `state` after
+    /// dispose throws, hence the flag.
+    bool _disposed = false;
+
+    /// Set by the first user mutation. The restore is async, so without this the
+        /// load can resolve *after* an addItem and overwrite it, silently dropping
+        /// whatever the shopper just added.
+        bool _mutatedBeforeRestore = false;
+
+        @override
+        void dispose() {
+          _disposed = true;
+          super.dispose();
+        }
+
+        Future<void> _restore() async {
+          CartModel loaded;
+          try {
+            loaded = await _persistence.load();
+          } catch (_) {
+            // A failed restore must not block the app from starting.
+            loaded = const CartModel();
+          }
+          if (_disposed) return;
+
+          if (_mutatedBeforeRestore) {
+            // Merge rather than replace: the shopper's live edits win, and lines
+            // from the saved cart they have not re-added still come back.
+            var merged = state;
+            for (final item in loaded.items) {
+              if (merged.itemForProduct(item.productId) == null) {
+                merged = merged.addItem(item);
+              }
+            }
+            state = merged;
+            _persist();
+            return;
+          }
+
+          state = loaded;
+        }
+
   void addItem(ProductModel product, {double quantity = 1, String? variantId}) {
     final item = CartItemModel(
-      id: '${product.id}_${DateTime.now().millisecondsSinceEpoch}',
+      // Stable id: the product id alone, so a reload merges instead of
+      // duplicating when the same item is added twice.
+      id: variantId == null ? product.id : '${product.id}::$variantId',
       productId: product.id,
       productName: product.title,
       productImage: product.primaryImage,
@@ -74,33 +255,40 @@ class CartNotifier extends StateNotifier<CartModel> {
       tenantId: product.tenantId,
       variantId: variantId,
     );
+    _mutatedBeforeRestore = true;
     state = state.addItem(item);
-    _saveCart();
+    _persist();
   }
-  
+
   void removeItem(String productId) {
+    _mutatedBeforeRestore = true;
     state = state.removeItem(productId);
-    _saveCart();
+    _persist();
   }
-  
+
   void updateQuantity(String productId, double quantity) {
+    _mutatedBeforeRestore = true;
     state = state.updateQuantity(productId, quantity);
-    _saveCart();
+    _persist();
   }
-  
+
   void clear() {
     state = state.clear();
-    _saveCart();
+    _persist(clearStore: true);
   }
-  
-  void _saveCart() {
-    // Persist cart to local storage
-    // TODO: Implement persistence
+
+  void _persist({bool clearStore = false}) {
+    final snapshot = state;
+    unawaited(
+      clearStore
+          ? _persistence.clear()
+          : _persistence.save(snapshot),
+    );
   }
 }
 
 final cartProvider = StateNotifierProvider<CartNotifier, CartModel>((ref) {
-  return CartNotifier(ref);
+  return CartNotifier(ref.watch(cartPersistenceProvider));
 });
 
 /// Cart item count (for badge display)
