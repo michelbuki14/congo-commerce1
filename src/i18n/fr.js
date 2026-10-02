@@ -3500,6 +3500,32 @@ auth: {
   tickets: {
     title: "Automatisation des tickets",
   },
+  creatorDashboard: {
+    title: "Espace créateur",
+    noCreatorAccount: "Aucun compte créateur associé",
+    noCreatorDesc: "Votre espace créateur n'est relié à aucun compte. L'administration doit le rattacher à l'adresse e-mail avec laquelle vous vous connectez.",
+    createCreator: "Créer un créateur",
+    trackedClicks: "Clics suivis",
+    conversions: "Conversions",
+    commissions: "Commissions",
+    publishedContents: "Contenus publiés",
+    newContent: "Nouveau contenu",
+    optionalProduct: "Article associé (optionnel)…",
+    contentTitle: "Titre du contenu",
+    caption: "Légende",
+    mediaUrl: "URL de la vidéo ou de la photo",
+    publishing: "Publication…",
+    publish: "Publier",
+    myContents: "Mes contenus",
+    noContent: "Aucun contenu publié. Associez un article à une vidéo pour vendre directement depuis votre contenu.",
+    commissionInfo: "Chaque vente attribuée à votre code génère une commission créditée sur votre portefeuille créateur, libérée après livraison confirmée.",
+    codeLabel: "Code :",
+    linkCopied: "Lien copié",
+    copyLink: "Copier mon lien",
+    likes: "j'aime",
+    views: "vues",
+    noProduct: "sans article",
+  }
 }
 
 ;

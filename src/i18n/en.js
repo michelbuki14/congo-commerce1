@@ -3497,6 +3497,32 @@ auth: {
   tickets: {
     title: "Ticket automation",
   },
+  creatorDashboard: {
+    title: "Creator space",
+    noCreatorAccount: "No creator account linked",
+    noCreatorDesc: "Your creator space is not linked to any account. An administrator must attach it to the email address you use to sign in.",
+    createCreator: "Create a creator",
+    trackedClicks: "Tracked clicks",
+    conversions: "Conversions",
+    commissions: "Commissions",
+    publishedContents: "Published contents",
+    newContent: "New content",
+    optionalProduct: "Associated product (optional)…",
+    contentTitle: "Content title",
+    caption: "Caption",
+    mediaUrl: "Video or photo URL",
+    publishing: "Publishing…",
+    publish: "Publish",
+    myContents: "My contents",
+    noContent: "No published content. Link a product to a video to sell directly from your content.",
+    commissionInfo: "Each sale attributed to your code generates a commission credited to your creator wallet, released after delivery is confirmed.",
+    codeLabel: "Code:",
+    linkCopied: "Link copied",
+    copyLink: "Copy my link",
+    likes: "likes",
+    views: "views",
+    noProduct: "no product",
+  }
 }
 
 ;
