@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import React, { useEffect } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 import TopBar from './TopBar';
 import LegalFooter from '@/components/legal/LegalFooter';
 import { applyTenantBranding, clearTenantBranding, resolveTenantByHost } from '@/lib/tenancy';
