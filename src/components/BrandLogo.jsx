@@ -8,7 +8,7 @@ export default function BrandLogo({ className = 'h-7 w-auto' }) {
     <img
       src={LOGO_URL}
       alt="Congo Commerce"
-      className={`shrink-0 object-contain ${className}`}
-    />
-  );
+      className={`shrink-0 object-contain rounded-sm ${className}`} />);
+
+
 }
