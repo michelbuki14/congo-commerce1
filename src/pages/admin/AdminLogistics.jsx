@@ -17,7 +17,7 @@ export default function AdminLogistics() {
   const [couriers, setCouriers] = useState([]);
   const [zones, setZones] = useState([]);
   const [pickups, setPickups] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, _setLoading] = useState(true);
   const [drafts, setDrafts] = useState({
     zones: { name: '', city: getCities()[0], fee_usd: 2.5, eta_days: '2-4' },
     pickups: { name: '', city: getCities()[0], commune: '', address: '', phone: '', fee_usd: 0.5 },

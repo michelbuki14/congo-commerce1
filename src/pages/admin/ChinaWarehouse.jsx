@@ -28,7 +28,6 @@ export default function ChinaWarehousePage() {
   const [form, setForm] = useState({ name: '', city: '', province: '', address: '', contact_name: '', contact_phone: '', manager_email: '', capacity_sqm: '' });
   const [selectedWh, setSelectedWh] = useState(null);
   const [errors, setErrors] = useState({});
-  const [deleteId, setDeleteId] = useState(null);
 
   const load = async () => {
     setLoading(true);
@@ -59,14 +58,14 @@ export default function ChinaWarehousePage() {
   };
 
   const deleteWarehouse = async (id) => {
-    setDeleteId(id);
-  };
-
-  const confirmDelete = async () => {
-    if (!deleteId) return;
-    await base44.functions.invoke('chinaWarehouse', { action: 'delete', id: deleteId });
-    setDeleteId(null);
-    await load();
+    setLoading(true);
+    try {
+      await base44.functions.invoke('chinaWarehouse', { action: 'delete', id });
+      await load();
+    } catch (e) {
+      setErrors((p) => ({ ...p, delete: e?.message || 'Erreur lors de la suppression' }));
+      setLoading(false);
+    }
   };
 
   const viewInventory = async (wh) => {

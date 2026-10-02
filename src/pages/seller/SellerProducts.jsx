@@ -27,7 +27,7 @@ const EMPTY = { title: '', description: '', price_usd: '', compare_at_usd: '', s
 
 export default function SellerProducts() {
   const { t } = useTranslation();
-  const { seller, loading: loadingSeller } = useActiveSeller();
+  const { seller } = useActiveSeller();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);

@@ -25,7 +25,6 @@ const COLUMN_KEYS = [
 
 export default function InventoryAlerts() {
   const { t } = useTranslation();
-  const srcLabel = (k) => t(`inventoryAlerts.${SOURCE_KEYS[k] || 'sourceSeller'}`);
   const { seller, loading: loadingSeller } = useActiveSeller();
   const [user, setUser] = useState(null);
   const [products, setProducts] = useState([]);

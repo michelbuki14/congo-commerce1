@@ -10,7 +10,6 @@ const LINKS = [
   ['/wishlist', 'nav.wishlist', Heart], ['/messages', 'nav.messages', MessageCircle],
   ['/notifications', 'nav.notifications', Bell],
 ];
-const SELLER_LINK = ['/seller', 'nav.sellerSpace', Store];
 export default function HeaderActions({ count }) {
   const { t } = useTranslation();
   const { user } = useAuth();

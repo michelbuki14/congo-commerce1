@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { Heart, Truck, Zap } from 'lucide-react';
 import { Image } from '@/components/ui/image';
 import { useCurrency } from '@/lib/currency';
-import { useCart } from '@/lib/cart';
 import { isWishlisted, toggleWishlist } from '@/lib/session';
 import RatingStars from './RatingStars';
 import { compactNumber } from '@/lib/format';
@@ -12,7 +11,6 @@ import { compactNumber } from '@/lib/format';
 function ProductCard({ product }) {
   const { t } = useTranslation();
   const { format } = useCurrency();
-  const { addItem } = useCart();
   const [liked, setLiked] = useState(() => isWishlisted(product.id));
 
   const discount =

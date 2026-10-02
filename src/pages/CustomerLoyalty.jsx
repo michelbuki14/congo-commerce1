@@ -104,7 +104,7 @@ export default function CustomerLoyalty() {
                 positive: false,
               })),
             ]
-              .sort((a, b) => 0)
+              .sort(() => 0)
               .map((row) => (
                 <div key={row.key} className="flex items-center justify-between rounded-xl border border-border px-3 py-2.5 text-xs">
                   <div>

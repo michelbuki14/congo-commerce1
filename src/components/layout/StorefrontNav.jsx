@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/AuthContext';
 
 const ALL_LINKS = [['/', 'nav.home'], ['/discover', 'nav.discover'], ['/categories', 'nav.categories'], ['/wishlist', 'nav.wishlist'], ['/messages', 'nav.messages'], ['/notifications', 'nav.notifications'], ['/seller', 'nav.sellerSpace'], ['/admin', 'nav.admin'], ['/profile', 'nav.profile']];
 
-function filteredLinks(user, t) {
+function filteredLinks(user) {
   const role = user?.role || 'user';
   return ALL_LINKS.filter(([to]) => {
     if (to === '/seller') return role === 'admin' || role === 'seller';
@@ -17,7 +17,7 @@ function filteredLinks(user, t) {
 export default function StorefrontNav() {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const links = filteredLinks(user, t);
+  const links = filteredLinks(user);
   return (
     <nav aria-label={t('nav.categories')} className="hidden border-t border-border/60 md:block">
       <div className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-6">

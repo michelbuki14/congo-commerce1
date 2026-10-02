@@ -117,7 +117,7 @@ export default function CourierConsole() {
       setShipments((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
       if (accepted) setTab('active');
       return true;
-    } catch (e) {
+    } catch {
       setError(t('courierConsole.actionFailed'));
       return false;
     } finally {
@@ -138,7 +138,7 @@ export default function CourierConsole() {
       });
       await load(fleetNames);
       return true;
-    } catch (e) {
+    } catch {
       setError(t('courierConsole.actionFailed'));
       return false;
     } finally {

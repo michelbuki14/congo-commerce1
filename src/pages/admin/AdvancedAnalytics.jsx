@@ -62,7 +62,7 @@ export default function AdvancedAnalytics() {
       <div className="rounded-2xl border border-border bg-card p-4">
         <h3 className="mb-3 text-sm font-bold">{t('analytics.funnel', 'Entonnoir de conversion')}</h3>
         <div className="space-y-2">
-          {f.map((step, i) => (
+          {f.map((step) => (
             <div key={step.step} className="flex items-center gap-3">
               <span className="w-24 text-xs text-muted-foreground">{step.step}</span>
               <div className="flex-1 rounded-full bg-secondary h-4 overflow-hidden">

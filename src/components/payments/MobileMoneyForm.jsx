@@ -11,7 +11,6 @@ const mobileMoneySchema = z.object({
   provider: z.string().min(1, 'payout.errProviderRequired'),
   phone: z.string().min(1, 'payout.errPhoneRequired').refine(
     (val) => {
-      const network = DRC_NETWORKS.find((n) => n.providerId === val);
       const phone = validateMobileMoneyNumber(val, val);
       return phone.ok;
     },

@@ -57,10 +57,6 @@ export default function AdminNotifications() {
     return markNotificationSent(base44, record, 'whatsapp');
   };
 
-  const sendSms = (record) => {
-    return markNotificationSent(base44, record, 'sms');
-  };
-
   if (loading) return <div className="h-64 animate-pulse rounded-2xl bg-secondary" />;
 
   return (
