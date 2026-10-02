@@ -25,6 +25,19 @@ export default function AdminLogistics() {
   const [savingZone, setSavingZone] = useState(false);
   const [savingPickup, setSavingPickup] = useState(false);
 
+  const load = async () => {
+    const asArray = (r) => (Array.isArray(r) ? r : (r?.items || []));
+    const [cs, zs, ps] = await Promise.all([
+      base44.entities.Courier.list('name', 100),
+      base44.entities.DeliveryZone.list('name', 100),
+      base44.entities.PickupPoint.list('name', 100),
+    ]);
+    setCouriers(asArray(cs));
+    setZones(asArray(zs));
+    setPickups(asArray(ps));
+    _setLoading(false);
+  };
+
   useEffect(() => {
     load();
   }, []);
