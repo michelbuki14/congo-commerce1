@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Check, Sparkles } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { FEATURE_LABELS, planAmountLabel, planLimit } from '@/lib/plans';
 
 /** Plan grid: price, commission, limits and tools, with a one-click switch. */
-export default function PlanComparisonTable({ plans, currentCode, cycle, busy, onChoose }) {
+export default memo(function PlanComparisonTable({ plans, currentCode, cycle, busy, onChoose }) {
   const { t } = useTranslation();
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -71,4 +71,4 @@ export default function PlanComparisonTable({ plans, currentCode, cycle, busy, o
       })}
     </div>
   );
-}
+});

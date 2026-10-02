@@ -539,6 +539,9 @@ auth: {
     methodsPrivacy: "Vos numéros sont liés à votre compte, visibles de vous seul et utilisés uniquement pour pré-remplir le paiement. Aucun débit n'a lieu sans votre confirmation sur votre téléphone.",
     holderName: 'Nom du titulaire',
     addAccount: 'Ajouter ce compte',
+    errProviderRequired: 'Veuillez sélectionner un réseau',
+    errPhoneRequired: 'Numéro de téléphone requis',
+    errPhoneInvalid: 'Numéro invalide pour ce réseau',
   },
   home: { loadFailed: "Certains contenus n'ont pas pu être chargés. Vérifiez votre connexion.", heroBadge: 'Livraison Kinshasa 2-4 jours', heroTitle: 'Le meilleur du Congo et du monde, livré chez vous', heroSubtitle: 'Vendeurs locaux vérifiés, importations suivies, paiement mobile money ou à la livraison.', discoverVideo: 'Découvrir en vidéo', browseCategories: 'Parcourir les catégories', becomeCreator: 'Devenir créateur →', flashSale: 'Ventes flash', limitedTime: 'Durée limitée', noFlash: 'Aucune vente flash en cours. Revenez bientôt.', discovery: 'Découverte', discoverySub: 'Acheté directement depuis les vidéos créateurs', trending: 'Tendances', trendingSub: 'Les articles les plus commandés', featured: 'Sélection Congo Commerce', localSellers: 'Vendeurs locaux vérifiés', localSellersSub: 'Paiement à la livraison disponible', noSellers: 'Aucun vendeur pour le moment', noSellersDesc: 'Les boutiques partenaires apparaîtront ici.', openShop: 'Ouvrir une boutique', localProducts: 'Produits locaux', localProductsSub: 'Expédiés depuis la RDC', newArrivals: 'Nouveautés', intlTitle: 'Import international', intlNote: "Frais d'importation et taxes inclus — la livraison est facturée au paiement.", featTrackedTitle: 'Livraison suivie', featTrackedText: 'Suivi en temps réel, retrait en point relais possible.', featMobileTitle: 'Paiement mobile money', featMobileText: 'M-Pesa, Airtel Money, Orange Money ou à la livraison.', featVerifiedTitle: 'Vendeurs vérifiés', featVerifiedText: 'Chaque boutique est contrôlée par notre équipe.', featProtectionTitle: 'Protection acheteur', featProtectionText: 'Article non conforme ? Ouverture d’un litige en 2 clics.' },
   discover: { linkCopied: 'Lien copié', addedToCart: 'Ajouté au panier', unavailable: 'Article indisponible', emptyTitle: 'Aucune vidéo pour le moment', emptyDesc: 'Les contenus des créateurs apparaîtront ici.', video: 'Vidéo', photo: 'Photo produit', cart: 'Panier', addToCart: 'Ajouter au panier' },
@@ -665,6 +668,7 @@ auth: {
   orderTracking: {
   title: "Suivi de livraison",
   helper: "Entrez le numéro reçu à la commande pour voir le statut transporteur et les dernières mises à jour du colis.",
+  search: "Rechercher",
   orderNumberPh: "Numéro de commande (CC-…)",
   phonePh: "Téléphone (optionnel)",
   orderNumberRequired: "Entrez votre numéro de commande.",
@@ -685,6 +689,7 @@ auth: {
   orderDetails: "Détail de la commande",
   reportIssue: "Signaler un problème",
   contactSupport: "Contacter le support",
+  totalLabel: "Total",
 },
   invoice: {
   notFound: "Facture introuvable",
@@ -1421,6 +1426,13 @@ auth: {
   ariaToggle: 'Publier / archiver',
   ariaDelete: 'Supprimer',
   empty: 'Aucun produit. Créez-en un ou importez depuis un fournisseur.',
+  errTitle: 'Le titre est requis',
+  errTitleLong: 'Le titre ne peut pas dépasser 120 caractères',
+  errDescLong: 'La description ne peut pas dépasser 2000 caractères',
+  errPricePositive: 'Le prix doit être supérieur à 0',
+  errCompareNegative: 'Le prix barré ne peut pas être négatif',
+  errStockInt: 'Le stock doit être un entier',
+  errStockNeg: 'Le stock ne peut pas être négatif',
 },
   sellerOrders: {
   title: 'Commandes reçues',
@@ -3043,6 +3055,7 @@ auth: {
   address: 'Adresse',
   phone: 'Téléphone',
   addPickup: 'Ajouter le point de retrait',
+  saving: 'Enregistrement…',
 },
   adminNotifications: {
   tab_queued: 'À envoyer',
@@ -3488,6 +3501,8 @@ auth: {
     inventory: "Stock",
     noInventory: "Aucun stock enregistré.",
     none: "Aucun entrepôt enregistré.",
+    deleteTitle: "Supprimer l'entrepôt",
+    deleteDesc: "Cette action est irréversible. Confirmez pour retirer cet entrepôt de la plateforme.",
     viewInventory: "Voir le stock",
   },
   rating: {
@@ -3496,6 +3511,13 @@ auth: {
   },
   shippingLabels: {
     title: "Étiquettes d'expédition",
+  },
+  fraudAlerts: {
+    title: "Alertes fraude",
+    toReview: "À examiner",
+    highRisk: "Haut risque",
+    amountAtStake: "Montant en jeu",
+    noAlerts: "Aucune alerte fraude pour le moment.",
   },
   tickets: {
     title: "Automatisation des tickets",
@@ -3525,6 +3547,7 @@ auth: {
     likes: "j'aime",
     views: "vues",
     noProduct: "sans article",
+    loadFailed: "Impossible de charger les données créateur.",
   }
 }
 

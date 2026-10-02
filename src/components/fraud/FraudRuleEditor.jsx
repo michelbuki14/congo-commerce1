@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Save } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-export default function FraudRuleEditor({ rules, drafts, savingId, onDraft, onSave }) {
+export default memo(function FraudRuleEditor({ rules, drafts, savingId, onDraft, onSave }) {
   const { t } = useTranslation();
   return (
     <div className="space-y-2">
@@ -74,4 +74,4 @@ export default function FraudRuleEditor({ rules, drafts, savingId, onDraft, onSa
       })}
     </div>
   );
-}
+});

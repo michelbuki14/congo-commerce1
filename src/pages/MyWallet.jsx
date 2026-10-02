@@ -30,6 +30,7 @@ export default function MyWallet() {
   const [method, setMethod] = useState(METHODS[0]);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const load = async () => {
     // Customer wallets are keyed by device session id, never by display name:
@@ -48,22 +49,13 @@ export default function MyWallet() {
 
   const submit = async (e) => {
     e.preventDefault();
+    if (saving) return;
+    setSaving(true);
     setMessage('');
     setError('');
-    const value = Number(amount);
-    if (!wallet) {
-      setError(t('sellerWallet.noWalletShort'));
-      return;
-    }
-    if (!value || value <= 0) {
-      setError(t('sellerWallet.badAmount'));
-      return;
-    }
-    if (value > (wallet.balance_usd || 0)) {
-      setError(t('sellerWallet.overBalance'));
-      return;
-    }
     try {
+      const value = Number(amount);
+      if (!wallet || !value || value <= 0 || value > (wallet.balance_usd || 0)) return;
       await requestWithdrawal({
         wallet,
         amount: value,
@@ -76,6 +68,8 @@ export default function MyWallet() {
       await load();
     } catch {
       setError(t('sellerWallet.requestFailed'));
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -125,8 +119,8 @@ export default function MyWallet() {
           </div>
           {error && <p className="text-xs text-destructive">{error}</p>}
           {message && <p className="text-xs text-primary">{message}</p>}
-          <button type="submit" className="inline-flex items-center gap-1.5 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground">
-            <Banknote className="h-4 w-4" /> {t('sellerWallet.sendRequest')}
+          <button type="submit" disabled={saving} className="inline-flex items-center gap-1.5 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+            {saving ? t('common.saving') : <><Banknote className="h-4 w-4" /> {t('sellerWallet.sendRequest')}</>}
           </button>
           <p className="flex items-start gap-1.5 text-[11px]">
             <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0" />

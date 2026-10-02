@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
@@ -17,7 +17,7 @@ const ROW_DEFS = [
   ['delivery', (p) => p.estimated_delivery || '—'],
 ];
 
-export default function CompareTable({ products, onRemove }) {
+export default memo(function CompareTable({ products, onRemove }) {
   const { t } = useTranslation();
   return (
     <div className="overflow-x-auto rounded-2xl border border-border bg-card">
@@ -46,4 +46,4 @@ export default function CompareTable({ products, onRemove }) {
       </table>
     </div>
   );
-}
+});

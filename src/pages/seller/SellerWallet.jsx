@@ -27,6 +27,7 @@ export default function SellerWallet() {
   const [amount, setAmount] = useState('');
   const [method, setMethod] = useState(METHODS[0]);
   const [message, setMessage] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const load = async () => {
     if (!seller) return;
@@ -48,29 +49,22 @@ export default function SellerWallet() {
 
   const submitWithdrawal = async (e) => {
     e.preventDefault();
+    if (saving) return;
+    setSaving(true);
     setMessage('');
-    const value = Number(amount);
-    if (!wallet) {
-      setMessage(t('sellerWallet.noWallet'));
-      return;
-    }
-    if (!value || value <= 0) {
-      setMessage(t('sellerWallet.badAmount'));
-      return;
-    }
-    if (value > (wallet.balance_usd || 0)) {
-      setMessage(t('sellerWallet.overBalance'));
-      return;
-    }
     try {
+      const value = Number(amount);
+      if (!wallet || !value || value <= 0 || value > (wallet.balance_usd || 0)) return;
       const updated = await requestWithdrawal({ wallet, amount: value, method: WITHDRAWAL_METHOD_IDS[method] || 'mpesa' });
       setWallet(updated);
       setAmount('');
       setMessage(t('sellerWallet.sent', { amount: formatUSD(value), method }));
+      await load();
     } catch (err) {
       setMessage(err?.message || t('sellerWallet.failed'));
+    } finally {
+      setSaving(false);
     }
-    await load();
   };
 
   if (loadingSeller || loading) return <div className="h-40 animate-pulse rounded-2xl bg-secondary" />;
@@ -110,9 +104,7 @@ export default function SellerWallet() {
           </select>
         </div>
         {message && <p className="text-xs text-primary">{message}</p>}
-        <button type="submit" className="rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground">
-          {t('sellerWallet.sendRequest')}
-        </button>
+        <button type="submit" disabled={saving} className="rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50">{saving ? t('common.saving') : t('sellerWallet.sendRequest')}</button>
         <p className="text-[11px] text-muted-foreground">
           {t('sellerWallet.localSalesNote')}
         </p>

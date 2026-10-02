@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { memo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useTranslation } from 'react-i18next';
 
 const LEVEL = { critical: 'bg-red-600 text-white', high: 'bg-red-100 text-red-900', medium: 'bg-amber-100 text-amber-900', low: 'bg-secondary' };
 
-export default function FraudAlertCard({ event: e, onDecide }) {
+export default memo(function FraudAlertCard({ event: e, onDecide }) {
   const { t } = useTranslation();
   const [notes, setNotes] = useState(e.notes || '');
   const [busy, setBusy] = useState(false);
@@ -36,4 +36,4 @@ export default function FraudAlertCard({ event: e, onDecide }) {
       )}
     </div>
   );
-}
+});

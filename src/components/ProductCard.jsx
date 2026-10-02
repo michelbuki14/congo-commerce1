@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { memo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Heart, Truck, Zap } from 'lucide-react';
@@ -9,7 +9,7 @@ import { isWishlisted, toggleWishlist } from '@/lib/session';
 import RatingStars from './RatingStars';
 import { compactNumber } from '@/lib/format';
 
-export default function ProductCard({ product }) {
+function ProductCard({ product }) {
   const { t } = useTranslation();
   const { format } = useCurrency();
   const { addItem } = useCart();
@@ -86,3 +86,5 @@ export default function ProductCard({ product }) {
     </article>
   );
 }
+
+export default memo(ProductCard);

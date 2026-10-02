@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertCircle, CheckCircle2, Upload } from 'lucide-react';
 import { formatUSD } from '@/lib/format';
 
 /** Preview of what a CSV will create, before anything is written. */
-export default function ImportPreview({ products = [], issues = [], totalRows = 0, publishDirect, onTogglePublish, onConfirm, importing }) {
+export default memo(function ImportPreview({ products = [], issues = [], totalRows = 0, publishDirect, onTogglePublish, onConfirm, importing }) {
   const { t } = useTranslation();
   const publishable = products.filter((p) => p.status === 'published').length;
 
@@ -85,4 +85,4 @@ export default function ImportPreview({ products = [], issues = [], totalRows = 
       </button>
     </section>
   );
-}
+});

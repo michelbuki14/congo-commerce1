@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { formatUSD } from '@/lib/format';
 import { useTranslation } from 'react-i18next';
 
 /** Per payment-method totals: collected vs still awaiting payment. */
-export default function ReconciliationTable({ rows }) {
+export default memo(function ReconciliationTable({ rows }) {
   const { t } = useTranslation();
   return (
     <div className="overflow-x-auto rounded-2xl border border-border bg-card">
@@ -34,4 +34,4 @@ export default function ReconciliationTable({ rows }) {
       </table>
     </div>
   );
-}
+});

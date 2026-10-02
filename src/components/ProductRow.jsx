@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { memo } from 'react';
 import ProductCard from './ProductCard';
 import ProductCardSkeleton from './ProductCardSkeleton';
 
-export default function ProductRow({ products, loading, skeletonCount = 4 }) {
+export default memo(function ProductRow({ products, loading, skeletonCount = 4 }) {
   if (loading) {
     return (
       <div className="flex gap-2.5 overflow-hidden md:gap-4">
@@ -25,4 +25,4 @@ export default function ProductRow({ products, loading, skeletonCount = 4 }) {
       ))}
     </div>
   );
-}
+});

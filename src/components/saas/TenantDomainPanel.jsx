@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { memo, useState } from 'react';
 import { Globe, ShieldCheck, Trash2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,7 @@ function token() {
   return `cc-verify-${Math.random().toString(36).slice(2, 12)}`;
 }
 
-export default function TenantDomainPanel({ tenant, domains, onChange }) {
+export default memo(function TenantDomainPanel({ tenant, domains, onChange }) {
   const { t } = useTranslation();
   const STATUS_LABELS = {
     pending: t('tenantDomainPanel.statusPending'),
@@ -123,4 +123,4 @@ export default function TenantDomainPanel({ tenant, domains, onChange }) {
       </CardContent>
     </Card>
   );
-}
+});

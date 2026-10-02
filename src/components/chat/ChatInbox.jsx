@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { memo } from 'react';
 import ChatWindow from '@/components/chat/ChatWindow';
 import { formatDateTime } from '@/lib/format';
 import { useTranslation } from 'react-i18next';
 
 /** Two-pane inbox: thread list + active conversation. */
-export default function ChatInbox({ threads, activeId, onSelect, role, senderName, emptyText }) {
+export default memo(function ChatInbox({ threads, activeId, onSelect, role, senderName, emptyText }) {
   const { t } = useTranslation();
   const active = threads.find((tx) => tx.id === activeId);
   const title = (tx) => (tx.type === 'support' ? t('chatInbox.support') : role === 'customer' ? tx.seller_name : tx.customer_name || t('chatInbox.client'));
@@ -30,4 +30,4 @@ export default function ChatInbox({ threads, activeId, onSelect, role, senderNam
       )}
     </div>
   );
-}
+});

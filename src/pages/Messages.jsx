@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { base44 } from '@/api/base44Client';
 import { getSessionId, getProfile } from '@/lib/session';
 import ChatInbox from '@/components/chat/ChatInbox';
-import BackButton from '@/components/BackButton';
 
 export default function Messages() {
   const { t } = useTranslation();
@@ -38,7 +37,6 @@ export default function Messages() {
   };
 
   return (<div className="mx-auto max-w-6xl space-y-4 px-3 py-5 md:px-6">
-        <BackButton fallback="/" className="md:hidden" />
       <h1 className="text-xl font-bold">{t('messages.title')}</h1>
       <div className="flex flex-wrap gap-2 rounded-2xl border border-border bg-card p-3">
         <select value={target} onChange={(e) => setTarget(e.target.value)} className="h-10 flex-1 rounded-full border border-border bg-background px-3 text-sm">

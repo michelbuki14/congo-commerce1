@@ -99,11 +99,15 @@ export default function AdminSuppliers() {
 
   const create = async (e) => {
     e.preventDefault();
-    if (!draft.name || !draft.code) return;
-    await base44.entities.Supplier.create({ ...draft, enabled: true, is_mock: draft.adapter !== 'manual' });
-    setCreating(false);
-    setDraft({ name: '', code: '', adapter: 'manual', type: 'international', country: 'CN', description: '' });
-    await load();
+    if (!draft.name || !draft.code || creating) return;
+    setCreating(true);
+    try {
+      await base44.entities.Supplier.create({ ...draft, enabled: true, is_mock: draft.adapter !== 'manual' });
+      setDraft({ name: '', code: '', adapter: 'manual', type: 'international', country: 'CN', description: '' });
+      await load();
+    } finally {
+      setCreating(false);
+    }
   };
 
   return (
@@ -146,7 +150,7 @@ export default function AdminSuppliers() {
             </select>
           </div>
           <input value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} placeholder={t('adminSuppliers.description')} className="h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" />
-          <button type="submit" className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground">{t('adminSuppliers.create')}</button>
+          <button type="submit" disabled={creating} className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">{t('adminSuppliers.create')}</button>
         </form>
       )}
 

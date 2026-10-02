@@ -1,4 +1,4 @@
-import { getTaxConfig } from './config';
+import { getTaxConfig } from './config.js';
 import { round2 } from './format';
 
 export const DEFAULT_VAT_RATE = 16;

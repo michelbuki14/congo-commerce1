@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 /** Per-courier delivery performance against the delay each partner promises. */
-export default function CourierPerformanceTable({ rows }) {
+export default memo(function CourierPerformanceTable({ rows }) {
   const { t } = useTranslation();
   if (!rows?.length) {
     return <p className="px-4 py-6 text-center text-xs text-muted-foreground">{t('courierPerformanceTable.empty')}</p>;
@@ -44,4 +44,4 @@ export default function CourierPerformanceTable({ rows }) {
       </table>
     </div>
   );
-}
+});

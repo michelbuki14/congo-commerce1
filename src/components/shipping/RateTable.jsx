@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MapPin, Trash2 } from 'lucide-react';
 import { formatUSD } from '@/lib/format';
@@ -17,7 +17,7 @@ function groupRates(rates) {
 }
 
 /** The rate table itself, grouped by destination. Values save on blur. */
-export default function RateTable({ rates = [], onPatch, onToggle, onDelete }) {
+export default memo(function RateTable({ rates = [], onPatch, onToggle, onDelete }) {
   const { t } = useTranslation();
   const NUMERIC = NUMERIC_IDS.map((field) => ({ field, label: t(`rateTable.num_${field}`) }));
   if (!rates.length) {
@@ -102,4 +102,4 @@ export default function RateTable({ rates = [], onPatch, onToggle, onDelete }) {
       })}
     </div>
   );
-}
+});

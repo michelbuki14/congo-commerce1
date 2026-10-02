@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { BadgeCheck, Star, Truck, Users } from 'lucide-react';
@@ -21,7 +21,7 @@ function Stars({ value = 0 }) {
 }
 
 /** One seller's public performance card. */
-export default function SellerRatingCard({ metrics }) {
+export default memo(function SellerRatingCard({ metrics }) {
   const { t } = useTranslation();
   const { seller, avgRating, reviewsCount, verifiedReviews, fiveStars, orders, productsCount, disputes, openDisputes, disputeRate, trustScore, level, verified, followers, deliveryInfo, city } = metrics;
 
@@ -97,4 +97,4 @@ export default function SellerRatingCard({ metrics }) {
       )}
     </article>
   );
-}
+});

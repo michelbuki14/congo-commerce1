@@ -7,6 +7,16 @@ import { ADMIN_LINKS } from '@/lib/navLinks';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { formatUSD } from '@/lib/format';
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from '@/components/ui/alert-dialog';
 
 export default function ChinaWarehousePage() {
   const { t } = useTranslation();
@@ -18,6 +28,7 @@ export default function ChinaWarehousePage() {
   const [form, setForm] = useState({ name: '', city: '', province: '', address: '', contact_name: '', contact_phone: '', manager_email: '', capacity_sqm: '' });
   const [selectedWh, setSelectedWh] = useState(null);
   const [errors, setErrors] = useState({});
+  const [deleteId, setDeleteId] = useState(null);
 
   const load = async () => {
     setLoading(true);
@@ -48,8 +59,13 @@ export default function ChinaWarehousePage() {
   };
 
   const deleteWarehouse = async (id) => {
-    if (!confirm('Supprimer cet entrepôt ?')) return;
-    await base44.functions.invoke('chinaWarehouse', { action: 'delete', id });
+    setDeleteId(id);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteId) return;
+    await base44.functions.invoke('chinaWarehouse', { action: 'delete', id: deleteId });
+    setDeleteId(null);
     await load();
   };
 
@@ -111,7 +127,21 @@ export default function ChinaWarehousePage() {
             </div>
             <div className="flex gap-2 pt-1">
               <Button size="sm" variant="outline" onClick={() => viewInventory(wh)} className="flex-1">{t('chinaWarehouse.viewInventory', 'Inventaire')}</Button>
-              <Button size="sm" variant="outline" onClick={() => deleteWarehouse(wh.id)}>{t('common.delete')}</Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button size="sm" variant="outline" className="text-destructive">{t('common.delete')}</Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>{t('chinaWarehouse.deleteTitle', 'Supprimer ?')}</AlertDialogTitle>
+                    <AlertDialogDescription>{t('chinaWarehouse.deleteDesc', 'Cette action est irréversible.')}</AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => deleteWarehouse(wh.id)}>{t('common.delete')}</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </div>
         ))}

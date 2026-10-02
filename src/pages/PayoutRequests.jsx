@@ -27,6 +27,7 @@ export default function PayoutRequests() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const load = async (me) => {
     const [sellers, creators] = await Promise.all([
@@ -73,22 +74,13 @@ export default function PayoutRequests() {
 
   const submit = async (e) => {
     e.preventDefault();
+    if (saving) return;
+    setSaving(true);
     setMessage('');
     setError('');
-    const value = Number(amount);
-    if (!wallet) {
-      setError('Sélectionnez un portefeuille.');
-      return;
-    }
-    if (!value || value <= 0) {
-      setError('Saisissez un montant valide.');
-      return;
-    }
-    if (value > (wallet.balance_usd || 0)) {
-      setError('Montant supérieur au solde disponible.');
-      return;
-    }
     try {
+      const value = Number(amount);
+      if (!wallet || !value || value <= 0 || value > (wallet.balance_usd || 0)) return;
       await requestWithdrawal({
         wallet,
         amount: value,
@@ -101,6 +93,8 @@ export default function PayoutRequests() {
       await load(user);
     } catch {
       setError("La demande n'a pas pu être envoyée. Réessayez.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -168,9 +162,7 @@ export default function PayoutRequests() {
               </div>
               {error && <p className="text-xs text-destructive">{error}</p>}
               {message && <p className="text-xs text-primary">{message}</p>}
-              <button type="submit" className="rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground">
-                Envoyer la demande
-              </button>
+              <button type="submit" disabled={saving} className="rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50">{saving ? 'Envoi…' : 'Envoyer la demande'}</button>
               <p className="text-[11px]">
                 Le montant est bloqué dès la demande et versé après validation par l’équipe. Un refus recrédite
                 automatiquement le portefeuille.

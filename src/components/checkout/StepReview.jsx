@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Image } from '@/components/ui/image';
 import { formatUSD } from '@/lib/format';
@@ -6,7 +6,7 @@ import { splitVat } from '@/lib/tax';
 import CheckoutConsent from '@/components/CheckoutConsent';
 
 /** Step 3 — final summary, tax breakdown, consent, then pay. */
-export default function StepReview({ quote, loadingQuote, coupon, vatRate, currency, consent, setConsent }) {
+export default memo(function StepReview({ quote, loadingQuote, coupon, vatRate, currency, consent, setConsent }) {
   const { t } = useTranslation();
   return (
     <>
@@ -66,4 +66,4 @@ export default function StepReview({ quote, loadingQuote, coupon, vatRate, curre
       <CheckoutConsent value={consent} onChange={setConsent} />
     </>
   );
-}
+});

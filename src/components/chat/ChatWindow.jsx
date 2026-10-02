@@ -1,8 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { memo, useEffect, useRef, useState } from 'react';
 import { Send } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
-export default function ChatWindow({ thread, role, senderName }) {
+export default memo(function ChatWindow({ thread, role, senderName }) {
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
@@ -57,4 +57,4 @@ export default function ChatWindow({ thread, role, senderName }) {
       </form>
     </div>
   );
-}
+});

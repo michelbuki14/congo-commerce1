@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,7 @@ export function feedHealth(s) {
   return ['healthStale', 'bg-red-100 text-red-900'];
 }
 
-export default function SupplierHealthCard({ supplier: s, check, checking, onCheck, onToggle }) {
+export default memo(function SupplierHealthCard({ supplier: s, check, checking, onCheck, onToggle }) {
   const { t } = useTranslation();
   const [labelKey, cls] = feedHealth(s);
   const label = t(`supplierHealthCard.${labelKey}`);
@@ -38,4 +38,4 @@ export default function SupplierHealthCard({ supplier: s, check, checking, onChe
       <Button size="sm" variant="outline" className="mt-3" onClick={onCheck} disabled={checking}>{checking ? t('supplierHealthCard.checking') : t('supplierHealthCard.check')}</Button>
     </div>
   );
-}
+});

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { memo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Phone, MapPin, Navigation, PackageCheck, CheckCircle2, XCircle, Loader2,
@@ -19,7 +19,7 @@ const NEXT_STEP = {
   IN_TRANSIT: { status: 'OUT_FOR_DELIVERY', labelKey: 'outForDelivery' },
 };
 
-export default function CourierJobCard({ shipment, fulfillment, order, busy, onRespond, onAdvance, showFleet }) {
+export default memo(function CourierJobCard({ shipment, fulfillment, order, busy, onRespond, onAdvance, showFleet }) {
   const { t } = useTranslation();
   const [proofOpen, setProofOpen] = useState(false);
 
@@ -175,4 +175,4 @@ export default function CourierJobCard({ shipment, fulfillment, order, busy, onR
       )}
     </div>
   );
-}
+});

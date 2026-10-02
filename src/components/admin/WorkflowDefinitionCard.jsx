@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Repeat, Timer, Workflow } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -10,7 +10,7 @@ const CATEGORY_STYLES = {
   ops: 'bg-secondary text-foreground',
 };
 
-export default function WorkflowDefinitionCard({ definition }) {
+export default memo(function WorkflowDefinitionCard({ definition }) {
   const { t } = useTranslation();
   const TRIGGER_LABELS = { manual: t('workflowDefinitionCard.triggerManual'), event: t('workflowDefinitionCard.triggerEvent'), schedule: t('workflowDefinitionCard.triggerSchedule') };
   const steps = definition.steps || [];
@@ -69,4 +69,4 @@ export default function WorkflowDefinitionCard({ definition }) {
       </div>
     </div>
   );
-}
+});

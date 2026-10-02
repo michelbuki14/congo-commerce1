@@ -12,7 +12,6 @@ import EmptyState from '@/components/EmptyState';
 import ProductRow from '@/components/ProductRow';
 import SectionHeader from '@/components/SectionHeader';
 import { getProfile } from '@/lib/session';
-import BackButton from '@/components/BackButton';
 
 export default function Cart() {
   const { t } = useTranslation();
@@ -54,7 +53,6 @@ export default function Cart() {
 
   return (
       <div className="space-y-5 pb-6">
-        <BackButton fallback="/" className="md:hidden" />
         <h1 className="text-2xl font-bold tracking-tight md:text-3xl">{t('cart.title', { count })}</h1>
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">

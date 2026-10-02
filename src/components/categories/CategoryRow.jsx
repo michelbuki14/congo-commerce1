@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowUp, ArrowDown, Pencil, Trash2 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 
-export default function CategoryRow({ category, isFirst, isLast, onMove, onEdit, onToggle, onDelete }) {
+export default memo(function CategoryRow({ category, isFirst, isLast, onMove, onEdit, onToggle, onDelete }) {
   const { t } = useTranslation();
   const btn = 'rounded-md p-1.5 hover:bg-secondary disabled:opacity-30';
   return (
@@ -21,4 +21,4 @@ export default function CategoryRow({ category, isFirst, isLast, onMove, onEdit,
       <button className={btn} onClick={onDelete} aria-label={t('categoryRow.delete')}><Trash2 className="h-4 w-4" /></button>
     </div>
   );
-}
+});

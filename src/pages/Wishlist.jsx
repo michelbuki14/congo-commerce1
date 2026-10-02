@@ -6,7 +6,6 @@ import ProductGrid from '@/components/ProductGrid';
 import EmptyState from '@/components/EmptyState';
 import SharedWishlist from '@/components/wishlist/SharedWishlist';
 import { getWishlist } from '@/lib/session';
-import BackButton from '@/components/BackButton';
 
 // A shared wishlist travels as base64-encoded product ids in ?wl=
 function encodeIds(ids) {
@@ -75,7 +74,6 @@ export default function Wishlist() {
   }
 
   return (<div className="space-y-4 pb-6">
-        <BackButton fallback="/" className="md:hidden" />
       {toast && (
         <div className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 rounded-full bg-foreground px-4 py-2 text-xs font-semibold text-background">
           {toast}

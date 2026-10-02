@@ -1,4 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
 import { Plus, Pencil, Trash2, Eye, EyeOff } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
@@ -10,17 +13,17 @@ import { formatUSD } from '@/lib/format';
 import { readActiveTenantId } from '@/lib/tenancy';
 import { emitEvent } from '@/lib/events';
 
+const productSchema = z.object({
+  title: z.string().min(1, 'sellerProducts.errTitle').max(120, 'sellerProducts.errTitleLong'),
+  description: z.string().max(2000, 'sellerProducts.errDescLong').default(''),
+  price_usd: z.coerce.number().positive('sellerProducts.errPricePositive').default(0),
+  compare_at_usd: z.coerce.number().nonnegative('sellerProducts.errCompareNegative').optional().default(0),
+  stock: z.coerce.number().int('sellerProducts.errStockInt').nonnegative('sellerProducts.errStockNeg').default(0),
+  category_id: z.string().default(''),
+  images: z.string().default(''),
+});
 
-
-const EMPTY = {
-  title: '',
-  description: '',
-  price_usd: '',
-  compare_at_usd: '',
-  stock: '',
-  category_id: '',
-  images: '',
-};
+const EMPTY = { title: '', description: '', price_usd: '', compare_at_usd: '', stock: '', category_id: '', images: '' };
 
 export default function SellerProducts() {
   const { t } = useTranslation();
@@ -28,10 +31,10 @@ export default function SellerProducts() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [form, setForm] = useState(EMPTY);
   const [editingId, setEditingId] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
+  const { register, handleSubmit, reset, formState: { errors } } = useForm({ resolver: zodResolver(productSchema), defaultValues: EMPTY });
 
   const load = async (sellerId) => {
     const rows = await base44.entities.Product.filter({ seller_id: sellerId }, '-created_date', 200);
@@ -48,18 +51,18 @@ export default function SellerProducts() {
   }, [seller]);
 
   const startCreate = () => {
-    setForm({ ...EMPTY, category_id: categories[0]?.id || '' });
+    reset({ ...EMPTY, category_id: categories[0]?.id || '' });
     setEditingId(null);
     setShowForm(true);
   };
 
   const startEdit = (p) => {
-    setForm({
+    reset({
       title: p.title || '',
       description: p.description || '',
-      price_usd: String(p.price_usd ?? ''),
-      compare_at_usd: String(p.compare_at_usd ?? ''),
-      stock: String(p.stock ?? ''),
+      price_usd: p.price_usd ?? 0,
+      compare_at_usd: p.compare_at_usd ?? 0,
+      stock: p.stock ?? 0,
       category_id: p.category_id || '',
       images: (p.images || []).join(', '),
     });
@@ -67,26 +70,25 @@ export default function SellerProducts() {
     setShowForm(true);
   };
 
-  const save = async (e) => {
-    e.preventDefault();
+  const onSubmit = async (formData) => {
     if (!seller || saving) return;
     setSaving(true);
-    const category = categories.find((c) => c.id === form.category_id);
+    const category = categories.find((c) => c.id === formData.category_id);
     const payload = {
       tenant_id: seller.tenant_id || readActiveTenantId() || '',
       tenant_owner_email: seller.email || '',
-      title: form.title,
-      description: form.description,
-      price_usd: Number(form.price_usd) || 0,
-      compare_at_usd: Number(form.compare_at_usd) || 0,
-      stock: Number(form.stock) || 0,
-      category_id: form.category_id,
+      title: formData.title,
+      description: formData.description,
+      price_usd: Number(formData.price_usd) || 0,
+      compare_at_usd: Number(formData.compare_at_usd) || 0,
+      stock: Number(formData.stock) || 0,
+      category_id: formData.category_id,
       category_name: category?.name || '',
-      images: form.images.split(',').map((s) => s.trim()).filter(Boolean),
+      images: String(formData.images || '').split(',').map((s) => s.trim()).filter(Boolean),
       seller_id: seller.id,
       seller_name: seller.name,
       source_type: 'local_seller',
-      supplier_price: Number(form.price_usd) || 0,
+      supplier_price: Number(formData.price_usd) || 0,
       currency: 'USD',
       origin_country: 'CD',
       estimated_delivery: '2-4 jours',
@@ -96,7 +98,7 @@ export default function SellerProducts() {
       if (editingId) {
         await base44.entities.Product.update(editingId, payload);
       } else {
-        const created = await base44.entities.Product.create({ ...payload, slug: form.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') });
+        const created = await base44.entities.Product.create({ ...payload, slug: payload.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') });
         base44.analytics.track({ eventName: 'seller_product_published' });
         emitEvent(base44, 'product_published', {
           category: 'catalogue',
@@ -112,7 +114,7 @@ export default function SellerProducts() {
       await load(seller.id);
       setShowForm(false);
       setEditingId(null);
-      setForm(EMPTY);
+      reset(EMPTY);
       await base44.functions.invoke('sellerProfile', { action: 'productCount', seller_id: seller.id });
     } finally {
       setSaving(false);
@@ -159,51 +161,58 @@ export default function SellerProducts() {
       </div>
 
       {showForm && (
-        <form onSubmit={save} className="space-y-3 rounded-2xl border border-border bg-card p-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 rounded-2xl border border-border bg-card p-4">
           <h2 className="text-sm font-bold">{editingId ? t('sellerProducts.editProduct') : t('sellerProducts.createProduct')}</h2>
-          <input
-            value={form.title}
-            onChange={(e) => setForm({ ...form, title: e.target.value })}
-            placeholder={t('sellerProducts.phTitle')}
-            required
-            className="h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"
-          />
-          <textarea
-            value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
-            rows={3}
-            placeholder={t('sellerProducts.phDescription')}
-            className="w-full rounded-lg border border-border bg-background p-3 text-sm"
-          />
+          <div>
+            <input
+              {...register('title')}
+              placeholder={t('sellerProducts.phTitle')}
+              className="h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"
+            />
+            {errors.title && <p className="mt-1 text-[11px] text-destructive">{t(errors.title.message)}</p>}
+          </div>
+          <div>
+            <textarea
+              {...register('description')}
+              rows={3}
+              placeholder={t('sellerProducts.phDescription')}
+              className="w-full rounded-lg border border-border bg-background p-3 text-sm"
+            />
+            {errors.description && <p className="mt-1 text-[11px] text-destructive">{t(errors.description.message)}</p>}
+          </div>
           <div className="grid gap-3 md:grid-cols-3">
-            <input
-              type="number"
-              step="0.01"
-              value={form.price_usd}
-              onChange={(e) => setForm({ ...form, price_usd: e.target.value })}
-              placeholder={t('sellerProducts.phPrice')}
-              required
-              className="h-11 rounded-lg border border-border bg-background px-3 text-sm"
-            />
-            <input
-              type="number"
-              step="0.01"
-              value={form.compare_at_usd}
-              onChange={(e) => setForm({ ...form, compare_at_usd: e.target.value })}
-              placeholder={t('sellerProducts.phCompareAt')}
-              className="h-11 rounded-lg border border-border bg-background px-3 text-sm"
-            />
-            <input
-              type="number"
-              value={form.stock}
-              onChange={(e) => setForm({ ...form, stock: e.target.value })}
-              placeholder={t('sellerProducts.phStock')}
-              className="h-11 rounded-lg border border-border bg-background px-3 text-sm"
-            />
+            <div>
+              <input
+                type="number"
+                step="0.01"
+                {...register('price_usd')}
+                placeholder={t('sellerProducts.phPrice')}
+                className="h-11 rounded-lg border border-border bg-background px-3 text-sm"
+              />
+              {errors.price_usd && <p className="mt-1 text-[11px] text-destructive">{t(errors.price_usd.message)}</p>}
+            </div>
+            <div>
+              <input
+                type="number"
+                step="0.01"
+                {...register('compare_at_usd')}
+                placeholder={t('sellerProducts.phCompareAt')}
+                className="h-11 rounded-lg border border-border bg-background px-3 text-sm"
+              />
+              {errors.compare_at_usd && <p className="mt-1 text-[11px] text-destructive">{t(errors.compare_at_usd.message)}</p>}
+            </div>
+            <div>
+              <input
+                type="number"
+                {...register('stock')}
+                placeholder={t('sellerProducts.phStock')}
+                className="h-11 rounded-lg border border-border bg-background px-3 text-sm"
+              />
+              {errors.stock && <p className="mt-1 text-[11px] text-destructive">{t(errors.stock.message)}</p>}
+            </div>
           </div>
           <select
-            value={form.category_id}
-            onChange={(e) => setForm({ ...form, category_id: e.target.value })}
+            {...register('category_id')}
             className="h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"
           >
             <option value="">{t('sellerProducts.phCategory')}</option>
@@ -212,8 +221,7 @@ export default function SellerProducts() {
             ))}
           </select>
           <input
-            value={form.images}
-            onChange={(e) => setForm({ ...form, images: e.target.value })}
+            {...register('images')}
             placeholder={t('sellerProducts.phImages')}
             className="h-11 w-full rounded-lg border border-border bg-background px-3 text-sm"
           />

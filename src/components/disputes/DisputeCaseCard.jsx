@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { memo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle, Banknote, MessageSquare, PackageCheck, Paperclip, Send, ShieldCheck, X } from 'lucide-react';
 import StatusBadge from '@/components/StatusBadge';
@@ -18,7 +18,7 @@ import {
 
 const AUTHOR_KEYS = { admin: 'disputeCase.mediation', seller: 'disputeCase.seller', customer: 'disputeCase.customer' };
 
-export default function DisputeCaseCard({ dispute, ticket, isAdmin, actor, onChanged, onMessage }) {
+export default memo(function DisputeCaseCard({ dispute, ticket, isAdmin, actor, onChanged, onMessage }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [body, setBody] = useState('');
@@ -239,4 +239,4 @@ export default function DisputeCaseCard({ dispute, ticket, isAdmin, actor, onCha
       ) : null}
     </div>
   );
-}
+});

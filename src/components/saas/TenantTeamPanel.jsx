@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { memo, useState } from 'react';
 import { UserPlus, Trash2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,7 @@ import { TENANT_PERMISSIONS, TENANT_ROLES, permissionLabel, permissionsForRole }
 import { formatDate } from '@/lib/format';
 import { useTranslation } from 'react-i18next';
 
-export default function TenantTeamPanel({ tenant, members, onChange, permissions = [], owner = false }) {
+export default memo(function TenantTeamPanel({ tenant, members, onChange, permissions = [], owner = false }) {
   const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
@@ -119,4 +119,4 @@ export default function TenantTeamPanel({ tenant, members, onChange, permissions
       </CardContent>
     </Card>
   );
-}
+});

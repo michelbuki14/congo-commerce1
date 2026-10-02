@@ -2,12 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import DashboardNav from '@/components/DashboardNav';
 import StatCard from '@/components/ops/StatCard';
+import { useTranslation } from 'react-i18next';
 import { ADMIN_LINKS } from '@/lib/navLinks';
 import FraudAlertCard from '@/components/fraud/FraudAlertCard';
 
 const TABS = [['queue', 'À examiner'], ['high', 'Risque élevé'], ['done', 'Traités']];
 
 export default function FraudAlerts() {
+  const { t } = useTranslation();
   const [events, setEvents] = useState(null);
   const [tab, setTab] = useState('queue');
   const load = () => base44.entities.FraudEvent.list('-risk_score', 300).then(setEvents);
@@ -26,11 +28,11 @@ export default function FraudAlerts() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-5 px-4 py-5">
-      <DashboardNav title="Alertes de fraude" links={ADMIN_LINKS} />
+      <DashboardNav title={t('fraudAlerts.title', 'Alertes de fraude')} links={ADMIN_LINKS} />
       <div className="grid grid-cols-3 gap-3">
-        <StatCard label="À examiner" value={all.filter(isOpen).length} tone="warning" />
-        <StatCard label="Risque élevé" value={all.filter((e) => isOpen(e) && ['high', 'critical'].includes(e.risk_level)).length} tone="bad" />
-        <StatCard label="Montant en jeu" value={`${all.filter(isOpen).reduce((s, e) => s + (e.amount_usd || 0), 0).toFixed(0)} $`} />
+        <StatCard label={t('fraudAlerts.toReview', 'À examiner')} value={all.filter(isOpen).length} tone="warning" />
+        <StatCard label={t('fraudAlerts.highRisk', 'Risque élevé')} value={all.filter((e) => isOpen(e) && ['high', 'critical'].includes(e.risk_level)).length} tone="bad" />
+        <StatCard label={t('fraudAlerts.amountAtStake', 'Montant en jeu')} value={`${all.filter(isOpen).reduce((s, e) => s + (e.amount_usd || 0), 0).toFixed(0)} $`} />
       </div>
       <div className="flex gap-2">
         {TABS.map(([k, l]) => (
@@ -38,7 +40,7 @@ export default function FraudAlerts() {
         ))}
       </div>
       {!events ? <div className="h-40 animate-pulse rounded-2xl bg-secondary" /> : shown.length === 0 ? (
-        <p className="text-xs text-muted-foreground">Aucune alerte dans cette vue.</p>
+        <p className="text-xs text-muted-foreground">{t('fraudAlerts.noAlerts', 'Aucune alerte dans cette vue.')}</p>
       ) : (
         <div className="space-y-3">{shown.map((e) => <FraudAlertCard key={e.id} event={e} onDecide={(s, n) => decide(e, s, n)} />)}</div>
       )}

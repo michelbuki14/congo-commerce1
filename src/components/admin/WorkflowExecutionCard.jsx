@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { memo, useState } from 'react';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -32,7 +32,7 @@ const STEP_ICONS = {
   PENDING: { Icon: Circle, className: 'text-muted-foreground' },
 };
 
-export default function WorkflowExecutionCard({ execution, steps, expanded, onToggle, onRetry, onCancel, busy }) {
+export default memo(function WorkflowExecutionCard({ execution, steps, expanded, onToggle, onRetry, onCancel, busy }) {
   const { t } = useTranslation();
   const [decision, setDecision] = useState('');
   const status = String(execution.status || '');
@@ -143,4 +143,4 @@ export default function WorkflowExecutionCard({ execution, steps, expanded, onTo
       )}
     </div>
   );
-}
+});

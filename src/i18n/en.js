@@ -536,6 +536,9 @@ auth: {
     methodsPrivacy: 'Your numbers are linked to your account, visible only to you, and used only to pre-fill payments. No charge happens without your confirmation on your phone.',
     holderName: 'Holder name',
     addAccount: 'Add this account',
+    errProviderRequired: 'Please select a network',
+    errPhoneRequired: 'Phone number is required',
+    errPhoneInvalid: 'Invalid phone number for this network',
   },
   home: { loadFailed: 'Some content could not be loaded. Check your connection.', heroBadge: 'Kinshasa delivery in 2-4 days', heroTitle: 'The best of Congo and the world, delivered to you', heroSubtitle: 'Verified local sellers, tracked imports, mobile money or cash-on-delivery payment.', discoverVideo: 'Discover in video', browseCategories: 'Browse categories', becomeCreator: 'Become a creator →', flashSale: 'Flash sales', limitedTime: 'Limited time', noFlash: 'No flash sale running. Check back soon.', discovery: 'Discovery', discoverySub: 'Buy directly from creator videos', trending: 'Trending', trendingSub: 'The most ordered items', featured: 'Congo Commerce picks', localSellers: 'Verified local sellers', localSellersSub: 'Cash on delivery available', noSellers: 'No sellers yet', noSellersDesc: 'Partner shops will appear here.', openShop: 'Open a shop', localProducts: 'Local products', localProductsSub: 'Shipped from the DRC', newArrivals: 'New arrivals', intlTitle: 'International import', intlNote: 'Import fees and taxes included — delivery is charged at checkout.', featTrackedTitle: 'Tracked delivery', featTrackedText: 'Real-time tracking, pickup-point collection available.', featMobileTitle: 'Mobile money payment', featMobileText: 'M-Pesa, Airtel Money, Orange Money, or on delivery.', featVerifiedTitle: 'Verified sellers', featVerifiedText: 'Every shop is vetted by our team.', featProtectionTitle: 'Buyer protection', featProtectionText: 'Item not as described? Open a dispute in 2 clicks.' },
   discover: { linkCopied: 'Link copied', addedToCart: 'Added to cart', unavailable: 'Item unavailable', emptyTitle: 'No videos yet', emptyDesc: 'Creator content will appear here.', video: 'Video', photo: 'Product photo', cart: 'Cart', addToCart: 'Add to cart' },
@@ -662,6 +665,7 @@ auth: {
   orderTracking: {
   title: "Delivery tracking",
   helper: "Enter the number received at checkout to see the carrier status and latest parcel updates.",
+  search: "Search",
   orderNumberPh: "Order number (CC-…)",
   phonePh: "Phone (optional)",
   orderNumberRequired: "Enter your order number.",
@@ -682,6 +686,7 @@ auth: {
   orderDetails: "Order details",
   reportIssue: "Report a problem",
   contactSupport: "Contact support",
+  totalLabel: "Total",
 },
   invoice: {
   notFound: "Invoice not found",
@@ -1418,6 +1423,13 @@ auth: {
   ariaToggle: 'Publish / archive',
   ariaDelete: 'Delete',
   empty: 'No products yet. Create one or import from a supplier.',
+  errTitle: 'Title is required',
+  errTitleLong: 'Title cannot exceed 120 characters',
+  errDescLong: 'Description cannot exceed 2000 characters',
+  errPricePositive: 'Price must be greater than 0',
+  errCompareNegative: 'Compare-at price cannot be negative',
+  errStockInt: 'Stock must be an integer',
+  errStockNeg: 'Stock cannot be negative',
 },
   sellerOrders: {
   title: 'Incoming orders',
@@ -3040,6 +3052,7 @@ auth: {
   address: 'Address',
   phone: 'Phone',
   addPickup: 'Add pickup point',
+  saving: 'Saving…',
 },
   adminNotifications: {
   tab_queued: 'To send',
@@ -3485,6 +3498,8 @@ auth: {
     inventory: "Inventory",
     noInventory: "No inventory recorded.",
     none: "No warehouses recorded.",
+    deleteTitle: "Delete warehouse",
+    deleteDesc: "This action is irreversible. Confirm to remove this warehouse from the platform.",
     viewInventory: "View inventory",
   },
   rating: {
@@ -3493,6 +3508,13 @@ auth: {
   },
   shippingLabels: {
     title: "Shipping labels",
+  },
+  fraudAlerts: {
+    title: "Fraud alerts",
+    toReview: "To review",
+    highRisk: "High risk",
+    amountAtStake: "Amount at stake",
+    noAlerts: "No fraud alerts for now.",
   },
   tickets: {
     title: "Ticket automation",
@@ -3522,6 +3544,7 @@ auth: {
     likes: "likes",
     views: "views",
     noProduct: "no product",
+    loadFailed: "Unable to load creator data.",
   }
 }
 

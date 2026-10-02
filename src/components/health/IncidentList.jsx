@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { CheckCircle2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { formatDateTime } from '@/lib/format';
@@ -10,7 +10,7 @@ const SEVERITY = {
 };
 
 /** Recent failures worth acting on, newest first. */
-export default function IncidentList({ incidents }) {
+export default memo(function IncidentList({ incidents }) {
   const { t } = useTranslation();
   const SEVERITY_LABELS = { critical: t('incidentList.severityCritical'), warning: t('incidentList.severityWarning'), info: t('incidentList.severityInfo') };
   if (!incidents?.length) {
@@ -40,4 +40,4 @@ export default function IncidentList({ incidents }) {
       ))}
     </div>
   );
-}
+});

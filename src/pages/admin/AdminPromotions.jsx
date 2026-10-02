@@ -17,6 +17,7 @@ export default function AdminPromotions() {
   const [draft, setDraft] = useState(EMPTY);
   const [showForm, setShowForm] = useState(false);
   const [message, setMessage] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const load = async () => {
     const [c, p] = await Promise.all([
@@ -34,17 +35,24 @@ export default function AdminPromotions() {
 
   const create = async (e) => {
     e.preventDefault();
-    if (!draft.code) return;
-    await base44.entities.Coupon.create({
-      ...draft,
-      code: draft.code.toUpperCase(),
-      active: true,
-      expires_at: draft.expires_at || undefined,
-    });
-    setDraft(EMPTY);
-    setShowForm(false);
-    setMessage(t('adminPromotions.created'));
-    await load();
+    if (!draft.code || saving) return;
+    setSaving(true);
+    try {
+      await base44.entities.Coupon.create({
+        ...draft,
+        code: draft.code.toUpperCase(),
+        active: true,
+        expires_at: draft.expires_at || undefined,
+      });
+      setDraft(EMPTY);
+      setShowForm(false);
+      setMessage(t('adminPromotions.created'));
+      await load();
+    } catch {
+      // Error handling if needed
+    } finally {
+      setSaving(false);
+    }
   };
 
   const toggle = async (c) => {
@@ -89,7 +97,7 @@ export default function AdminPromotions() {
           <input type="number" step="0.01" value={draft.max_discount_usd} onChange={(e) => setDraft({ ...draft, max_discount_usd: Number(e.target.value) })} placeholder={t('adminPromotions.maxDiscount')} className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
           <input type="date" value={draft.expires_at} onChange={(e) => setDraft({ ...draft, expires_at: e.target.value })} className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
           <input value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} placeholder={t('adminPromotions.description')} className="h-11 rounded-lg border border-border bg-background px-3 text-sm md:col-span-3" />
-          <button type="submit" className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground md:col-span-3">{t('adminPromotions.create')}</button>
+          <button type="submit" disabled={saving} className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground md:col-span-3 disabled:opacity-50">{saving ? t('common.saving') : t('adminPromotions.create')}</button>
         </form>
       )}
 

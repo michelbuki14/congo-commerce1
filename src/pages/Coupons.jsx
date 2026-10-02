@@ -4,7 +4,6 @@ import { Ticket, Copy, Check } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import EmptyState from '@/components/EmptyState';
 import { formatUSD, formatDate } from '@/lib/format';
-import BackButton from '@/components/BackButton';
 
 export default function Coupons() {
   const { t } = useTranslation();
@@ -40,7 +39,6 @@ export default function Coupons() {
   };
 
   return (<div className="mx-auto max-w-2xl space-y-5 pb-8">
-        <BackButton fallback="/" className="md:hidden" />
       <h1 className="text-lg font-bold md:text-xl">{t('coupons.title')}</h1>
       <p className="text-sm text-muted-foreground">
         {t('coupons.subtitle')}

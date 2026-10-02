@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { memo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Send, User, Headphones } from 'lucide-react';
 import { replyToTicket } from '@/lib/customerAccount';
 import { getProfile } from '@/lib/session';
 import { formatDateTime } from '@/lib/format';
 
-export default function TicketThread({ ticket, onReplied }) {
+export default memo(function TicketThread({ ticket, onReplied }) {
   const { t } = useTranslation();
   const [reply, setReply] = useState('');
   const [sending, setSending] = useState(false);
@@ -65,4 +65,4 @@ export default function TicketThread({ ticket, onReplied }) {
       {error && <p className="text-[11px] text-destructive">{error}</p>}
     </div>
   );
-}
+});

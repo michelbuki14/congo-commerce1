@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Wallet as WalletIcon } from 'lucide-react';
 import { formatUSD, formatDate } from '@/lib/format';
 
-export default function CourierEarnings({ wallet, transactions }) {
+export default memo(function CourierEarnings({ wallet, transactions }) {
   const { t } = useTranslation();
   const delivered = transactions.filter((t) => t.status === 'posted').length;
 
@@ -42,4 +42,4 @@ export default function CourierEarnings({ wallet, transactions }) {
       )}
     </section>
   );
-}
+});

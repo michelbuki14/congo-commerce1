@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { memo, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,7 +8,7 @@ import { BILLING_CYCLES, cancelSubscription, changePlan, renewSubscription, subs
 import { planByCode, planLimit, usagePercent } from '@/lib/plans';
 import { useTranslation } from 'react-i18next';
 
-export default function TenantPlanPanel({ tenant, subscription, plans, invoices, usage, onChange }) {
+export default memo(function TenantPlanPanel({ tenant, subscription, plans, invoices, usage, onChange }) {
   const { t } = useTranslation();
   const [cycle, setCycle] = useState(subscription?.billing_cycle || 'monthly');
   const [busy, setBusy] = useState(false);
@@ -116,4 +116,4 @@ export default function TenantPlanPanel({ tenant, subscription, plans, invoices,
       </Card>
     </div>
   );
-}
+});

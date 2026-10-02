@@ -16,6 +16,7 @@ export default memo(function CreatorDashboard() {
   const [products, setProducts] = useState([]);
   const [clicks, setClicks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [draft, setDraft] = useState({ product_id: '', title: '', caption: '', media_url: '', media_type: 'image' });
@@ -23,20 +24,31 @@ export default memo(function CreatorDashboard() {
 
   const loadCreator = async (c) => {
     if (!c) return;
-    const [ct, cl] = await Promise.all([
-      base44.entities.Content.filter({ creator_id: c.id }, '-created_date', 50).catch(() => []),
-      base44.entities.AffiliateClick.filter({ creator_id: c.id }, '-created_date', 100).catch(() => []),
-    ]);
-    setContents(ct);
-    setClicks(cl);
+    try {
+      const [ct, cl] = await Promise.all([
+        base44.entities.Content.filter({ creator_id: c.id }, '-created_date', 50),
+        base44.entities.AffiliateClick.filter({ creator_id: c.id }, '-created_date', 100),
+      ]);
+      setContents(ct);
+      setClicks(cl);
+    } catch {
+      setError(t('creatorDashboard.loadFailed', 'Impossible de charger les données.'));
+    }
   };
 
   useEffect(() => {
+    let alive = true;
     (async () => {
-      const p = await base44.entities.Product.filter({ status: 'published' }, '-sold_count', 40).catch(() => []);
-      setProducts(p);
-      setLoading(false);
+      try {
+        const p = await base44.entities.Product.filter({ status: 'published' }, '-sold_count', 40);
+        if (alive) setProducts(p);
+      } catch {
+        if (alive) setError(t('creatorDashboard.loadFailed', 'Impossible de charger les données.'));
+      } finally {
+        if (alive) setLoading(false);
+      }
     })();
+    return () => { alive = false; };
   }, []);
 
   useEffect(() => {
@@ -89,6 +101,17 @@ export default memo(function CreatorDashboard() {
   };
 
   if (loading || loadingCreator) return <div className="h-64 animate-pulse rounded-2xl bg-secondary" />;
+
+  if (error) {
+    return (
+      <div className="rounded-2xl border border-destructive bg-card p-6 text-center">
+        <p className="text-sm font-semibold text-destructive">{error}</p>
+        <button type="button" onClick={() => { setError(''); setLoading(true); }} className="mt-3 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground">
+          {t('common.retry', 'Réessayer')}
+        </button>
+      </div>
+    );
+  }
 
   if (!creator) {
     return (

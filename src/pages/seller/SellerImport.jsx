@@ -172,7 +172,7 @@ export default function SellerImport() {
             className="h-11 w-full rounded-full border border-border bg-card pl-9 pr-3 text-sm"
           />
         </div>
-        <button type="submit" className="rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground">
+        <button type="submit" disabled={searching} className="rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground disabled:opacity-50">
           {searching ? t('sellerImport.searching') : t('sellerImport.search')}
         </button>
       </form>

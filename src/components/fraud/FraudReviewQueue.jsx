@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { ShieldCheck, ShieldAlert, ShieldX, Eye } from 'lucide-react';
 import { formatUSD } from '@/lib/format';
 import { useTranslation } from 'react-i18next';
@@ -10,7 +10,7 @@ const LEVEL_STYLE = {
   critical: 'bg-red-100 text-red-900',
 };
 
-export default function FraudReviewQueue({ events, busyId, onReview }) {
+export default memo(function FraudReviewQueue({ events, busyId, onReview }) {
   const { t } = useTranslation();
   const LEVEL_LABEL = { low: t('fraudReviewQueue.levelLow'), medium: t('fraudReviewQueue.levelMedium'), high: t('fraudReviewQueue.levelHigh'), critical: t('fraudReviewQueue.levelCritical') };
   const STATUS_LABEL = {
@@ -79,4 +79,4 @@ export default function FraudReviewQueue({ events, busyId, onReview }) {
       ))}
     </div>
   );
-}
+});

@@ -18,7 +18,7 @@ export async function resolve(specifier, context, next) {
   if (specifier.startsWith('.') && context?.parentURL?.startsWith('file:')) {
     const base = path.resolve(path.dirname(fileURLToPath(context.parentURL)), specifier);
     const hit = EXTENSIONS.map((e) => base + e).find((p) => fs.existsSync(p) && fs.statSync(p).isFile());
-    if (hit && hit !== base) return { url: pathToFileURL(hit).href, shortCircuit: true };
+    if (hit) return { url: pathToFileURL(hit).href, shortCircuit: true };
   }
   return next(specifier, context);
 }

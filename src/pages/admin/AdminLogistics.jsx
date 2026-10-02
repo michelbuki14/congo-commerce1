@@ -22,18 +22,8 @@ export default function AdminLogistics() {
     zones: { name: '', city: getCities()[0], fee_usd: 2.5, eta_days: '2-4' },
     pickups: { name: '', city: getCities()[0], commune: '', address: '', phone: '', fee_usd: 0.5 },
   });
-
-  const load = async () => {
-    const [c, z, p] = await Promise.all([
-      base44.entities.Courier.list('name', 50).catch(() => []),
-      base44.entities.DeliveryZone.list('city', 100).catch(() => []),
-      base44.entities.PickupPoint.list('city', 100).catch(() => []),
-    ]);
-    setCouriers(c);
-    setZones(z);
-    setPickups(p);
-    setLoading(false);
-  };
+  const [savingZone, setSavingZone] = useState(false);
+  const [savingPickup, setSavingPickup] = useState(false);
 
   useEffect(() => {
     load();
@@ -51,18 +41,28 @@ export default function AdminLogistics() {
 
   const addZone = async (e) => {
     e.preventDefault();
-    if (!drafts.zones.name) return;
-    await base44.entities.DeliveryZone.create({ ...drafts.zones, country: 'CD', supports_pickup: true, active: true });
-    setDrafts({ ...drafts, zones: { name: '', city: getCities()[0], fee_usd: 2.5, eta_days: '2-4' } });
-    await load();
+    if (!drafts.zones.name || savingZone) return;
+    setSavingZone(true);
+    try {
+      await base44.entities.DeliveryZone.create({ ...drafts.zones, country: 'CD', supports_pickup: true, active: true });
+      setDrafts({ ...drafts, zones: { name: '', city: getCities()[0], fee_usd: 2.5, eta_days: '2-4' } });
+      await load();
+    } finally {
+      setSavingZone(false);
+    }
   };
 
   const addPickup = async (e) => {
     e.preventDefault();
-    if (!drafts.pickups.name) return;
-    await base44.entities.PickupPoint.create({ ...drafts.pickups, hours: '08:00 - 18:00', active: true });
-    setDrafts({ ...drafts, pickups: { name: '', city: getCities()[0], commune: '', address: '', phone: '', fee_usd: 0.5 } });
-    await load();
+    if (!drafts.pickups.name || savingPickup) return;
+    setSavingPickup(true);
+    try {
+      await base44.entities.PickupPoint.create({ ...drafts.pickups, hours: '08:00 - 18:00', active: true });
+      setDrafts({ ...drafts, pickups: { name: '', city: getCities()[0], commune: '', address: '', phone: '', fee_usd: 0.5 } });
+      await load();
+    } finally {
+      setSavingPickup(false);
+    }
   };
 
   const removeZone = async (z) => {
@@ -155,8 +155,8 @@ export default function AdminLogistics() {
             </select>
             <input type="number" step="0.1" value={drafts.zones.fee_usd} onChange={(e) => setDrafts({ ...drafts, zones: { ...drafts.zones, fee_usd: Number(e.target.value) } })} placeholder={t('adminLogistics.feeUsd')} className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
             <input value={drafts.zones.eta_days} onChange={(e) => setDrafts({ ...drafts, zones: { ...drafts.zones, eta_days: e.target.value } })} placeholder={t('adminLogistics.eta')} className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
-            <button type="submit" className="flex items-center justify-center gap-1.5 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground md:col-span-4">
-              <Plus className="h-4 w-4" /> {t('adminLogistics.addZone')}
+            <button type="submit" disabled={savingZone} className="flex items-center justify-center gap-1.5 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground md:col-span-4 disabled:opacity-50">
+              <Plus className="h-4 w-4" /> {savingZone ? t('adminLogistics.saving') : t('adminLogistics.addZone')}
             </button>
           </form>
           <div className="space-y-2">
@@ -187,8 +187,8 @@ export default function AdminLogistics() {
             <input value={drafts.pickups.commune} onChange={(e) => setDrafts({ ...drafts, pickups: { ...drafts.pickups, commune: e.target.value } })} placeholder={t('adminLogistics.commune')} className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
             <input value={drafts.pickups.address} onChange={(e) => setDrafts({ ...drafts, pickups: { ...drafts.pickups, address: e.target.value } })} placeholder={t('adminLogistics.address')} className="h-11 rounded-lg border border-border bg-background px-3 text-sm md:col-span-2" />
             <input value={drafts.pickups.phone} onChange={(e) => setDrafts({ ...drafts, pickups: { ...drafts.pickups, phone: e.target.value } })} placeholder={t('adminLogistics.phone')} className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
-            <button type="submit" className="flex items-center justify-center gap-1.5 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground md:col-span-3">
-              <Plus className="h-4 w-4" /> {t('adminLogistics.addPickup')}
+            <button type="submit" disabled={savingPickup} className="flex items-center justify-center gap-1.5 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground md:col-span-3 disabled:opacity-50">
+              <Plus className="h-4 w-4" /> {savingPickup ? t('adminLogistics.saving') : t('adminLogistics.addPickup')}
             </button>
           </form>
           <div className="space-y-2">

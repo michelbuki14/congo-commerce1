@@ -24,6 +24,8 @@ export default function AdminUsers() {
   const [message, setMessage] = useState('');
   const [newSeller, setNewSeller] = useState({ name: '', email: '', city: getCities()[0], phone: '', commission_rate: 10 });
   const [showSellerForm, setShowSellerForm] = useState(false);
+  const [savingSeller, setSavingSeller] = useState(false);
+  const [savingInvite, setSavingInvite] = useState(false);
 
   const load = async () => {
     const [s, c, k, cl] = await Promise.all([
@@ -77,31 +79,39 @@ export default function AdminUsers() {
 
   const createSeller = async (e) => {
     e.preventDefault();
-    if (!newSeller.name) return;
-    await base44.entities.Seller.create({
-      ...newSeller,
-      slug: newSeller.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-      country: 'CD',
-      status: 'pending',
-      verified: false,
-      delivery_info: 'Livraison locale 2-4 jours, retrait en point relais.',
-    });
-    setNewSeller({ name: '', email: '', city: getCities()[0], phone: '', commission_rate: 10 });
-    setShowSellerForm(false);
-    setMessage(t('adminUsers.shopCreated'));
-    await load();
+    if (!newSeller.name || savingSeller) return;
+    setSavingSeller(true);
+    try {
+      await base44.entities.Seller.create({
+        ...newSeller,
+        slug: newSeller.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        country: 'CD',
+        status: 'pending',
+        verified: false,
+        delivery_info: 'Livraison locale 2-4 jours, retrait en point relais.',
+      });
+      setNewSeller({ name: '', email: '', city: getCities()[0], phone: '', commission_rate: 10 });
+      setShowSellerForm(false);
+      setMessage(t('adminUsers.shopCreated'));
+      await load();
+    } finally {
+      setSavingSeller(false);
+    }
   };
 
   const sendInvite = async (e) => {
     e.preventDefault();
+    if (!invite.email || savingInvite) return;
+    setSavingInvite(true);
     setMessage('');
-    if (!invite.email) return;
     try {
       await base44.users.inviteUser(invite.email, invite.role);
       setMessage(t('adminUsers.inviteSent', { email: invite.email, role: invite.role }));
       setInvite({ email: '', role: 'user' });
     } catch {
       setMessage(t('adminUsers.inviteFailed'));
+    } finally {
+      setSavingInvite(false);
     }
   };
 
@@ -148,7 +158,7 @@ export default function AdminUsers() {
               <input value={newSeller.phone} onChange={(e) => setNewSeller({ ...newSeller, phone: e.target.value })} placeholder={t('adminUsers.phone')} className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
               <input type="email" value={newSeller.email} onChange={(e) => setNewSeller({ ...newSeller, email: e.target.value })} placeholder={t('adminUsers.sellerEmail')} className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
               <input type="number" value={newSeller.commission_rate} onChange={(e) => setNewSeller({ ...newSeller, commission_rate: Number(e.target.value) })} placeholder={t('adminUsers.commission')} className="h-11 rounded-lg border border-border bg-background px-3 text-sm" />
-              <button type="submit" className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground md:col-span-2">{t('adminUsers.createShop')}</button>
+              <button type="submit" disabled={savingSeller} className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground md:col-span-2 disabled:opacity-50">{savingSeller ? t('common.saving') : t('adminUsers.createShop')}</button>
             </form>
           )}
           <div className="space-y-2">
@@ -264,9 +274,7 @@ export default function AdminUsers() {
               <option value="admin">{t('adminUsers.roleAdmin')}</option>
             </select>
           </div>
-          <button type="submit" className="rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground">
-            {t('adminUsers.sendInvite')}
-          </button>
+          <button type="submit" disabled={savingInvite} className="rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50">{savingInvite ? t('common.saving') : t('adminUsers.sendInvite')}</button>
           <p className="text-[11px] text-muted-foreground">
             {t('adminUsers.inviteNote')}
           </p>

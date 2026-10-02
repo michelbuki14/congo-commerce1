@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import StatusBadge from '@/components/StatusBadge';
@@ -6,7 +6,7 @@ import { formatUSD, formatDate } from '@/lib/format';
 import { RETURN_REASONS } from '@/lib/returns';
 
 /** One delivered order with its items, each selectable with its own reason. */
-export default function ReturnOrderCard({ order, eligibility, selection, onToggle, onReason }) {
+export default memo(function ReturnOrderCard({ order, eligibility, selection, onToggle, onReason }) {
   const { t } = useTranslation();
   return (
     <div className="rounded-xl border border-border p-3">
@@ -67,4 +67,4 @@ export default function ReturnOrderCard({ order, eligibility, selection, onToggl
       ) : null}
     </div>
   );
-}
+});

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { memo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MapPin, Phone, Navigation, CheckCircle2, XCircle } from 'lucide-react';
 import { SHIPMENT_STATUS_LABELS } from '@/lib/logistics';
@@ -16,7 +16,7 @@ const NEXT_STEP = {
   IN_TRANSIT: { status: 'OUT_FOR_DELIVERY', labelKey: 'outForDelivery' },
 };
 
-export default function CourierTrackingCard({ shipment, fulfillment, order, busy, showFleet, onAdvance }) {
+export default memo(function CourierTrackingCard({ shipment, fulfillment, order, busy, showFleet, onAdvance }) {
   const { t } = useTranslation();
   const [proofOpen, setProofOpen] = useState(false);
   const disabled = busy === shipment.id;
@@ -145,4 +145,4 @@ export default function CourierTrackingCard({ shipment, fulfillment, order, busy
       </div>
     </div>
   );
-}
+});

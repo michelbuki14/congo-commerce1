@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Heart, ShoppingBag } from 'lucide-react';
@@ -10,7 +10,7 @@ import { useCurrency } from '@/lib/currency';
  * Read-only view of a wishlist someone shared. Nothing here edits the
  * recipient's own favourites, but every item can be added to the cart.
  */
-export default function SharedWishlist({ products, loading }) {
+export default memo(function SharedWishlist({ products, loading }) {
   const { t } = useTranslation();
   const { addItem } = useCart();
   const { format } = useCurrency();
@@ -63,4 +63,4 @@ export default function SharedWishlist({ products, loading }) {
       </Link>
     </div>
   );
-}
+});

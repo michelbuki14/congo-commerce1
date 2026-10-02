@@ -6,7 +6,6 @@ import InfoPage, { InfoSection } from '@/components/InfoPage';
 import SellerRatingCard from '@/components/ratings/SellerRatingCard';
 import { RATING_SORTS, buildSellerMetrics, marketplaceStats, sortMetrics } from '@/lib/vendorRatings';
 import { fetchDisputeIndex } from '@/lib/customerAccount';
-import BackButton from '@/components/BackButton';
 
 export default function VendorRatings() {
   const { t } = useTranslation();
@@ -41,7 +40,6 @@ export default function VendorRatings() {
       title={t('vendorRatings.title')}
       subtitle={t('vendorRatings.subtitle')}
     >
-        <BackButton fallback="/" className="md:hidden" />
       <InfoSection title={t('vendorRatings.marketTitle')}>
         <div className="grid grid-cols-2 gap-2.5 md:grid-cols-4">
           {[

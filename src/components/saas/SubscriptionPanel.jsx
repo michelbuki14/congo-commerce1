@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { memo, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,7 +8,7 @@ import { planByCode } from '@/lib/plans';
 import { useTranslation } from 'react-i18next';
 
 /** Platform-admin subscription desk: change plan, renew, cancel, settle invoices. */
-export default function SubscriptionPanel({ subscriptions, plans, onChange }) {
+export default memo(function SubscriptionPanel({ subscriptions, plans, onChange }) {
   const { t } = useTranslation();
   const [busyId, setBusyId] = useState('');
   const [error, setError] = useState('');
@@ -89,4 +89,4 @@ export default function SubscriptionPanel({ subscriptions, plans, onChange }) {
       </CardContent>
     </Card>
   );
-}
+});

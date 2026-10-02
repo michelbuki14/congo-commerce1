@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { CheckCircle2, Circle, XCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { EVENT_LABELS } from '@/lib/events';
@@ -16,7 +16,7 @@ const ACTION_ICONS = {
   skipped: Circle,
 };
 
-export default function EventCard({ event }) {
+export default memo(function EventCard({ event }) {
   const { t } = useTranslation();
   const SEVERITY_LABELS = { info: t('eventCard.severityInfo'), warning: t('eventCard.severityWarning'), critical: t('eventCard.severityCritical') };
   const STATUS_LABELS = { received: t('eventCard.statusReceived'), handled: t('eventCard.statusHandled'), failed: t('eventCard.statusFailed') };
@@ -66,4 +66,4 @@ export default function EventCard({ event }) {
       )}
     </div>
   );
-}
+});
