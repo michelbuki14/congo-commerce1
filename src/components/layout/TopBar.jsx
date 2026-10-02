@@ -9,6 +9,7 @@ import LanguageToggle from '@/components/LanguageToggle';
 import BrandLogo from '@/components/BrandLogo';
 import ThemeToggle from '@/components/ThemeToggle';
 import MobileDrawer from '@/components/MobileDrawer';
+import EnvironmentBadge from '@/components/ui/EnvironmentBadge';
 
 export default function TopBar() {
   const { t } = useTranslation();
@@ -85,6 +86,7 @@ export default function TopBar() {
                       <CurrencyToggle className="hidden md:inline-flex" />
                       <LanguageToggle className="hidden h-12 md:block" />
                       <ThemeToggle className="hidden md:inline-flex" />
+                      <EnvironmentBadge />
 
                       {/* User actions - desktop only */}
                       <div className="hidden md:flex items-center gap-2">

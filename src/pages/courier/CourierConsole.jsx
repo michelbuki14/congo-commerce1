@@ -4,6 +4,7 @@ import { Truck } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { respondToShipment, courierUpdateShipment } from '@/lib/orderService';
 import { useTenantScope } from '@/lib/tenant';
+import DashboardShell from '@/components/DashboardShell';
 import CourierHeader from '@/components/courier/CourierHeader';
 import CourierJobCard from '@/components/courier/CourierJobCard';
 import CourierTrackingView from '@/components/courier/CourierTrackingView';
@@ -156,82 +157,84 @@ export default function CourierConsole() {
   const visible = buckets[tab];
 
   return (
-    <div className="space-y-5 pb-8">
-      <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight md:text-3xl">
-        <Truck className="h-5 w-5 text-primary" /> {t('courierConsole.title')}
-      </h1>
+    <DashboardShell nav={[]} title={t('courierConsole.title')}>
+      <>
+        <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight md:text-3xl">
+          <Truck className="h-5 w-5 text-primary" /> {t('courierConsole.title')}
+        </h1>
 
-      {!loadingCourier && (
-        <CourierHeader
-          user={user}
-          fleets={fleets}
-          activeFleet={isAdmin ? courier : fleets[0] || null}
-          isAdmin={isAdmin}
-          couriers={couriers}
-          onSelectFleet={pickCourier}
-        />
-      )}
+        {!loadingCourier && (
+          <CourierHeader
+            user={user}
+            fleets={fleets}
+            activeFleet={isAdmin ? courier : fleets[0] || null}
+            isAdmin={isAdmin}
+            couriers={couriers}
+            onSelectFleet={pickCourier}
+          />
+        )}
 
-      <CourierEarnings wallet={wallet} transactions={transactions} />
+        <CourierEarnings wallet={wallet} transactions={transactions} />
 
-      <div className="flex flex-wrap gap-2">
-        {TABS.map((tx) => (
-          <button
-            key={tx.id}
-            type="button"
-            onClick={() => setTab(tx.id)}
-            className={`rounded-full px-3.5 py-1.5 text-xs font-semibold ${
-              tab === tx.id ? 'bg-primary text-primary-foreground' : 'bg-secondary'
-            }`}
-          >
-            {tx.label}
-          </button>
-        ))}
-      </div>
-
-      {error && (
-        <p className="rounded-xl border border-destructive bg-card p-3 text-xs font-medium text-destructive">{error}</p>
-      )}
-
-      {loading || loadingCourier ? (
-        <div className="h-40 animate-pulse rounded-2xl bg-secondary" />
-      ) : !courier ? (
-        <p className="rounded-xl border border-dashed border-border bg-card p-4 text-xs text-muted-foreground">
-{t('courierConsole.noFleet')}
-        </p>
-      ) : tab === 'tracking' ? (
-        <CourierTrackingView
-          shipments={buckets.active}
-          fulfillments={fulfillments}
-          orders={orders}
-          busy={busy}
-          showFleet={fleets.length > 1}
-          onAdvance={advance}
-        />
-      ) : visible.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-border bg-card p-4 text-xs text-muted-foreground">
-          {tab === 'offers'
-            ? t('courierConsole.emptyOffers')
-            : tab === 'active'
-              ? t('courierConsole.emptyActive')
-              : t('courierConsole.emptyDone')}
-        </p>
-      ) : (
-        <div className="space-y-3">
-          {visible.map((s) => (
-            <CourierJobCard
-              key={s.id}
-              shipment={s}
-              fulfillment={fulfillments[s.fulfillment_order_id]}
-              order={orders[s.order_number]}
-              busy={busy}
-              showFleet={fleets.length > 1}
-              onRespond={respond}
-              onAdvance={advance}
-            />
+        <div className="flex flex-wrap gap-2">
+          {TABS.map((tx) => (
+            <button
+              key={tx.id}
+              type="button"
+              onClick={() => setTab(tx.id)}
+              className={`rounded-full px-3.5 py-1.5 text-xs font-semibold ${
+                tab === tx.id ? 'bg-primary text-primary-foreground' : 'bg-secondary'
+              }`}
+            >
+              {tx.label}
+            </button>
           ))}
         </div>
-      )}
-    </div>
+
+        {error && (
+          <p className="rounded-xl border border-destructive bg-card p-3 text-xs font-medium text-destructive">{error}</p>
+        )}
+
+        {loading || loadingCourier ? (
+          <div className="h-40 animate-pulse rounded-2xl bg-secondary" />
+        ) : !courier ? (
+          <p className="rounded-xl border border-dashed border-border bg-card p-4 text-xs text-muted-foreground">
+{t('courierConsole.noFleet')}
+          </p>
+        ) : tab === 'tracking' ? (
+          <CourierTrackingView
+            shipments={buckets.active}
+            fulfillments={fulfillments}
+            orders={orders}
+            busy={busy}
+            showFleet={fleets.length > 1}
+            onAdvance={advance}
+          />
+        ) : visible.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-border bg-card p-4 text-xs text-muted-foreground">
+            {tab === 'offers'
+              ? t('courierConsole.emptyOffers')
+              : tab === 'active'
+                ? t('courierConsole.emptyActive')
+                : t('courierConsole.emptyDone')}
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {visible.map((s) => (
+              <CourierJobCard
+                key={s.id}
+                shipment={s}
+                fulfillment={fulfillments[s.fulfillment_order_id]}
+                order={orders[s.order_number]}
+                busy={busy}
+                showFleet={fleets.length > 1}
+                onRespond={respond}
+                onAdvance={advance}
+              />
+            ))}
+          </div>
+        )}
+      </>
+    </DashboardShell>
   );
 }

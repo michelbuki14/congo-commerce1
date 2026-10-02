@@ -323,6 +323,9 @@ auth: {
     movements: 'Movements',
     noFilterMovements: 'No movements in this filter.',
   },
+  dashboard: {
+    title: 'Dashboard'
+  },
   sellerNav: {
     dashboard: 'Dashboard',
     products: 'Products',
@@ -331,6 +334,14 @@ auth: {
     payouts: 'Withdrawals',
     payment: 'Payment',
     export: 'Export',
+  },
+  env: {
+    sandbox: 'Sandbox',
+    development: 'Dev',
+    staging: 'Staging',
+    test: 'Test',
+    modeLabel: 'Environment: {{mode}}',
+    modeTooltip: 'This app is running in {{mode}} mode',
   },
   seller: {
     title: 'Seller space', overview: 'Overview',
@@ -384,6 +395,7 @@ auth: {
     requestTitle: 'Request a withdrawal',
     heldNote: 'The amount is locked on your balance when you request, then paid after our team approves. A refusal automatically re-credits the wallet.',
     pendingTitle: 'Pending withdrawals ({{count}})',
+    partnerTitle: 'Partner wallet',
   },
   healthStatus: {
     ok: 'Operational',

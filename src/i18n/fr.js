@@ -326,6 +326,9 @@ auth: {
     movements: 'Mouvements',
     noFilterMovements: 'Aucun mouvement dans ce filtre.',
   },
+  dashboard: {
+    title: 'Tableau de bord'
+  },
   sellerNav: {
     dashboard: 'Tableau de bord',
     products: 'Produits',
@@ -334,6 +337,14 @@ auth: {
     payouts: 'Retraits',
     payment: 'Paiement',
     export: 'Export',
+  },
+  env: {
+    sandbox: 'Sandbox',
+    development: 'Dev',
+    staging: 'Staging',
+    test: 'Test',
+    modeLabel: 'Environnement : {{mode}}',
+    modeTooltip: 'Cette application fonctionne en mode {{mode}}',
   },
   seller: {
     title: 'Espace vendeur', overview: 'Aperçu',
@@ -387,6 +398,7 @@ auth: {
     requestTitle: 'Demander un retrait',
     heldNote: 'Le montant est bloqué sur votre solde dès la demande, puis versé après validation par notre équipe. Un refus recrédite automatiquement le portefeuille.',
     pendingTitle: 'Retraits en attente ({{count}})',
+    partnerTitle: 'Portefeuille partenaires',
   },
   healthStatus: {
     ok: 'Opérationnel',

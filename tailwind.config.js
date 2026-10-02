@@ -10,6 +10,19 @@ module.exports = {
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
   		},
+  		spacing: {
+  			'18': '4.5rem',
+  			'88': '22rem',
+  			'128': '32rem',
+  		},
+  		fontSize: {
+  			'2xs': ['0.6875rem', { lineHeight: '1rem' }],
+  			'5xl': ['2.25rem', { lineHeight: '2.5rem' }],
+  			'6xl': ['3rem', { lineHeight: '3.25rem' }],
+  		},
+  		fontWeight: {
+  			medium: '500',
+  		},
   		colors: {
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',

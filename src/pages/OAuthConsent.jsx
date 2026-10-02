@@ -128,7 +128,7 @@ export default function OAuthConsent() {
         setDecided(action);
         setSubmitting(false);
       }
-    } catch (e) {
+    } catch {
       setError(e.message);
       setSubmitting(false);
     }

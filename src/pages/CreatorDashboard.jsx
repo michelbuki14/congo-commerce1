@@ -7,6 +7,7 @@ import { useCurrency } from '@/lib/currency';
 import { useTenantScope } from '@/lib/tenant';
 import { compactNumber } from '@/lib/format';
 import { useTranslation } from 'react-i18next';
+import DashboardShell from '@/components/DashboardShell';
 
 export default memo(function CreatorDashboard() {
   const { t } = useTranslation();
@@ -132,105 +133,106 @@ export default memo(function CreatorDashboard() {
   const earnings = conversions.reduce((s, c) => s + (c.commission_usd || 0), 0);
 
   return (
-    <div className="space-y-5 pb-8">
-      <div className="flex flex-wrap items-center gap-2">
-        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">{t('creatorDashboard.title')}</h1>
-        {isAdmin ? (
-          <select
-            value={creator.id}
-            onChange={(e) => switchCreator(e.target.value)}
-            className="ml-auto h-9 rounded-lg border border-border bg-card px-2 text-sm"
-          >
-            {creators.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
-        ) : (
-          <span className="ml-auto text-sm font-semibold">{creator.name}</span>
-        )}
-      </div>
-
-      <section className="rounded-2xl border border-border bg-card p-4">
-        <div className="flex items-center gap-3">
-          <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full bg-secondary">
-            <Image src={creator.avatar_url} alt={creator.name} className="h-full w-full object-cover" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-bold">{creator.name} <span className="text-muted-foreground">@{creator.handle}</span></p>
-            <p className="text-[11px] text-muted-foreground">{creator.city} · commission {creator.commission_rate}% · {compactNumber(creator.followers_count || 0)} abonnés</p>
-          </div>
-        </div>
-        <div className="mt-3 flex flex-wrap items-center gap-2 rounded-xl bg-secondary/60 p-3">
-          <span className="text-xs font-semibold">{t('creatorDashboard.codeLabel')} {creator.referral_code}</span>
-          <button type="button" onClick={copyLink} className="ml-auto flex items-center gap-1 rounded-full bg-card px-3 py-1.5 text-xs font-semibold">
-            {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />} {copied ? t('creatorDashboard.linkCopied') : t('creatorDashboard.copyLink')}
-          </button>
-        </div>
-      </section>
-
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        {[
-          { icon: MousePointerClick, label: t('creatorDashboard.trackedClicks'), value: clicks.length },
-          { icon: ShoppingBag, label: t('creatorDashboard.conversions'), value: conversions.length },
-          { icon: Coins, label: t('creatorDashboard.commissions'), value: format(earnings) },
-          { icon: Eye, label: t('creatorDashboard.publishedContents'), value: contents.length },
-        ].map((k) => (
-          <div key={k.label} className="rounded-xl border border-border bg-card p-3.5">
-            <k.icon className="h-4 w-4 text-primary" />
-            <p className="mt-1.5 text-lg font-bold">{k.value}</p>
-            <p className="text-[11px] text-muted-foreground">{k.label}</p>
-          </div>
-        ))}
-      </div>
-
-      <div className="flex justify-end">
-        <button type="button" onClick={() => setShowForm((s) => !s)} className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground">
-          <Plus className="h-3.5 w-3.5" /> {t('creatorDashboard.newContent')}
-        </button>
-      </div>
-
-      {showForm && (
-        <form onSubmit={publish} className="space-y-3 rounded-2xl border border-border bg-card p-4">
-          <select value={draft.product_id} onChange={(e) => setDraft({ ...draft, product_id: e.target.value })} className="h-11 w-full rounded-lg border border-border bg-background px-3 text-sm">
-            <option value="">{t('creatorDashboard.optionalProduct')}</option>
-            {products.map((p) => (
-              <option key={p.id} value={p.id}>{p.title} — {format(p.price_usd)}</option>
-            ))}
-          </select>
-          <input value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} placeholder={t('creatorDashboard.contentTitle')} required className="h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" />
-          <textarea value={draft.caption} onChange={(e) => setDraft({ ...draft, caption: e.target.value })} rows={2} placeholder={t('creatorDashboard.caption')} className="w-full rounded-lg border border-border bg-background p-3 text-sm" />
-          <input value={draft.media_url} onChange={(e) => setDraft({ ...draft, media_url: e.target.value })} placeholder={t('creatorDashboard.mediaUrl')} className="h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" />
-          <button type="submit" disabled={saving} className="rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50">
-            {saving ? t('creatorDashboard.publishing') : t('creatorDashboard.publish')}
-          </button>
-        </form>
-      )}
-
-      <section className="space-y-2">
-        <h2 className="text-sm font-bold">{t('creatorDashboard.myContents')}</h2>
-        <div className="grid gap-2 md:grid-cols-3">
-          {contents.map((c) => (
-            <div key={c.id} className="overflow-hidden rounded-xl border border-border bg-card">
-              <div className="relative aspect-video w-full bg-secondary">
-                <Image src={c.thumbnail_url || c.media_url} alt={c.title} className="h-full w-full object-cover" />
-              </div>
-              <div className="p-2.5">
-                <p className="line-clamp-1 text-sm font-medium">{c.title}</p>
-                <p className="text-[11px] text-muted-foreground">
-                  {compactNumber(c.likes_count || 0)} {t('creatorDashboard.likes')} · {compactNumber(c.views_count || 0)} {t('creatorDashboard.views')} · {c.product_title || t('creatorDashboard.noProduct')}
-                </p>
-              </div>
-            </div>
-          ))}
-          {!contents.length && (
-            <p className="rounded-xl border border-dashed border-border bg-card p-6 text-center text-xs text-muted-foreground md:col-span-3">
-              {t('creatorDashboard.noContent')}
-            </p>
+    <DashboardShell nav={[]} title={t('creatorDashboard.title')}>
+      <>
+        <div className="flex flex-wrap items-center gap-2">
+          {isAdmin ? (
+            <select
+              value={creator.id}
+              onChange={(e) => switchCreator(e.target.value)}
+              className="ml-auto h-9 rounded-lg border border-border bg-card px-2 text-sm"
+            >
+              {creators.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          ) : (
+            <span className="ml-auto text-sm font-semibold">{creator.name}</span>
           )}
         </div>
-      </section>
 
-      <p className="text-[11px] text-muted-foreground">{t('creatorDashboard.commissionInfo')}</p>
-    </div>
+        <section className="rounded-2xl border border-border bg-card p-4">
+          <div className="flex items-center gap-3">
+            <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full bg-secondary">
+              <Image src={creator.avatar_url} alt={creator.name} className="h-full w-full object-cover" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-bold">{creator.name} <span className="text-muted-foreground">@{creator.handle}</span></p>
+              <p className="text-[11px] text-muted-foreground">{creator.city} · commission {creator.commission_rate}% · {compactNumber(creator.followers_count || 0)} abonnés</p>
+            </div>
+          </div>
+          <div className="mt-3 flex flex-wrap items-center gap-2 rounded-xl bg-secondary/60 p-3">
+            <span className="text-xs font-semibold">{t('creatorDashboard.codeLabel')} {creator.referral_code}</span>
+            <button type="button" onClick={copyLink} className="ml-auto flex items-center gap-1 rounded-full bg-card px-3 py-1.5 text-xs font-semibold">
+              {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />} {copied ? t('creatorDashboard.linkCopied') : t('creatorDashboard.copyLink')}
+            </button>
+          </div>
+        </section>
+
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          {[
+            { icon: MousePointerClick, label: t('creatorDashboard.trackedClicks'), value: clicks.length },
+            { icon: ShoppingBag, label: t('creatorDashboard.conversions'), value: conversions.length },
+            { icon: Coins, label: t('creatorDashboard.commissions'), value: format(earnings) },
+            { icon: Eye, label: t('creatorDashboard.publishedContents'), value: contents.length },
+          ].map((k) => (
+            <div key={k.label} className="rounded-xl border border-border bg-card p-3.5">
+              <k.icon className="h-4 w-4 text-primary" />
+              <p className="mt-1.5 text-lg font-bold">{k.value}</p>
+              <p className="text-[11px] text-muted-foreground">{k.label}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex justify-end">
+          <button type="button" onClick={() => setShowForm((s) => !s)} className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground">
+            <Plus className="h-3.5 w-3.5" /> {t('creatorDashboard.newContent')}
+          </button>
+        </div>
+
+        {showForm && (
+          <form onSubmit={publish} className="space-y-3 rounded-2xl border border-border bg-card p-4">
+            <select value={draft.product_id} onChange={(e) => setDraft({ ...draft, product_id: e.target.value })} className="h-11 w-full rounded-lg border border-border bg-background px-3 text-sm">
+              <option value="">{t('creatorDashboard.optionalProduct')}</option>
+              {products.map((p) => (
+                <option key={p.id} value={p.id}>{p.title} — {format(p.price_usd)}</option>
+              ))}
+            </select>
+            <input value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} placeholder={t('creatorDashboard.contentTitle')} required className="h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" />
+            <textarea value={draft.caption} onChange={(e) => setDraft({ ...draft, caption: e.target.value })} rows={2} placeholder={t('creatorDashboard.caption')} className="w-full rounded-lg border border-border bg-background p-3 text-sm" />
+            <input value={draft.media_url} onChange={(e) => setDraft({ ...draft, media_url: e.target.value })} placeholder={t('creatorDashboard.mediaUrl')} className="h-11 w-full rounded-lg border border-border bg-background px-3 text-sm" />
+            <button type="submit" disabled={saving} className="rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+              {saving ? t('creatorDashboard.publishing') : t('creatorDashboard.publish')}
+            </button>
+          </form>
+        )}
+
+        <section className="space-y-2">
+          <h2 className="text-sm font-bold">{t('creatorDashboard.myContents')}</h2>
+          <div className="grid gap-2 md:grid-cols-3">
+            {contents.map((c) => (
+              <div key={c.id} className="overflow-hidden rounded-xl border border-border bg-card">
+                <div className="relative aspect-video w-full bg-secondary">
+                  <Image src={c.thumbnail_url || c.media_url} alt={c.title} className="h-full w-full object-cover" />
+                </div>
+                <div className="p-2.5">
+                  <p className="line-clamp-1 text-sm font-medium">{c.title}</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {compactNumber(c.likes_count || 0)} {t('creatorDashboard.likes')} · {compactNumber(c.views_count || 0)} {t('creatorDashboard.views')} · {c.product_title || t('creatorDashboard.noProduct')}
+                  </p>
+                </div>
+              </div>
+            ))}
+            {!contents.length && (
+              <p className="rounded-xl border border-dashed border-border bg-card p-6 text-center text-xs text-muted-foreground md:col-span-3">
+                {t('creatorDashboard.noContent')}
+              </p>
+            )}
+          </div>
+        </section>
+
+        <p className="text-[11px] text-muted-foreground">{t('creatorDashboard.commissionInfo')}</p>
+      </>
+    </DashboardShell>
   );
 });

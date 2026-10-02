@@ -21,7 +21,7 @@ function writeStored(key, id) {
 
 /**
  * Multitenancy: a signed-in partner only ever reaches the shop, courier fleet or
- * creator account bound to their login (matched on the record's contact email).
+ * creator account bound to their tenant record.
  * Admins keep the global view and the account switcher.
  */
 export function useTenantScope(entityName) {
@@ -35,13 +35,13 @@ export function useTenantScope(entityName) {
     (async () => {
       const me = await base44.auth.me().catch(() => null);
       const admin = me?.role === 'admin';
-      const email = String(me?.email || '').trim().toLowerCase();
+      const tenantId = String(me?.tenant_id || '').trim();
       const all = await base44.entities[entityName].list('name', 100).catch(() => []);
       if (!alive) return;
       setRows(
         admin
           ? all
-          : all.filter((r) => email && String(r.email || '').trim().toLowerCase() === email),
+          : all.filter((r) => tenantId && String(r.tenant_id || '').trim() === tenantId),
       );
       setIsAdmin(admin);
       setLoading(false);

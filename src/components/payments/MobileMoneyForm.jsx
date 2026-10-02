@@ -21,14 +21,18 @@ const mobileMoneySchema = z.object({
 
 export default function MobileMoneyForm({ onAdd }) {
   const { t } = useTranslation();
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm({
+  const { register, handleSubmit, reset, formState: { errors, isSubmitting }, setError, clearErrors } = useForm({
     resolver: zodResolver(mobileMoneySchema),
     defaultValues: { provider: 'mpesa', phone: '', holder: '' },
   });
 
   const submit = async (formData) => {
+    clearErrors();
     const check = validateMobileMoneyNumber(formData.provider, formData.phone);
-    if (!check.ok) return;
+    if (!check.ok) {
+      setError('phone', { type: 'manual', message: t('payout.errPhoneInvalid') });
+      return;
+    }
     await onAdd({ provider: formData.provider, phone: check.phone, holder: formData.holder });
     reset({ provider: 'mpesa', phone: '', holder: '' });
   };
