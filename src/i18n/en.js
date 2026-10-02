@@ -62,15 +62,30 @@ export default {
     noTickets: "No tickets.",
   },
   
+
+
+
+
   cart: {
     empty: "Your cart is empty",
     emptyDesc: "Looks like you haven't added anything yet",
-    checkout: "Checkout",
-    continueShopping: "Continue shopping",
+    emptyTitle: "Your cart is empty",
+    emptyAction: "Start shopping",
+    title: "My cart ({{count}})",
+    intlImport: "International import",
+    localSeller: "Local seller",
+    remove: "Remove from cart",
+    couponHint: "Have a promo code? Apply it at checkout",
     items: "{{count}} item(s)",
     subtotal: "Subtotal",
+    estimatedShipping: "Estimated shipping {{zone}}",
+    atCheckout: "At checkout",
     shipping: "Shipping calculated at checkout",
     total: "Total",
+    totalNote: "Amount in {{currency}} · rate applied at payment time. Check your city in your profile for an exact quote.",
+    checkout: "Proceed to checkout",
+    continueShopping: "Continue shopping",
+    suggestions: "You may also like",
   },
 
 auth: {
@@ -191,23 +206,6 @@ auth: {
     international: 'International · {{eta}}',
     localSeller: 'Local seller · {{eta}}',
     addToWishlist: 'Add to wishlist',
-  },
-  cart: {
-    emptyTitle: 'Your cart is empty',
-    emptyDesc: 'Browse categories or watch creator videos.',
-    emptyAction: 'Start shopping',
-    title: 'My cart ({{count}})',
-    intlImport: 'International import',
-    localSeller: 'Local seller',
-    remove: 'Remove from cart',
-    couponHint: 'Have a promo code? Apply it at checkout',
-    subtotal: 'Subtotal',
-    estimatedShipping: 'Estimated shipping {{zone}}',
-    atCheckout: 'At checkout',
-    total: 'Total',
-    totalNote: 'Amount in {{currency}} · rate applied at payment time. Check your city in your profile for an exact quote.',
-    checkout: 'Proceed to checkout',
-    suggestions: 'You may also like',
   },
   checkout: {
     stepDelivery: 'Delivery',
@@ -3499,4 +3497,6 @@ auth: {
   tickets: {
     title: "Ticket automation",
   },
-};
+}
+
+;

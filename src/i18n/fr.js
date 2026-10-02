@@ -65,15 +65,30 @@ export default {
     noTickets: "Aucun ticket.",
   },
   
+
+
+
+
   cart: {
     empty: "Votre panier est vide",
     emptyDesc: "Il semblerait que vous n'ayez rien ajouté pour l'instant",
-    checkout: "Commander",
-    continueShopping: "Continuer mes achats",
+    emptyTitle: "Votre panier est vide",
+    emptyAction: "Commencer mes achats",
+    title: "Mon panier ({{count}})",
+    intlImport: "Import international",
+    localSeller: "Vendeur local",
+    remove: "Retirer du panier",
+    couponHint: "Vous avez un code promo ? Appliquez-le au paiement",
     items: "{{count}} article(s)",
     subtotal: "Sous-total",
+    estimatedShipping: "Livraison estimée {{zone}}",
+    atCheckout: "Au paiement",
     shipping: "Livraison calculée au passage à la caisse",
     total: "Total",
+    totalNote: "Montant en {{currency}} · taux appliqué au moment du paiement. Vérifiez votre ville dans votre profil pour un calcul exact.",
+    checkout: "Passer au paiement",
+    continueShopping: "Continuer mes achats",
+    suggestions: "Vous aimerez aussi",
   },
 
 auth: {
@@ -194,23 +209,6 @@ auth: {
     international: 'International · {{eta}}',
     localSeller: 'Vendeur local · {{eta}}',
     addToWishlist: 'Ajouter aux favoris',
-  },
-  cart: {
-    emptyTitle: 'Votre panier est vide',
-    emptyDesc: 'Parcourez les catégories ou découvrez les vidéos des créateurs.',
-    emptyAction: 'Commencer mes achats',
-    title: 'Mon panier ({{count}})',
-    intlImport: 'Import international',
-    localSeller: 'Vendeur local',
-    remove: 'Retirer du panier',
-    couponHint: 'Vous avez un code promo ? Appliquez-le au paiement',
-    subtotal: 'Sous-total',
-    estimatedShipping: 'Livraison estimée {{zone}}',
-    atCheckout: 'Au paiement',
-    total: 'Total',
-    totalNote: 'Montant en {{currency}} · taux appliqué au moment du paiement. Vérifiez votre ville dans votre profil pour un calcul exact.',
-    checkout: 'Passer au paiement',
-    suggestions: 'Vous aimerez aussi',
   },
   checkout: {
     stepDelivery: 'Livraison',
@@ -3502,4 +3500,6 @@ auth: {
   tickets: {
     title: "Automatisation des tickets",
   },
-};
+}
+
+;
