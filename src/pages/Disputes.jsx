@@ -10,6 +10,7 @@ import { formatUSD, formatDate } from '@/lib/format';
 import { emitEvent } from '@/lib/events';
 import { lookupOrder } from '@/lib/orderLookup';
 import { RETURN_COPY } from '@/lib/returnCopy';
+import BackButton from '@/components/BackButton';
 
 export default function Disputes() {
   const { t, i18n } = useTranslation();
@@ -93,8 +94,8 @@ export default function Disputes() {
     }
   };
 
-  return (
-    <div className="mx-auto max-w-3xl space-y-5 pb-8">
+  return (<div className="mx-auto max-w-3xl space-y-5 pb-8">
+        <BackButton fallback="/" className="md:hidden" />
       <h1 className="text-lg font-bold md:text-xl">{t('disputes.title')}</h1>
 
       <div className="flex items-start gap-2 rounded-xl border border-primary/30 bg-primary/5 p-3 text-xs">

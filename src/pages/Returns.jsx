@@ -11,6 +11,7 @@ import { lookupOrder } from '@/lib/orderLookup';
 import { returnEligibility, loadMyReturns } from '@/lib/returns';
 import { openReturn } from '@/lib/customerAccount';
 import { RETURN_COPY } from '@/lib/returnCopy';
+import BackButton from '@/components/BackButton';
 
 export default function Returns() {
   const { t, i18n } = useTranslation();
@@ -104,8 +105,8 @@ export default function Returns() {
     }
   };
 
-  return (
-    <div className="mx-auto max-w-3xl space-y-5 pb-8">
+  return (<div className="mx-auto max-w-3xl space-y-5 pb-8">
+        <BackButton fallback="/order-history" className="md:hidden" />
       <h1 className="text-lg font-bold md:text-xl">{t('returns.title')}</h1>
 
       <Link

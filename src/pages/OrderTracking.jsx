@@ -8,6 +8,7 @@ import { getOrderIds, getProfile } from '@/lib/session';
 import { lookupOrder } from '@/lib/orderLookup';
 import { formatUSD, formatDateTime } from '@/lib/format';
 import { SHIPMENT_STATUS_FLOW, SHIPMENT_STATUS_LABELS } from '@/lib/logistics';
+import BackButton from '@/components/BackButton';
 
 export default function OrderTracking() {
   const { t } = useTranslation();
@@ -60,8 +61,8 @@ export default function OrderTracking() {
     .filter((e) => e.at)
     .sort((a, b) => new Date(b.at) - new Date(a.at));
 
-  return (
-    <div className="mx-auto max-w-3xl space-y-5 pb-8">
+  return (<div className="mx-auto max-w-3xl space-y-5 pb-8">
+        <BackButton fallback="/order-history" className="md:hidden" />
       <h1 className="text-lg font-bold md:text-xl">{t('orderTracking.title')}</h1>
 
       <form

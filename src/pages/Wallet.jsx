@@ -5,6 +5,7 @@ import { fetchMyWallet } from '@/lib/customerAccount';
 import EmptyState from '@/components/EmptyState';
 import { useCurrency } from '@/lib/currency';
 import { formatDateTime } from '@/lib/format';
+import BackButton from '@/components/BackButton';
 
 const TYPE_KEYS = {
   CREDIT: 'wallet.typeCredit',
@@ -33,8 +34,8 @@ export default function Wallet() {
 
   if (loading) return <div className="h-48 animate-pulse rounded-2xl bg-secondary" />;
 
-  return (
-    <div className="mx-auto max-w-2xl space-y-5 pb-8">
+  return (<div className="mx-auto max-w-2xl space-y-5 pb-8">
+        <BackButton fallback="/profile" className="md:hidden" />
       <h1 className="text-lg font-bold md:text-xl">{t('wallet.title')}</h1>
 
       <section className="rounded-2xl bg-gradient-to-br from-primary to-primary/70 p-5 text-primary-foreground">

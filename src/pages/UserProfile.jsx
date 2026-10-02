@@ -5,6 +5,7 @@ import { base44 } from '@/api/base44Client';
 import StatusBadge from '@/components/StatusBadge';
 import StatCard from '@/components/ops/StatCard';
 import ContactForm from '@/components/profile/ContactForm';
+import BackButton from '@/components/BackButton';
 
 export default function UserProfile() {
   const { t } = useTranslation();
@@ -22,8 +23,8 @@ export default function UserProfile() {
   if (!user) return <div className="mx-auto mt-6 h-60 max-w-3xl animate-pulse rounded-2xl bg-secondary" />;
   const spent = (orders || []).filter((o) => o.payment_status === 'PAID').reduce((s, o) => s + (o.total_usd || 0), 0);
 
-  return (
-    <div className="mx-auto max-w-3xl space-y-5 px-4 py-5 pb-24">
+  return (<div className="mx-auto max-w-3xl space-y-5 px-4 py-5 pb-24">
+        <BackButton fallback="/profile" className="md:hidden" />
       <div>
         <h1 className="text-lg font-bold">{t('userProfile.hello', { commaName: user.full_name ? `, ${user.full_name.split(' ')[0]}` : '' })}</h1>
         <p className="text-xs text-muted-foreground">{t('userProfile.memberSince', { date: new Date(user.created_date).toLocaleDateString('fr-FR') })}</p>

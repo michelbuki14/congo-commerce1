@@ -6,6 +6,7 @@ import { base44 } from '@/api/base44Client';
 import { getReferralCode, setReferralCode, getSessionId } from '@/lib/session';
 import { useCurrency } from '@/lib/currency';
 import { formatDate } from '@/lib/format';
+import BackButton from '@/components/BackButton';
 
 export default function Referral() {
   const { t } = useTranslation();
@@ -52,8 +53,8 @@ export default function Referral() {
   const conversions = clicks.filter((c) => c.converted);
   const earned = conversions.reduce((s, c) => s + (c.commission_usd || 0), 0);
 
-  return (
-    <div className="mx-auto max-w-2xl space-y-5 pb-8">
+  return (<div className="mx-auto max-w-2xl space-y-5 pb-8">
+        <BackButton fallback="/" className="md:hidden" />
       <h1 className="text-lg font-bold md:text-xl">{t('referral.title')}</h1>
 
       <section className="space-y-3 rounded-2xl border border-border bg-card p-4">

@@ -19,6 +19,7 @@ import CheckoutSteps from '@/components/checkout/CheckoutSteps';
 import StepDelivery from '@/components/checkout/StepDelivery';
 import StepPayment from '@/components/checkout/StepPayment';
 import StepReview from '@/components/checkout/StepReview';
+import BackButton from '@/components/BackButton';
 
 const STEP_KEYS = ['checkout.stepDelivery', 'checkout.stepPayment', 'checkout.stepReview'];
 const STEP_COMPONENTS = [StepDelivery, StepPayment, StepReview];
@@ -261,19 +262,20 @@ export default function Checkout() {
   ];
 
   if (!count) {
-    return (
-      <EmptyState
-        title={t('checkout.emptyTitle')}
-        description={t('checkout.emptyDesc')}
-        actionTo="/"
-        actionLabel={t('checkout.emptyAction')}
-      />
-    );
-  }
+      return (
+        <EmptyState
+          title={t('checkout.emptyTitle')}
+          description={t('checkout.emptyDesc')}
+          actionTo="/"
+          actionLabel={t('checkout.emptyAction')}
+        />
+      );
+    }
 
   return (
-    <form onSubmit={submit} className="space-y-5 pb-32 md:pb-6">
-      <div className="space-y-2">
+      <form onSubmit={submit} className="space-y-5 pb-32 md:pb-6">
+        <BackButton fallback="/cart" className="md:hidden" />
+        <div className="space-y-2">
         <Link to="/cart" className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4" />{t('checkout.backToCart')}</Link>
         <h1 className="text-2xl font-bold tracking-tight md:text-3xl">{t('checkout.title')}</h1>
       </div>

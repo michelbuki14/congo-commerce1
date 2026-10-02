@@ -8,6 +8,7 @@ import { getProfile, getOrderIds } from '@/lib/session';
 import { fetchMyOrder } from '@/lib/customerAccount';
 import { formatUSD, formatDateTime } from '@/lib/format';
 import { SHIPMENT_STATUS_LABELS } from '@/lib/logistics';
+import BackButton from '@/components/BackButton';
 
 export default function CheckoutSuccess() {
   const { t } = useTranslation();
@@ -44,8 +45,8 @@ export default function CheckoutSuccess() {
   }
 
   if (notFound || !order) {
-    return (
-      <div className="mx-auto max-w-3xl rounded-2xl border border-dashed border-border bg-card p-10 text-center">
+    return (<div className="mx-auto max-w-3xl rounded-2xl border border-dashed border-border bg-card p-10 text-center">
+        <BackButton fallback="/order-history" className="md:hidden" />
         <p className="font-semibold">{t('checkoutSuccess.notFoundTitle')}</p>
         <p className="mt-1 text-sm text-muted-foreground">
           {t('checkoutSuccess.notFoundText')}

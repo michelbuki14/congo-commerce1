@@ -8,6 +8,7 @@ import EmptyState from '@/components/EmptyState';
 import StatusBadge from '@/components/StatusBadge';
 import { useCurrency } from '@/lib/currency';
 import { formatDateTime } from '@/lib/format';
+import BackButton from '@/components/BackButton';
 
 export default function OrderHistory() {
   const { t } = useTranslation();
@@ -22,12 +23,12 @@ export default function OrderHistory() {
     })();
   }, []);
 
-  return (
-    <InfoPage
+  return (<InfoPage
       icon={Package}
       title={t('orderHistory.title')}
       subtitle={t('orderHistory.subtitle')}
     >
+        <BackButton fallback="/" className="md:hidden" />
       {loading ? (
         <div className="h-40 animate-pulse rounded-2xl bg-secondary" />
       ) : !orders.length ? (

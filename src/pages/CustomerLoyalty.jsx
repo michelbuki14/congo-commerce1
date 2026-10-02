@@ -10,6 +10,7 @@ import { getProfile, getSessionId } from '@/lib/session';
 import { emitEvent } from '@/lib/events';
 import { formatDate } from '@/lib/format';
 import { base44 } from '@/api/base44Client';
+import BackButton from '@/components/BackButton';
 
 export default function CustomerLoyalty() {
   const { t } = useTranslation();
@@ -69,12 +70,12 @@ export default function CustomerLoyalty() {
 
   if (loading) return <div className="h-64 animate-pulse rounded-2xl bg-secondary" />;
 
-  return (
-    <InfoPage
+  return (<InfoPage
       icon={Gift}
       title={t('customerLoyalty.title')}
       subtitle={t('customerLoyalty.subtitle')}
     >
+        <BackButton fallback="/profile" className="md:hidden" />
       <LoyaltyTierCard summary={summary} />
 
       {flash ? <p className="rounded-xl bg-emerald-50 p-3 text-xs text-emerald-800">{flash}</p> : null}

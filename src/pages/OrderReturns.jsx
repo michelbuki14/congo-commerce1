@@ -17,6 +17,7 @@ import {
   returnEligibility,
   submitReturns,
 } from '@/lib/returns';
+import BackButton from '@/components/BackButton';
 
 export default function OrderReturns() {
   const { t } = useTranslation();
@@ -119,8 +120,8 @@ export default function OrderReturns() {
     return sum + (Number(item?.line_total_usd) || 0);
   }, 0);
 
-  return (
-    <div className="mx-auto max-w-3xl space-y-5 pb-8">
+  return (<div className="mx-auto max-w-3xl space-y-5 pb-8">
+        <BackButton fallback="/order-history" className="md:hidden" />
       <h1 className="text-lg font-bold md:text-xl">{t('orderReturns.title')}</h1>
 
       <div className="flex items-start gap-2 rounded-xl border border-primary/30 bg-primary/5 p-3 text-xs">

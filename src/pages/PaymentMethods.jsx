@@ -4,6 +4,7 @@ import { Smartphone, CreditCard, Trash2, ShieldCheck } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { DRC_NETWORKS } from '@/lib/mobileMoney';
 import MobileMoneyForm from '@/components/payments/MobileMoneyForm';
+import BackButton from '@/components/BackButton';
 
 const mask = (p) => `${p.slice(0, 4)} ••• ••${p.slice(-3)}`;
 
@@ -21,8 +22,8 @@ export default function PaymentMethods() {
   };
   const makeDefault = (id) => persist(methods.map((m) => ({ ...m, is_default: m.id === id })));
 
-  return (
-    <div className="mx-auto max-w-2xl space-y-5 px-4 py-5 pb-24">
+  return (<div className="mx-auto max-w-2xl space-y-5 px-4 py-5 pb-24">
+        <BackButton fallback="/profile" className="md:hidden" />
       <h1 className="text-lg font-bold">{t('payout.savedMethodsTitle')}</h1>
       <section className="rounded-2xl border border-border bg-card p-4">
         <p className="mb-3 flex items-center gap-2 text-sm font-bold"><Smartphone className="h-4 w-4" /> Mobile money</p>

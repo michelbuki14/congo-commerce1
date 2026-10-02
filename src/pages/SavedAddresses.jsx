@@ -5,6 +5,7 @@ import { base44 } from '@/api/base44Client';
 import InfoPage, { InfoSection } from '@/components/InfoPage';
 import AddressForm from '@/components/settings/AddressForm';
 import useUserPrefs from '@/lib/useUserPrefs';
+import BackButton from '@/components/BackButton';
 
 export default function SavedAddresses() {
   const { t } = useTranslation();
@@ -19,8 +20,8 @@ export default function SavedAddresses() {
   const remove = (id) => save(list.filter((a) => a.id !== id));
   const makeDefault = (id) => save(list.map((a) => ({ ...a, is_default: a.id === id })));
 
-  return (
-    <InfoPage icon={MapPin} title={t('savedAddresses.title')} subtitle={t('savedAddresses.subtitle')}>
+  return (<InfoPage icon={MapPin} title={t('savedAddresses.title')} subtitle={t('savedAddresses.subtitle')}>
+        <BackButton fallback="/profile" className="md:hidden" />
       <InfoSection title={t('savedAddresses.newAddress')}>
         <AddressForm pickupPoints={points} onAdd={add} />
       </InfoSection>

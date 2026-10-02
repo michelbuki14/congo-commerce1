@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ShoppingBag, Heart, Truck, ShieldCheck, Store as StoreIcon, ChevronRight, PackageCheck, Zap, Share2, ArrowLeft } from 'lucide-react';
+import { ShoppingBag, Heart, Truck, ShieldCheck, Store as StoreIcon, ChevronRight, PackageCheck, Zap, Share2 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Image } from '@/components/ui/image';
 import { useCart } from '@/lib/cart';

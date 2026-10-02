@@ -8,6 +8,7 @@ import { fetchMyOrders, openReturn } from '@/lib/customerAccount';
 import { loadMyReturns } from '@/lib/returns';
 import { formatUSD, formatDate } from '@/lib/format';
 import { RETURN_COPY } from '@/lib/returnCopy';
+import BackButton from '@/components/BackButton';
 
 const WINDOW_DAYS = 7;
 
@@ -90,8 +91,8 @@ export default function ReturnsPortal() {
     }
   };
 
-  return (
-    <div className="mx-auto max-w-3xl space-y-5 pb-8">
+  return (<div className="mx-auto max-w-3xl space-y-5 pb-8">
+        <BackButton fallback="/order-history" className="md:hidden" />
       <h1 className="text-lg font-bold md:text-xl">{t('returnsPortal.title')}</h1>
 
       <div className="flex items-start gap-2 rounded-xl border border-primary/30 bg-primary/5 p-3 text-xs">

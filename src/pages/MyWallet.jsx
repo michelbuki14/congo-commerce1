@@ -8,6 +8,7 @@ import EmptyState from '@/components/EmptyState';
 import { requestWithdrawal } from '@/lib/wallet';
 import { useCurrency } from '@/lib/currency';
 import { formatDateTime } from '@/lib/format';
+import BackButton from '@/components/BackButton';
 
 const METHODS = ['M-Pesa', 'Airtel Money', 'Orange Money', 'Virement bancaire'];
 const TYPE_KEYS = {
@@ -82,12 +83,12 @@ export default function MyWallet() {
 
   if (loading) return <div className="mx-auto h-48 max-w-3xl animate-pulse rounded-2xl bg-secondary" />;
 
-  return (
-    <InfoPage
+  return (<InfoPage
       icon={WalletIcon}
       title={t('myWallet.title')}
       subtitle={t('myWallet.subtitle')}
     >
+        <BackButton fallback="/profile" className="md:hidden" />
       <section className="rounded-2xl bg-gradient-to-br from-primary to-primary/70 p-5 text-primary-foreground">
         <p className="flex items-center gap-2 text-xs font-semibold opacity-90">
           <WalletIcon className="h-4 w-4" /> {t('wallet.balance')}

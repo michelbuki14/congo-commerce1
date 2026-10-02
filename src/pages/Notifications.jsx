@@ -4,6 +4,7 @@ import { Bell, BellRing, CheckCheck } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import EmptyState from '@/components/EmptyState';
 import { timeAgo } from '@/lib/format';
+import BackButton from '@/components/BackButton';
 
 const TYPE_STYLES = {
   order: 'bg-sky-100 text-sky-900',
@@ -39,8 +40,8 @@ export default function Notifications() {
 
   const unreadCount = items.filter((n) => !n.read).length;
 
-  return (
-    <div className="mx-auto max-w-2xl space-y-4 pb-8">
+  return (<div className="mx-auto max-w-2xl space-y-4 pb-8">
+        <BackButton fallback="/" className="md:hidden" />
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-bold md:text-xl">{t('notifications.title')}</h1>
         {unreadCount > 0 && (
