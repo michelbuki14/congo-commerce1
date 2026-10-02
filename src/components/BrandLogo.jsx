@@ -3,7 +3,7 @@ import React from 'react';
 export const LOGO_URL = '/brand/logo-primary.svg';
 export const LOGO_ICON_URL = '/brand/logo-icon.svg';
 
-export default function BrandLogo({ className = 'h-8 w-auto' }) {
+export default function BrandLogo({ className = 'h-10 w-auto' }) {
   return (
     <img
       src={LOGO_URL}
