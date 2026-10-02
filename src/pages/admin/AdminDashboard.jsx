@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingBag, TrendingUp, AlertTriangle, Users, Package, Wallet as WalletIcon, Store, Coins } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import DashboardNav from '@/components/DashboardNav';
+import DashboardShell from '@/components/DashboardShell';
 import StatusBadge from '@/components/StatusBadge';
 import AdminLiveOverview from '@/components/admin/AdminLiveOverview';
 import { ADMIN_LINKS } from '@/lib/navLinks';
@@ -52,9 +52,7 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="space-y-5 pb-8">
-      <DashboardNav title={t('adminDashboard.title')} links={ADMIN_LINKS} />
-
+    <DashboardShell nav={ADMIN_LINKS} title={t('adminDashboard.title')}>
       <AdminLiveOverview />
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -112,6 +110,6 @@ export default function AdminDashboard() {
           {!logs.length && <p className="text-xs text-muted-foreground">{t('adminDashboard.noLogs')}</p>}
         </div>
       </section>
-    </div>
+    </DashboardShell>
   );
 }
