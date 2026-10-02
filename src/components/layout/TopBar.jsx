@@ -26,21 +26,21 @@ export default function TopBar() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur pt-[env(safe-area-inset-top)]">
-          <button
-            type="button"
-            onClick={() => setDrawerOpen(true)}
-            className="md:hidden flex h-14 w-14 items-center justify-center rounded-full hover:bg-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            aria-label={t('nav.menu')}
-            aria-expanded={drawerOpen}
-            aria-controls="mobile-drawer"
-          >
-            <Menu className="h-7 w-7" aria-hidden="true" />
-          </button>
+      <div className="mx-auto flex w-full max-w-6xl items-center gap-4 px-4 py-3 md:px-8">
+        <button
+          type="button"
+          onClick={() => setDrawerOpen(true)}
+          className="md:hidden flex h-14 w-14 items-center justify-center rounded-full hover:bg-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          aria-label={t('nav.menu')}
+          aria-expanded={drawerOpen ? 'true' : 'false'}
+          aria-controls="mobile-drawer"
+        >
+          <Menu className="h-7 w-7" aria-hidden="true" />
+        </button>
 
-          <div className="mx-auto flex w-full max-w-6xl items-center gap-4 px-4 py-3 md:px-8">
-            <Link to="/" className="flex shrink-0 items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md" aria-label="Congo Commerce — accueil">
-              <BrandLogo />
-            </Link>
+        <Link to="/" className="flex shrink-0 items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md" aria-label="Congo Commerce — accueil">
+          <BrandLogo />
+        </Link>
 
             {/* Primary Navigation - visible on desktop */}
             <nav className="hidden md:flex items-center gap-2 mx-3" aria-label={t('nav.primary')}>

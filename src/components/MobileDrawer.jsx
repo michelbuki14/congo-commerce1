@@ -79,11 +79,12 @@ export default function MobileDrawer({ isOpen, onClose }) {
         aria-hidden="true"
       />
       <aside
-              className="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-card shadow-xl md:hidden"
-              role="dialog"
-              aria-modal="true"
-              aria-label={t('nav.menu')}
-            >
+                  id="mobile-drawer"
+                  className="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-card shadow-xl md:hidden"
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label={t('nav.menu')}
+                >
               <div className="flex h-16 items-center justify-between border-b border-border px-4">
                 <span className="text-base font-semibold">{t('nav.menu')}</span>
                 <button
