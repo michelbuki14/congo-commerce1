@@ -34,7 +34,7 @@ export default function BuyerProtection() {
           ))}
         </div>
         <div className="flex flex-wrap gap-2 pt-1">
-          <Link to="/disputes" className="rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground">
+          <Link to="/dispute-center" className="rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground">
             {t('buyerProtection.openDispute')}
           </Link>
           <Link to="/track" className="rounded-full border border-border px-4 py-2 text-xs font-semibold text-foreground">

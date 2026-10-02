@@ -39,7 +39,6 @@ const Wallet = lazy(() => import('@/pages/Wallet'));
 const Coupons = lazy(() => import('@/pages/Coupons'));
 const Referral = lazy(() => import('@/pages/Referral'));
 const Returns = lazy(() => import('@/pages/Returns'));
-const Disputes = lazy(() => import('@/pages/Disputes'));
 const Notifications = lazy(() => import('@/pages/Notifications'));
 const Support = lazy(() => import('@/pages/Support'));
 const Invoice = lazy(() => import('@/pages/Invoice'));
@@ -56,13 +55,11 @@ const BuyerProtection = lazy(() => import('@/pages/BuyerProtection'));
 const SellWithUs = lazy(() => import('@/pages/SellWithUs'));
 const PrivacySettings = lazy(() => import('@/pages/PrivacySettings'));
 const OrderHistory = lazy(() => import('@/pages/OrderHistory'));
-const MyWallet = lazy(() => import('@/pages/MyWallet'));
 const ReferralProgram = lazy(() => import('@/pages/ReferralProgram'));
 const CreatorShowcase = lazy(() => import('@/pages/CreatorShowcase'));
 const PayoutRequests = lazy(() => import('@/pages/PayoutRequests'));
 const MarketingAnalytics = lazy(() => import('@/pages/MarketingAnalytics'));
 const OrderTracking = lazy(() => import('@/pages/OrderTracking'));
-const DisputeCenter = lazy(() => import('@/pages/DisputeCenter'));
 const SellerApplication = lazy(() => import('@/pages/SellerApplication'));
 const ShippingCalculator = lazy(() => import('@/pages/ShippingCalculator'));
 const PickupPoints = lazy(() => import('@/pages/PickupPoints'));
@@ -74,7 +71,6 @@ const Pricing = lazy(() => import('@/pages/Pricing'));
 const TenantOnboarding = lazy(() => import('@/pages/TenantOnboarding'));
 const TenantConsole = lazy(() => import('@/pages/TenantConsole'));
 const DisputeResolution = lazy(() => import('@/pages/DisputeResolution'));
-const OrderReturns = lazy(() => import('@/pages/OrderReturns'));
 const PlatformAnalytics = lazy(() => import('@/pages/PlatformAnalytics'));
 const SubscriptionPlans = lazy(() => import('@/pages/SubscriptionPlans'));
 const PlatformHealth = lazy(() => import('@/pages/PlatformHealth'));
@@ -141,7 +137,6 @@ const AdminWorkflows = lazy(() => import('@/pages/admin/AdminWorkflows'));
 const AdminFraud = lazy(() => import('@/pages/admin/AdminFraud'));
 const AdminDisputes = lazy(() => import('@/pages/admin/AdminDisputes'));
 const AdminBilling = lazy(() => import('@/pages/admin/AdminBilling'));
-const ReturnsPortal = lazy(() => import('@/pages/ReturnsPortal'));
 const PayoutHistory = lazy(() => import('@/pages/PayoutHistory'));
 const PayoutSettings = lazy(() => import('@/pages/PayoutSettings'));
 const DataExport = lazy(() => import('@/pages/DataExport'));
@@ -229,20 +224,20 @@ const AuthenticatedApp = () => {
         <Route path="/discover" element={<PageWrapper><Discover /></PageWrapper>} />
         <Route path="/categories" element={<PageWrapper><Categories /></PageWrapper>} />
         <Route path="/search" element={<PageWrapper><Search /></PageWrapper>} />
-        <Route path="/product/:slug" element={<PageWrapper><ErrorBoundary><ProductDetail /></ErrorBoundary></PageWrapper>} />
+        <Route path="/product/:slug" element={<PageWrapper><ProductDetail /></PageWrapper>} />
         <Route path="/store/:slug" element={<PageWrapper><Store /></PageWrapper>} />
-        <Route path="/cart" element={<PageWrapper><ErrorBoundary><Cart /></ErrorBoundary></PageWrapper>} />
+        <Route path="/cart" element={<PageWrapper><Cart /></PageWrapper>} />
         <Route path="/checkout" element={<PageWrapper><Checkout /></PageWrapper>} />
         <Route path="/order/:number" element={<PageWrapper><OrderConfirmation /></PageWrapper>} />
-        <Route path="/track" element={<Navigate to="/order-tracking" replace />} />
+        <Route path="/track" element={<Navigate to={`/order-tracking${window.location.search}`} replace />} />
         <Route path="/wishlist" element={<PageWrapper><Wishlist /></PageWrapper>} />
         <Route path="/profile" element={<PageWrapper><Profile /></PageWrapper>} />
         <Route path="/wallet" element={<PageWrapper><Wallet /></PageWrapper>} />
         <Route path="/coupons" element={<PageWrapper><Coupons /></PageWrapper>} />
         <Route path="/referral" element={<PageWrapper><Referral /></PageWrapper>} />
         <Route path="/returns" element={<PageWrapper><Returns /></PageWrapper>} />
-        <Route path="/returns-portal" element={<PageWrapper><ReturnsPortal /></PageWrapper>} />
-        <Route path="/order-returns" element={<PageWrapper><OrderReturns /></PageWrapper>} />
+        <Route path="/returns-portal" element={<Navigate to="/returns" replace />} />
+        <Route path="/order-returns" element={<Navigate to="/returns" replace />} />
         <Route path="/vendor-onboarding" element={<Navigate to="/seller-application" replace />} />
         <Route path="/seller-onboarding" element={<Navigate to="/seller-application" replace />} />
         <Route path="/customer-loyalty" element={<PageWrapper><CustomerLoyalty /></PageWrapper>} />
@@ -250,7 +245,7 @@ const AuthenticatedApp = () => {
         <Route path="/product-comparison" element={<PageWrapper><ProductComparison /></PageWrapper>} />
         <Route path="/partner-directory" element={<PageWrapper><PartnerDirectory /></PageWrapper>} />
         <Route path="/activity-feed" element={<PageWrapper><ActivityFeed /></PageWrapper>} />
-        <Route path="/disputes" element={<PageWrapper><Disputes /></PageWrapper>} />
+        <Route path="/disputes" element={<Navigate to="/dispute-center" replace />} />
         <Route path="/notifications" element={<PageWrapper><Notifications /></PageWrapper>} />
         <Route path="/support" element={<PageWrapper><Support /></PageWrapper>} />
         <Route path="/assistant" element={<PageWrapper><Assistant /></PageWrapper>} />
@@ -264,7 +259,7 @@ const AuthenticatedApp = () => {
         <Route path="/sell-with-us" element={<PageWrapper><SellWithUs /></PageWrapper>} />
         <Route path="/privacy-settings" element={<PageWrapper><PrivacySettings /></PageWrapper>} />
         <Route path="/order-history" element={<PageWrapper><OrderHistory /></PageWrapper>} />
-        <Route path="/my-wallet" element={<PageWrapper><MyWallet /></PageWrapper>} />
+        <Route path="/my-wallet" element={<Navigate to="/wallet" replace />} />
         <Route path="/referral-program" element={<PageWrapper><ReferralProgram /></PageWrapper>} />
         <Route path="/creator-showcase" element={<PageWrapper><CreatorShowcase /></PageWrapper>} />
         <Route path="/order-tracking" element={<PageWrapper><OrderTracking /></PageWrapper>} />

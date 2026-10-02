@@ -110,7 +110,7 @@ export default function Returns() {
       <h1 className="text-lg font-bold md:text-xl">{t('returns.title')}</h1>
 
       <Link
-        to="/returns-portal"
+        to="/returns"
         className="flex items-center justify-between rounded-xl border border-border bg-card p-3.5 text-sm font-semibold"
       >
         {t('returns.portalTitle')}
@@ -208,7 +208,7 @@ export default function Returns() {
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">{r.product_title} · {copy.expectedRefund}: {formatUSD(r.refund_amount_usd)}</p>
                 {r.resolution_notes && <p className="mt-1 text-xs text-muted-foreground">{t('returns.responseIs', { notes: r.resolution_notes })}</p>}
-                {!['refunded', 'closed'].includes(r.status) && <Link className="mt-2 inline-block text-xs font-semibold text-primary" to={`/disputes?order=${encodeURIComponent(r.order_number)}&phone=${encodeURIComponent(r.customer_phone)}&reason=${encodeURIComponent(r.reason)}`}>{copy.escalate}</Link>}
+                {!['refunded', 'closed'].includes(r.status) && <Link className="mt-2 inline-block text-xs font-semibold text-primary" to={`/dispute-center?order=${encodeURIComponent(r.order_number)}&phone=${encodeURIComponent(r.customer_phone)}&reason=${encodeURIComponent(r.reason)}`}>{copy.escalate}</Link>}
               </div>
             ))}
           </div>

@@ -18,7 +18,7 @@ export default function Profile() {
     { to: '/coupons', label: t('profile.linkCoupons'), icon: Ticket },
     { to: '/referral', label: t('profile.linkReferral'), icon: Gift },
     { to: '/returns', label: t('profile.linkReturns'), icon: RotateCcw },
-    { to: '/disputes', label: t('profile.linkDisputes'), icon: Gavel },
+    { to: '/dispute-center', label: t('profile.linkDisputes'), icon: Gavel },
     { to: '/notifications', label: t('profile.linkNotifications'), icon: Bell },
     { to: '/wishlist', label: t('profile.linkWishlist'), icon: Heart },
     { to: '/track', label: t('profile.linkTrack'), icon: MapPin },
