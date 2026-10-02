@@ -2,39 +2,36 @@
   "name": "PartnerPreference",
   "type": "object",
   "properties": {
-    "key": {
-      "type": "string",
-      "enum": [
-        "partner_ai",
-        "inventory_alerts"
+    "key": { "type": "string", "enum": ["partner_ai", "inventory_alerts"] },
+    "value": { "type": "object" },
+    "description": { "type": "string", "maxLength": 1000 },
+    "created_by_id": { "type": "string", "description": "User who created the preference" }
+  },
+  "required": ["key"],
+  "rls": {
+    "create": {
+      "$or": [
+        { "data.created_by_id": "{{user.id}}" },
+        { "user_condition": { "role": "admin" } }
       ]
     },
-    "value": {
-      "type": "object"
-    },
-    "description": {
-      "type": "string",
-      "maxLength": 1000
-    }
-  },
-  "required": [
-    "key"
-  ],
-  "rls": {
-    "created_by_id": {
-      "type": "string"
-    },
-    "create": {
-      "created_by_id": "{{user.id}}"
-    },
     "read": {
-      "created_by_id": "{{user.id}}"
+      "$or": [
+        { "data.created_by_id": "{{user.id}}" },
+        { "user_condition": { "role": "admin" } }
+      ]
     },
     "update": {
-      "created_by_id": "{{user.id}}"
+      "$or": [
+        { "data.created_by_id": "{{user.id}}" },
+        { "user_condition": { "role": "admin" } }
+      ]
     },
     "delete": {
-      "created_by_id": "{{user.id}}"
+      "$or": [
+        { "data.created_by_id": "{{user.id}}" },
+        { "user_condition": { "role": "admin" } }
+      ]
     }
   }
 }

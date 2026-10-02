@@ -2,200 +2,66 @@
   "name": "Product",
   "type": "object",
   "properties": {
-    "tenant_id": {
-      "type": "string"
-    },
-    "tenant_owner_email": {
-      "type": "string"
-    },
-    "title": {
-      "type": "string"
-    },
-    "slug": {
-      "type": "string"
-    },
-    "description": {
-      "type": "string"
-    },
-    "category_id": {
-      "type": "string"
-    },
-    "category_name": {
-      "type": "string"
-    },
-    "brand": {
-      "type": "string"
-    },
-    "images": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "video_url": {
-      "type": "string"
-    },
-    "model_3d_url": {
-      "type": "string"
-    },
-    "seller_id": {
-      "type": "string"
-    },
-    "seller_name": {
-      "type": "string"
-    },
-    "supplier_id": {
-      "type": "string"
-    },
-    "supplier_name": {
-      "type": "string"
-    },
-    "external_product_id": {
-      "type": "string"
-    },
-    "source_type": {
-      "type": "string",
-      "enum": [
-        "local_seller",
-        "local_warehouse",
-        "international_supplier"
-      ],
-      "default": "local_seller"
-    },
-    "supplier_price": {
-      "type": "number"
-    },
-    "currency": {
-      "type": "string",
-      "default": "USD"
-    },
-    "price_usd": {
-      "type": "number"
-    },
-    "compare_at_usd": {
-      "type": "number"
-    },
-    "markup_percent": {
-      "type": "number"
-    },
-    "stock": {
-      "type": "number",
-      "default": 0
-    },
-    "weight_kg": {
-      "type": "number"
-    },
-    "dimensions": {
-      "type": "string"
-    },
-    "origin_country": {
-      "type": "string",
-      "default": "CD"
-    },
-    "shipping_options": {
-      "type": "array",
-      "items": {
-        "type": "object"
-      }
-    },
-    "estimated_delivery": {
-      "type": "string"
-    },
-    "tags": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "attributes": {
-      "type": "object"
-    },
-    "variants": {
-      "type": "array",
-      "items": {
-        "type": "object"
-      }
-    },
-    "rating": {
-      "type": "number",
-      "default": 0
-    },
-    "reviews_count": {
-      "type": "number",
-      "default": 0
-    },
-    "sold_count": {
-      "type": "number",
-      "default": 0
-    },
-    "is_flash_sale": {
-      "type": "boolean",
-      "default": false
-    },
-    "is_featured": {
-      "type": "boolean",
-      "default": false
-    },
-    "status": {
-      "type": "string",
-      "enum": [
-        "draft",
-        "pending_review",
-        "published",
-        "archived"
-      ],
-      "default": "published"
-    }
+    "tenant_id": { "type": "string" },
+    "tenant_owner_email": { "type": "string" },
+    "title": { "type": "string" },
+    "slug": { "type": "string" },
+    "description": { "type": "string" },
+    "category_id": { "type": "string" },
+    "category_name": { "type": "string" },
+    "brand": { "type": "string" },
+    "images": { "type": "array", "items": { "type": "string" } },
+    "video_url": { "type": "string" },
+    "model_3d_url": { "type": "string" },
+    "seller_id": { "type": "string" },
+    "seller_name": { "type": "string" },
+    "supplier_id": { "type": "string" },
+    "supplier_name": { "type": "string" },
+    "external_product_id": { "type": "string" },
+    "source_type": { "type": "string", "enum": ["local_seller", "local_warehouse", "international_supplier"], "default": "local_seller" },
+    "supplier_price": { "type": "number" },
+    "currency": { "type": "string", "default": "USD" },
+    "price_usd": { "type": "number" },
+    "compare_at_usd": { "type": "number" },
+    "markup_percent": { "type": "number" },
+    "stock": { "type": "number", "default": 0 },
+    "weight_kg": { "type": "number" },
+    "dimensions": { "type": "string" },
+    "origin_country": { "type": "string", "default": "CD" },
+    "shipping_options": { "type": "array", "items": { "type": "object" } },
+    "estimated_delivery": { "type": "string" },
+    "tags": { "type": "array", "items": { "type": "string" } },
+    "attributes": { "type": "object" },
+    "variants": { "type": "array", "items": { "type": "object" } },
+    "rating": { "type": "number", "default": 0 },
+    "reviews_count": { "type": "number", "default": 0 },
+    "sold_count": { "type": "number", "default": 0 },
+    "is_flash_sale": { "type": "boolean", "default": false },
+    "is_featured": { "type": "boolean", "default": false },
+    "status": { "type": "string", "enum": ["draft", "pending_review", "published", "archived"], "default": "published" },
+    "created_by_id": { "type": "string", "description": "User who created the product" }
   },
-  "required": [
-    "title",
-    "price_usd"
-  ],
+  "required": ["title", "price_usd"],
   "rls": {
     "read": null,
-    "created_by_id": {
-      "type": "string"
-    },
     "create": {
       "$or": [
-        {
-          "created_by_id": "{{user.id}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
+        { "data.created_by_id": "{{user.id}}" },
+        { "user_condition": { "role": "admin" } }
       ]
     },
     "update": {
       "$or": [
-        {
-          "created_by_id": "{{user.id}}"
-        },
-        {
-          "data.tenant_owner_email": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
+        { "data.created_by_id": "{{user.id}}" },
+        { "data.tenant_owner_email": "{{user.email}}" },
+        { "user_condition": { "role": "admin" } }
       ]
     },
     "delete": {
       "$or": [
-        {
-          "created_by_id": "{{user.id}}"
-        },
-        {
-          "data.tenant_owner_email": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
+        { "data.created_by_id": "{{user.id}}" },
+        { "data.tenant_owner_email": "{{user.email}}" },
+        { "user_condition": { "role": "admin" } }
       ]
     }
   }

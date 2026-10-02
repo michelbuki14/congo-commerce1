@@ -2,120 +2,46 @@
   "name": "Content",
   "type": "object",
   "properties": {
-    "tenant_id": {
-      "type": "string"
-    },
-    "tenant_owner_email": {
-      "type": "string"
-    },
-    "description": {
-      "type": "string",
-      "maxLength": 1000
-    },
-    "title": {
-      "type": "string"
-    },
-    "caption": {
-      "type": "string"
-    },
-    "media_type": {
-      "type": "string",
-      "enum": [
-        "image",
-        "video"
-      ],
-      "default": "image"
-    },
-    "media_url": {
-      "type": "string"
-    },
-    "thumbnail_url": {
-      "type": "string"
-    },
-    "creator_id": {
-      "type": "string"
-    },
-    "creator_name": {
-      "type": "string"
-    },
-    "creator_handle": {
-      "type": "string"
-    },
-    "creator_avatar": {
-      "type": "string"
-    },
-    "seller_id": {
-      "type": "string"
-    },
-    "product_id": {
-      "type": "string"
-    },
-    "product_title": {
-      "type": "string"
-    },
-    "product_price_usd": {
-      "type": "number"
-    },
-    "product_image": {
-      "type": "string"
-    },
-    "tags": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "likes_count": {
-      "type": "number",
-      "default": 0
-    },
-    "comments_count": {
-      "type": "number",
-      "default": 0
-    },
-    "shares_count": {
-      "type": "number",
-      "default": 0
-    },
-    "views_count": {
-      "type": "number",
-      "default": 0
-    },
-    "status": {
-      "type": "string",
-      "enum": [
-        "draft",
-        "published",
-        "removed"
-      ],
-      "default": "published"
-    }
+    "tenant_id": { "type": "string" },
+    "tenant_owner_email": { "type": "string" },
+    "description": { "type": "string", "maxLength": 1000 },
+    "title": { "type": "string" },
+    "caption": { "type": "string" },
+    "media_type": { "type": "string", "enum": ["image", "video"], "default": "image" },
+    "media_url": { "type": "string" },
+    "thumbnail_url": { "type": "string" },
+    "creator_id": { "type": "string" },
+    "creator_name": { "type": "string" },
+    "creator_handle": { "type": "string" },
+    "creator_avatar": { "type": "string" },
+    "seller_id": { "type": "string" },
+    "product_id": { "type": "string" },
+    "product_title": { "type": "string" },
+    "product_price_usd": { "type": "number" },
+    "product_image": { "type": "string" },
+    "tags": { "type": "array", "items": { "type": "string" } },
+    "likes_count": { "type": "number", "default": 0 },
+    "comments_count": { "type": "number", "default": 0 },
+    "shares_count": { "type": "number", "default": 0 },
+    "views_count": { "type": "number", "default": 0 },
+    "status": { "type": "string", "enum": ["draft", "published", "removed"], "default": "published" },
+    "created_by_id": { "type": "string", "description": "User who created the content" }
   },
-  "required": [
-    "title"
-  ],
+  "required": ["title"],
   "rls": {
-    "created_by_id": {
-      "type": "string"
-    },
+    "read": { "user_condition": { "role": "admin" } },
     "create": {
       "$or": [
-        {
-          "created_by_id": "{{user.id}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
+        { "data.created_by_id": "{{user.id}}" },
+        { "user_condition": { "role": "admin" } }
       ]
     },
-    "read": { "user_condition": { "role": "admin" } },
-    "update": null,
-    "delete": {
-      "user_condition": {
-        "role": "admin"
-      }
-    }
+    "update": {
+      "$or": [
+        { "data.created_by_id": "{{user.id}}" },
+        { "user_condition": { "role": "admin" } }
+      ]
+    },
+    "delete": { "user_condition": { "role": "admin" } }
   }
 }
