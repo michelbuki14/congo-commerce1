@@ -9,6 +9,7 @@ import { getProfile, saveProfile } from '@/lib/session';
 import { getCities } from '@/lib/config';
 import StatusBadge from '@/components/StatusBadge';
 import { formatUSD, formatDate } from '@/lib/format';
+import BackButton from '@/components/BackButton';
 
 export default function Profile() {
   const { t } = useTranslation();
@@ -50,8 +51,9 @@ export default function Profile() {
   };
 
     return (
-    <div className="space-y-5 pb-6">
-      <h1 className="text-lg font-bold md:text-xl">{t('profile.title')}</h1>
+      <div className="space-y-5 pb-6">
+        <BackButton fallback="/" className="md:hidden" />
+        <h1 className="text-lg font-bold md:text-xl">{t('profile.title')}</h1>
 
       <section className="rounded-2xl border border-border bg-card p-4">
         <h2 className="mb-3 text-sm font-bold">{t('profile.myInfo')}</h2>

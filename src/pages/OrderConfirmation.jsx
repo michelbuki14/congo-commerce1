@@ -8,6 +8,7 @@ import { Image } from '@/components/ui/image';
 import StatusBadge from '@/components/StatusBadge';
 import { formatUSD, formatDateTime } from '@/lib/format';
 import { SHIPMENT_STATUS_LABELS } from '@/lib/logistics';
+import BackButton from '@/components/BackButton';
 
 export default function OrderConfirmation() {
   const { t } = useTranslation();
@@ -49,8 +50,9 @@ export default function OrderConfirmation() {
   const paid = order.payment_status === 'PAID' || order.payment_status === 'AUTHORIZED';
 
   return (
-    <div className="mx-auto max-w-3xl space-y-5 pb-8">
-      <div className="rounded-2xl border border-border bg-card p-5 text-center">
+      <div className="mx-auto max-w-3xl space-y-5 pb-8">
+        <BackButton fallback="/order-history" className="md:hidden" />
+        <div className="rounded-2xl border border-border bg-card p-5 text-center">
         <CheckCircle2 className="mx-auto h-10 w-10 text-emerald-600" />
         <h1 className="mt-2 text-lg font-bold md:text-xl">{t('orderConfirmation.thanks', { name: order.customer_name })}</h1>
         <p className="mt-1 text-sm text-muted-foreground">

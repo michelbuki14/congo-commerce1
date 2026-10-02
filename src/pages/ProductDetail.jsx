@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ShoppingBag, Heart, Truck, ShieldCheck, Store as StoreIcon, ChevronRight, PackageCheck, Zap, Share2 } from 'lucide-react';
+import { ShoppingBag, Heart, Truck, ShieldCheck, Store as StoreIcon, ChevronRight, PackageCheck, Zap, Share2, ArrowLeft } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Image } from '@/components/ui/image';
 import { useCart } from '@/lib/cart';
@@ -19,6 +19,7 @@ import Product3DViewer from '@/components/Product3DViewer';
 import SectionHeader from '@/components/SectionHeader';
 import { compactNumber } from '@/lib/format';
 import { inTenantScope, resolveStorefrontScope, scopeRecords } from '@/lib/tenancy';
+import BackButton from '@/components/BackButton';
 
 export default function ProductDetail() {
   const { t } = useTranslation();
@@ -150,8 +151,9 @@ export default function ProductDetail() {
   const outOfStock = Number(product.stock) <= 0;
 
   return (
-    <div className="space-y-6 pb-28 md:pb-6">
-      {toast && (
+      <div className="space-y-6 pb-28 md:pb-6">
+        <BackButton fallback="/categories" className="md:hidden" />
+        {toast && (
         <div className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 rounded-full bg-foreground px-4 py-2 text-xs font-semibold text-background">
           {toast}
         </div>
