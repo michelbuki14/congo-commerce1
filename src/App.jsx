@@ -71,6 +71,7 @@ const Pricing = lazy(() => import('@/pages/Pricing'));
 const TenantOnboarding = lazy(() => import('@/pages/TenantOnboarding'));
 const TenantConsole = lazy(() => import('@/pages/TenantConsole'));
 const DisputeResolution = lazy(() => import('@/pages/DisputeResolution'));
+const DisputeCenter = lazy(() => import('@/pages/DisputeCenter'));
 const PlatformAnalytics = lazy(() => import('@/pages/PlatformAnalytics'));
 const SubscriptionPlans = lazy(() => import('@/pages/SubscriptionPlans'));
 const PlatformHealth = lazy(() => import('@/pages/PlatformHealth'));

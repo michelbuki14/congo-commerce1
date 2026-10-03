@@ -48,7 +48,7 @@ export class ErrorBoundary extends Component {
                 <div className="space-y-2">
                   <h2 className="text-lg font-semibold">Something went wrong</h2>
                   <p className="text-sm text-muted-foreground">We encountered an unexpected error. Our team has been notified.</p>
-                  {process.env.NODE_ENV === 'development' && this.state.error && (
+                  {import.meta.env.DEV && this.state.error && (
                     <details className="mt-4 text-left text-xs text-muted-foreground">
                       <summary className="cursor-pointer">Error details</summary>
                       <pre className="mt-2 overflow-auto rounded bg-muted p-2">{this.state.error.stack}</pre>
