@@ -102,17 +102,17 @@ export default function Home() {
           <p className="max-w-md text-sm leading-relaxed text-background/90 md:text-base">
             {t('home.heroSubtitle')}
           </p>
-          <div className="mt-1 flex flex-wrap gap-2">
-            <Link to="/discover" className="inline-flex min-h-11 items-center rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground">
-              {t('home.discoverVideo')}
-            </Link>
-            <Link to="/categories" className="inline-flex min-h-11 items-center rounded-full border border-background/40 bg-background/10 px-5 py-3 text-sm font-semibold backdrop-blur">
-              {t('home.browseCategories')}
-            </Link>
-            <Link to="/creator" className="inline-flex min-h-11 w-fit items-center text-sm font-medium text-background underline underline-offset-4">
-              {t('home.becomeCreator')}
-            </Link>
-          </div>
+          <div className="mt-1 flex flex-wrap items-center gap-3">
+                      <Link to="/discover" className="inline-flex min-h-11 items-center rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground">
+                        {t('home.discoverVideo')}
+                      </Link>
+                      <Link to="/categories" className="inline-flex min-h-11 items-center rounded-full border border-background/40 bg-background/10 px-5 py-3 text-sm font-semibold text-background backdrop-blur">
+                        {t('home.browseCategories')}
+                      </Link>
+                      <Link to="/creator" className="inline-flex min-h-11 items-center px-1 text-sm font-medium text-background underline underline-offset-4">
+                        {t('home.becomeCreator')}
+                      </Link>
+                    </div>
         </div>
       </section>
 
