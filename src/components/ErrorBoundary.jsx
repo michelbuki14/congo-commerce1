@@ -1,70 +1,76 @@
-/** @jsxImportSource react */
-import React, { Component } from 'react';
+import React from 'react';
+import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
-/**
- * @typedef {Object} Props
- * @property {React.ReactNode} children
- * @property {React.ReactNode} [fallback]
- * @property {Function} [onError]
- */
-
-/**
- * @typedef {Object} State
- * @property {boolean} hasError
- * @property {Error} [error]
- */
-
-export class ErrorBoundary extends Component {
+class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    /** @type {{ hasError: boolean; error?: Error }} */
-    this.state = { hasError: false };
+    this.state = { hasError: false, error: null, errorInfo: null };
   }
 
   static getDerivedStateFromError(error) {
-    return { hasError: true, error };
+    return { hasError: true };
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error('ErrorBoundary caught:', error, errorInfo);
-    this.props.onError?.(error, errorInfo);
+    this.setState({
+      error: error,
+      errorInfo: errorInfo
+    });
+    // Log to console in development
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('ErrorBoundary caught an error:', error, errorInfo);
+    }
+    // Could send to error reporting service here (Sentry, LogRocket, etc.)
   }
 
+  handleRetry = () => {
+    this.setState({ hasError: false, error: null, errorInfo: null });
+  };
+
   render() {
-    if (this.state.hasError) {
+    const { t } = useTranslation();
+    const { hasError, error } = this.state;
+
+    if (hasError) {
+      // If a fallback UI is provided as a prop, use it
       if (this.props.fallback) {
         return this.props.fallback;
       }
 
+      // Default fallback UI
       return (
-        <>
-          <div className="flex min-h-[300px] items-center justify-center p-6">
-            <div className="text-center space-y-4 rounded-2xl border border-border bg-card p-6">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
-                <svg className="h-8 w-8 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77-1.333.192 3 1.732 3h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77-1.333.192 3 1.732 3h13.856z" />
-                </svg>
-              </div>
-              <div className="space-y-2">
-                <h2 className="text-lg font-semibold">Something went wrong</h2>
-                <p className="text-sm text-muted-foreground">We encountered an unexpected error. Our team has been notified.</p>
-                {import.meta.env.DEV && this.state.error && (
-                  <details className="mt-4 text-left text-xs text-muted-foreground">
-                    <summary className="cursor-pointer">Error details</summary>
-                    <pre className="mt-2 overflow-auto rounded bg-muted p-2">{this.state.error.stack}</pre>
-                  </details>
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={() => window.location.reload()}
-                className="mt-4 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
-              >
-                Reload page
-              </button>
+        <div className="flex min-h-[400px] items-center justify-center p-8">
+          <div className="text-center space-y-4">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+              <AlertTriangle className="h-8 w-8" aria-hidden="true" />
             </div>
+            <h2 className="text-xl font-semibold text-foreground">
+              {t('errorBoundary.somethingWentWrong')}
+            </h2>
+            <p className="text-muted-foreground max-w-md">
+              {t('errorBoundary.tryAgain')}
+            </p>
+            <button
+              onClick={this.handleRetry}
+              className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <RefreshCw className="h-4 w-4" aria-hidden="true" />
+              {t('errorBoundary.retry')}
+            </button>
+            {process.env.NODE_ENV !== 'production' && error && (
+              <details className="text-left text-xs text-muted-foreground mt-4 max-w-md mx-auto">
+                <summary className="cursor-pointer select-none mb-1">
+                  {t('errorBoundary.details')}
+                </summary>
+                <pre className="overflow-auto rounded bg-muted p-3 text-[11px]">
+                  {error.toString()}
+                  {this.state.errorInfo?.componentStack}
+                </pre>
+              </details>
+            )}
           </div>
-        </>
+        </div>
       );
     }
 

@@ -26,9 +26,9 @@ export default function HeaderActions({ count }) {
         {user?.role === 'admin' && <Link to="/backoffice" aria-label={t('nav.admin')} title={t('nav.admin')} className="flex h-11 w-11 items-center justify-center rounded-full border border-transparent bg-transparent hover:bg-secondary hover:border-border/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-all duration-75 ease-out active:scale-90"><ShieldCheck className="h-5 w-5" /></Link>}
         {(user?.role === 'admin' || user?.role === 'seller') && <Link to="/seller" aria-label={t('nav.sellerSpace')} title={t('nav.sellerSpace')} className="flex h-11 w-11 items-center justify-center rounded-full border border-transparent bg-transparent hover:bg-secondary hover:border-border/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-all duration-75 ease-out active:scale-90"><Store className="h-5 w-5" /></Link>}
       </div>
-      <Link to="/cart" aria-label={`${t('nav.cart')} (${count})`} className="relative flex h-11 w-11 items-center justify-center rounded-full border border-border/50 bg-card/80 backdrop-blur-sm hover:bg-secondary hover:border-border focus:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-all duration-75 ease-out active:scale-90">
-        <ShoppingBag className="h-5 w-5" />
-        {count > 0 && <span className="absolute -right-1 -top-1 min-w-5 rounded-full bg-primary px-1 text-center text-[10px] font-bold leading-5 text-primary-foreground">{count}</span>}
+      <Link to="/cart" aria-label={`${t('nav.cart')} (${count})`} className="relative flex h-12 w-12 items-center justify-center rounded-full border border-border/50 bg-card/80 backdrop-blur-sm hover:bg-secondary hover:border-border focus:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-all duration-75 ease-out active:scale-90">
+        <ShoppingBag className="h-5.5 w-5.5" />
+        {count > 0 && <span className="absolute -right-0.5 -top-0.5 min-w-[20px] rounded-full bg-primary px-1.5 text-center text-[10px] font-bold leading-5 text-primary-foreground">{count}<span className="sr-only">{t('cart.items', { count })}</span></span>}
       </Link>
     </div>
   );

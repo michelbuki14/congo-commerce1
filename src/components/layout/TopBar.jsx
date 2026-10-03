@@ -79,6 +79,9 @@ export default function TopBar() {
                 value={term}
                 onChange={(e) => setTerm(e.target.value)}
                 placeholder={t('nav.searchPlaceholder')}
+                // P0 M-09: Add inputMode for mobile keyboard
+                inputMode="search"
+                enterKeyHint="search"
                 className="h-12 w-full rounded-full border border-border bg-background pl-11 pr-4 text-sm outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-ring"
               />
             </form>
@@ -94,21 +97,24 @@ export default function TopBar() {
                         <Link
                           to="/wishlist"
                           aria-label={t('nav.wishlist')}
-                          className="flex h-12 w-12 items-center justify-center rounded-full hover:bg-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          // P0 M-06/M-10: Add press feedback on mobile
+                          className="flex h-12 w-12 items-center justify-center rounded-full hover:bg-secondary active:scale-90 active:bg-accent transition-all duration-75 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         >
                           <Heart className="h-5.5 w-5.5" aria-hidden="true" />
                         </Link>
                         <Link
                           to="/messages"
                           aria-label={t('nav.messages')}
-                          className="flex h-12 w-12 items-center justify-center rounded-full hover:bg-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          // P0 M-06/M-10: Add press feedback on mobile
+                          className="flex h-12 w-12 items-center justify-center rounded-full hover:bg-secondary active:scale-90 active:bg-accent transition-all duration-75 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         >
                           <MessageCircle className="h-5.5 w-5.5" aria-hidden="true" />
                         </Link>
                         <Link
                           to="/notifications"
                           aria-label={t('nav.notifications')}
-                          className="flex h-12 w-12 items-center justify-center rounded-full hover:bg-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          // P0 M-06/M-10: Add press feedback on mobile
+                          className="flex h-12 w-12 items-center justify-center rounded-full hover:bg-secondary active:scale-90 active:bg-accent transition-all duration-75 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         >
                           <Bell className="h-5.5 w-5.5" aria-hidden="true" />
                         </Link>
@@ -118,7 +124,8 @@ export default function TopBar() {
                           <button
                             type="button"
                             onClick={() => setUserMenuOpen(!userMenuOpen)}
-                            className="flex h-12 w-12 items-center justify-center rounded-full hover:bg-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            // P0 M-06: Add press feedback
+                            className="flex h-12 w-12 items-center justify-center rounded-full hover:bg-secondary active:scale-90 active:bg-accent transition-all duration-75 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             aria-expanded={userMenuOpen}
                             aria-haspopup="true"
                             aria-label={user ? t('nav.profile') : t('nav.login')}
@@ -231,7 +238,8 @@ export default function TopBar() {
             <Link
                           to="/cart"
                           aria-label={t('nav.cart')}
-                          className="relative flex h-12 w-12 items-center justify-center rounded-full hover:bg-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          // P0 M-06/M-10: Add press feedback on mobile
+                          className="relative flex h-12 w-12 items-center justify-center rounded-full hover:bg-secondary active:scale-90 active:bg-accent transition-all duration-75 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         >
                           <ShoppingBag className="h-5.5 w-5.5" aria-hidden="true" />
                           {count > 0 && (

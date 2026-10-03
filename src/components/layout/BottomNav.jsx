@@ -19,7 +19,8 @@ export default function BottomNav() {
 
   return (
     // Apple Design §12 — translucent material surface with depth
-    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/50 bg-card/80 backdrop-blur-xl md:hidden" aria-label="Navigation principale">
+    // P0 M-04: Add safe-area inset for iOS home indicator
+    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/50 bg-card/80 backdrop-blur-xl md:hidden pb-[env(safe-area-inset-bottom)]" aria-label="Navigation principale">
       <div className="grid grid-cols-5">
         {ITEMS.map((item) => {
           const Icon = item.icon;
