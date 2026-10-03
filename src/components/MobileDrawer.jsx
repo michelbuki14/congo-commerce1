@@ -80,7 +80,7 @@ export default function MobileDrawer({ isOpen, onClose }) {
       />
       <aside
                   id="mobile-drawer"
-                  className="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-card shadow-xl md:hidden"
+                  className="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-card/95 backdrop-blur-xl border-l border-border/50 shadow-xl md:hidden"
                   role="dialog"
                   aria-modal="true"
                   aria-label={t('nav.menu')}

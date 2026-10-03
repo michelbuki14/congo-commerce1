@@ -18,24 +18,30 @@ export default function BottomNav() {
   const { count } = useCart();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card/90 backdrop-blur md:hidden shadow-sm" aria-label="Navigation principale">
+    // Apple Design §12 — translucent material surface with depth
+    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/50 bg-card/80 backdrop-blur-xl md:hidden" aria-label="Navigation principale">
       <div className="grid grid-cols-5">
         {ITEMS.map((item) => {
           const Icon = item.icon;
           const active = item.path === '/' ? location.pathname === '/' : location.pathname.startsWith(item.path);
           return (
+            // Apple Design §1 — respond on pointer-down, not release
             <Link
               key={item.path}
               to={item.path}
               aria-current={active ? 'page' : undefined}
               aria-label={t(item.key)}
-              className={`relative flex h-12 flex-col items-center justify-center gap-1 px-2 text-[10px] font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring ${
+              className={`relative flex h-12 flex-col items-center justify-center gap-1 px-2 text-[10px] font-medium transition-transform duration-75 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring ${
                 active ? 'text-primary' : 'text-muted-foreground'
               }`}
+              onPointerDown={(e) => { e.currentTarget.style.transform = 'scale(0.92)'; }}
+              onPointerUp={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+              onPointerLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
             >
               <Icon className="h-5 w-5" strokeWidth={active ? 2.4 : 1.8} />
               {item.badge && count > 0 && (
-                <span className="absolute right-2 top-1 min-w-[18px] rounded-full bg-primary px-1 text-[9px] leading-5 text-primary-foreground">
+                // Apple Design §11 — subtle scale pulse for badge updates
+                <span className="absolute right-2 top-1 min-w-[18px] rounded-full bg-primary px-1 text-[9px] leading-5 text-primary-foreground animate-badge-pulse">
                   {count}
                 </span>
               )}

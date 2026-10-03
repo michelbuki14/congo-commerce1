@@ -26,7 +26,8 @@ export default function TopBar() {
   };
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur pt-[env(safe-area-inset-top)]">
+    // Apple Design §12 — translucent material with depth; elevated above content
+    <header className="sticky top-0 z-40 border-b border-border/50 bg-card/75 backdrop-blur-xl pt-[env(safe-area-inset-top)]">
       <div className="mx-auto flex w-full max-w-6xl items-center gap-4 px-4 py-3 md:px-8">
         <button
           type="button"
@@ -138,7 +139,8 @@ export default function TopBar() {
                         <Link
                           to="/profile"
                           onClick={() => setUserMenuOpen(false)}
-                          className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-secondary"
+                          // Apple Design §1 — instant press feedback
+                          className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-secondary active:bg-accent transition-colors duration-75"
                         >
                           <User className="h-4 w-4" aria-hidden="true" />
                           {t('nav.profile')}
@@ -206,7 +208,7 @@ export default function TopBar() {
                         <Link
                           to="/login"
                           onClick={() => setUserMenuOpen(false)}
-                          className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-secondary"
+                          className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-secondary active:bg-accent transition-colors duration-75"
                         >
                           <User className="h-4 w-4" aria-hidden="true" />
                           {t('nav.login')}
@@ -214,7 +216,7 @@ export default function TopBar() {
                         <Link
                           to="/register"
                           onClick={() => setUserMenuOpen(false)}
-                          className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-secondary"
+                          className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-secondary active:bg-accent transition-colors duration-75"
                         >
                           <User className="h-4 w-4" aria-hidden="true" />
                           {t('nav.register')}

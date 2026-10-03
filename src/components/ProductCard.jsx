@@ -21,14 +21,14 @@ function ProductCard({ product }) {
   const isIntl = product.source_type === 'international_supplier';
 
   return (
-    <article className="group relative overflow-hidden rounded-xl border border-border bg-card">
-      <Link to={`/product/${product.slug || product.id}`} className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-xl" aria-label={`${product.title}, ${format(product.price_usd)}`}>
+    <article className="group relative overflow-hidden rounded-xl border border-border/60 bg-card shadow-sm transition-shadow duration-200 hover:shadow-md">
+      <Link to={`/product/${product.slug || product.id}`} className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 rounded-xl" aria-label={`${product.title}, ${format(product.price_usd)}`}>
         <div className="relative aspect-square w-full overflow-hidden bg-secondary">
           <Image
             src={product.images?.[0]}
             alt={product.title}
             loading="lazy"
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
           />
           {discount > 0 && (
             <span className="absolute left-1.5 top-1.5 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-primary-foreground">

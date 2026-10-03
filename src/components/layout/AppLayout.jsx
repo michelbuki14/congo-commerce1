@@ -6,28 +6,30 @@ import LegalFooter from '@/components/legal/LegalFooter';
 import { applyTenantBranding, clearTenantBranding, resolveTenantByHost } from '@/lib/tenancy';
 import BackButton from '@/components/BackButton';
 
-// Page transition variants
+// Page transition variants — Apple Design §4/§7
+// Spatial consistency: enter from right, exit to right (same axis, mirrored)
+// Springs: critically damped by default (bounce: 0), only bounce on momentum-driven transitions
 const pageVariants = {
   initial: {
     opacity: 0,
-    x: 20,
+    x: 24,
   },
   animate: {
     opacity: 1,
     x: 0,
     transition: {
       type: 'spring',
-      stiffness: 300,
-      damping: 20,
+      bounce: 0,
+      duration: 0.35,
     },
   },
   exit: {
     opacity: 0,
-    x: -20,
+    x: -8,
     transition: {
       type: 'spring',
-      stiffness: 300,
-      damping: 20,
+      bounce: 0,
+      duration: 0.25,
     },
   },
 };
