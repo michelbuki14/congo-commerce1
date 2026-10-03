@@ -1,5 +1,83 @@
 import { base44 } from '@/api/base44Client';
-import { buildOrderUpdate } from './orderMessages';
+
+function buildOrderUpdate({ order, fulfillment = null, status = '', event = '' }) {
+  const isFulfillment = !!fulfillment;
+  const num = isFulfillment ? fulfillment.fulfillment_number : order.order_number;
+  const customer = order.customer_name || 'Client';
+  const total = order.total_usd ? `$${order.total_usd}` : '';
+
+  const map = {
+    purchase_confirmed: {
+      label: 'Purchase confirmed',
+      event: 'purchase_confirmed',
+      subject: `Commande confirmée ${num}`,
+      message: `Bonjour ${customer}, votre commande ${num} a été confirmée.${total ? ` Total : ${total}.` : ''} Nous préparons votre envoi.`,
+    },
+    payment_received: {
+      label: 'Payment received',
+      event: 'payment_received',
+      subject: `Paiement reçu — ${num}`,
+      message: `Bonjour ${customer}, nous avons bien reçu votre paiement pour la commande ${num}.${total ? ` Montant : ${total}.` : ''} Merci pour votre confiance.`,
+    },
+    shipped: {
+      label: 'Shipped',
+      event: 'shipped',
+      subject: `Votre commande est expédiée — ${num}`,
+      message: `Bonjour ${customer}, votre commande ${num} a été expédiée. Suivez-la avec le numéro de suivi fourni par le transporteur.`,
+    },
+    out_for_delivery: {
+      label: 'Out for delivery',
+      event: 'out_for_delivery',
+      subject: `Livraison en cours — ${num}`,
+      message: `Bonjour ${customer}, votre commande ${num} est en cours de livraison. Merci de rester disponible.`,
+    },
+    delivered: {
+      label: 'Delivered',
+      event: 'delivered',
+      subject: `Livraison confirmée — ${num}`,
+      message: `Bonjour ${customer}, votre commande ${num} a été livrée. Merci d'avoir choisi Congo Commerce !`,
+    },
+    cancelled: {
+      label: 'Cancelled',
+      event: 'cancelled',
+      subject: `Commande annulée — ${num}`,
+      message: `Bonjour ${customer}, votre commande ${num} a été annulée. Si vous avez des questions, contactez le support.`,
+    },
+    refunded: {
+      label: 'Refunded',
+      event: 'refunded',
+      subject: `Remboursement effectué — ${num}`,
+      message: `Bonjour ${customer}, votre commande ${num} a été remboursée. Le montant sera crédité selon votre mode de paiement initial.`,
+    },
+    partially_refunded: {
+      label: 'Partially refunded',
+      event: 'partially_refunded',
+      subject: `Remboursement partiel — ${num}`,
+      message: `Bonjour ${customer}, un remboursement partiel a été effectué sur votre commande ${num}.`,
+    },
+    dispute_opened: {
+      label: 'Dispute opened',
+      event: 'dispute_opened',
+      subject: `Litige ouvert — ${num}`,
+      message: `Bonjour ${customer}, un litige a été ouvert concernant votre commande ${num}. Notre équipe vous contactera sous peu.`,
+    },
+    dispute_resolved: {
+      label: 'Dispute resolved',
+      event: 'dispute_resolved',
+      subject: `Litige résolu — ${num}`,
+      message: `Bonjour ${customer}, le litige concernant votre commande ${num} a été résolu. Merci pour votre patience.`,
+    },
+    return_received: {
+      label: 'Return received',
+      event: 'return_received',
+      subject: `Retour reçu — ${num}`,
+      message: `Bonjour ${customer}, nous avons bien reçu le retour pour votre commande ${num}. Le remboursement sera traité prochainement.`,
+    },
+  };
+
+  const key = isFulfillment ? (status || event) : (event || status);
+  return map[key] || null;
+}
 
 /** Marks a parked message as delivered by hand (phone channel).
  *  Accepts an optional Base44 client so server functions can pass the

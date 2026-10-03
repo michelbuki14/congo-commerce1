@@ -1,3 +1,7 @@
+// DEPRECATED — withdrawal requests are now handled through the
+// automated payout pipeline (payout-request function). Kept for
+// rollback only; do not add new callers.
+
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.49";
 import { requireAdmin } from "../../shared/security.ts";
 import { postWalletEntry } from "../../shared/walletLedger.ts";

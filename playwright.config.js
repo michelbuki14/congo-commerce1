@@ -1,4 +1,6 @@
-module.exports = {
+import { defineConfig, devices } from '@playwright/test';
+
+export default defineConfig({
   testDir: './test/e2e',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
@@ -13,7 +15,7 @@ module.exports = {
   projects: [
     {
       name: 'chromium',
-      use: { ...require('@playwright/test').devices['Desktop Chrome'] },
+      use: { ...devices['Desktop Chrome'] },
     },
   ],
-};
+});

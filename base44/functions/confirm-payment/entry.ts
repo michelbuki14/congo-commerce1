@@ -1,3 +1,8 @@
+// DEPRECATED — replaced by the payments-webhook idempotency guard and
+// the automated payment verification flow. This function is kept for
+// rollback only; new integrations should use the webhook path.
+// Do not add new callers.
+
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.49";
 import { requireAdmin } from "../../shared/security.ts";
 

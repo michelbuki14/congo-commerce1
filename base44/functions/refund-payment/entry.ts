@@ -1,3 +1,7 @@
+// DEPRECATED — replaced by the automated dispute/refund flow in
+// dispute-center and the webhook-based payment completion path.
+// Kept for rollback only; do not add new callers.
+
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.49";
 import { requireAdmin } from "../../shared/security.ts";
 import { postWalletEntry, releasePending } from "../../shared/walletLedger.ts";

@@ -3,7 +3,6 @@ import ErrorBoundary from "@/components/ErrorBoundary"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Navigate, Route, Routes } from 'react-router-dom';
-import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ScrollToTop from './components/ScrollToTop';
@@ -35,6 +34,7 @@ const Checkout = lazy(() => import('@/pages/Checkout'));
 const OrderConfirmation = lazy(() => import('@/pages/OrderConfirmation'));
 const Wishlist = lazy(() => import('@/pages/Wishlist'));
 const Profile = lazy(() => import('@/pages/Profile'));
+const DisputeCenter = lazy(() => import('@/pages/DisputeCenter'));
 const Wallet = lazy(() => import('@/pages/Wallet'));
 const Coupons = lazy(() => import('@/pages/Coupons'));
 const Referral = lazy(() => import('@/pages/Referral'));
@@ -382,7 +382,7 @@ const AuthenticatedApp = () => {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/oauth/consent" element={<OAuthConsent />} />
-      <Route path="*" element={<PageNotFound />} />
+      <Route path="*" element={<div className="min-h-screen flex items-center justify-center p-6 bg-slate-50"><div className="max-w-md w-full text-center space-y-6"><h1 className="text-7xl font-light text-slate-300">404</h1><h2 className="text-2xl font-medium text-slate-800">Page Not Found</h2><button onClick={() => window.location.href = '/'} className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300">Go Home</button></div></div>} />
       </Routes>
     </motion.div>
   );

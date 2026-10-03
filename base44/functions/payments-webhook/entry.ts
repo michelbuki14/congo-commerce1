@@ -142,6 +142,15 @@ async function handleOrderApproved(db: any, eventData: any): Promise<Response> {
   // (the only identity an anonymous buyer has). Persisted below and used by the grant block.
   const buyerEmail: string | null = purchase.buyerEmail ?? extractBuyerEmail(order);
 
+  // ===== IDEMPOTENCY GUARD =====
+  // Wix may retry ORDER_APPROVED; a second run must not double-grant.
+  const idemKey = `payments-webhook:${checkoutId}`
+  const existing = await db.entities.IdempotencyKey.filter({ key: idemKey }).catch(() => [])
+  if (existing.length && existing[0].used_at) {
+    console.log('payments-webhook: idempotent skip', { checkoutId, key: idemKey })
+    return new Response('Already processed', { status: 200 })
+  }
+
   // ===== APP-SPECIFIC =====
   // Grant whatever the buyer paid for. This runs BEFORE we mark the purchase paid: if it
   // throws or times out, the status stays "pending", so Wix's retry re-runs the grant
@@ -216,6 +225,13 @@ async function handleOrderApproved(db: any, eventData: any): Promise<Response> {
     }
   }
   // ===== END APP-SPECIFIC =====
+
+  // Record idempotency key so a retry is short-circuited at the top.
+  await db.entities.IdempotencyKey.upsert({
+    key: idemKey,
+    used_at: new Date().toISOString(),
+    context: `checkout:${checkoutId}|order:${orderId}`,
+  }).catch(() => {})
 
   // Mark paid LAST, so "paid" always implies the grant above completed. The idempotency
   // check at the top short-circuits on this status, so it must only be set after fulfillment.
